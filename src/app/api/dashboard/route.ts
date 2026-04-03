@@ -8,18 +8,18 @@ export async function GET() {
     let env;
     try {
       env = getRequestContext().env;
-    } catch (_e) {
+    } catch {
       console.warn("Cloudflare context not found, using mock data for local dev");
       // For local dev, we don't have DB, so return a sample or error
       return NextResponse.json({ error: "Local development mode: Please use localStorage or configure Cloudflare bindings." }, { status: 500 });
     }
-    const db = (env as any).DB;
+    const db = (env as { DB: any }).DB;
 
     if (!db) {
       return NextResponse.json({ error: "Database not configured" }, { status: 500 });
     }
 
-    const teamData = await db.prepare("SELECT * FROM team_data WHERE id = 1").first();
+    const teamData: any = await db.prepare("SELECT * FROM team_data WHERE id = 1").first();
     const agents = await db.prepare("SELECT * FROM agents").all();
 
     return NextResponse.json({
@@ -27,7 +27,7 @@ export async function GET() {
         goal: teamData.goal,
         ytdProduction: teamData.ytd_production,
       },
-      agents: (agents.results as any[]).map((a) => ({
+      agents: (agents.results as unknown[]).map((a: any) => ({
         ...a,
         volumePending: a.volume_pending,
         mlsLink: a.mls_link,
@@ -61,10 +61,11 @@ export async function POST(req: NextRequest) {
     // Update Agents - For simplicity, we'll clear and re-insert or use UPSERT
     const statements = [
       db.prepare("DELETE FROM agents"),
-      ...(agents as any[]).map((a) => 
-        db.prepare("INSERT INTO agents (id, name, goal, closings, volume_pending, buyers, sellers, listings, mls_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-          .bind(a.id, a.name, a.goal, a.closings, a.volumePending, a.buyers, a.sellers, a.listings, a.mlsLink || null)
-      )
+      ...(agents as unknown[]).map((item) => {
+        const a = item as any;
+        return db.prepare("INSERT INTO agents (id, name, goal, closings, volume_pending, buyers, sellers, listings, mls_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+          .bind(a.id, a.name, a.goal, a.closings, a.volumePending, a.buyers, a.sellers, a.listings, a.mlsLink || null);
+      })
     ];
 
     await db.batch(statements);
