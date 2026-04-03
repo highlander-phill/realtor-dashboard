@@ -1,0 +1,7 @@
+name = "nspg-dashboard"
+pages_build_output_dir = ".next"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nspg_prod"
+database_id = "138c69f7-f596-41f4-9e3c-6a517c7dbbf3"
