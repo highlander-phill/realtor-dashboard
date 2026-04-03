@@ -1,4 +1,4 @@
-name = "nspg-dashboard"
+name = "realtor-dashboard"
 pages_build_output_dir = ".next"
 
 [[d1_databases]]
