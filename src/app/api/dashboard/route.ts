@@ -3,23 +3,33 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
+interface D1Env {
+  DB: {
+    prepare: (query: string) => {
+      first: () => Promise<any>;
+      all: () => Promise<{ results: any[] }>;
+      bind: (...args: any[]) => { run: () => Promise<any> };
+    };
+    batch: (statements: any[]) => Promise<any>;
+  };
+}
+
 export async function GET() {
   try {
-    let env;
+    let env: D1Env;
     try {
-      env = getRequestContext().env;
+      env = getRequestContext().env as unknown as D1Env;
     } catch {
       console.warn("Cloudflare context not found, using mock data for local dev");
-      // For local dev, we don't have DB, so return a sample or error
       return NextResponse.json({ error: "Local development mode: Please use localStorage or configure Cloudflare bindings." }, { status: 500 });
     }
-    const db = (env as { DB: any }).DB;
+    const db = env.DB;
 
     if (!db) {
       return NextResponse.json({ error: "Database not configured" }, { status: 500 });
     }
 
-    const teamData: any = await db.prepare("SELECT * FROM team_data WHERE id = 1").first();
+    const teamData = await db.prepare("SELECT * FROM team_data WHERE id = 1").first();
     const agents = await db.prepare("SELECT * FROM agents").all();
 
     return NextResponse.json({
@@ -27,7 +37,7 @@ export async function GET() {
         goal: teamData.goal,
         ytdProduction: teamData.ytd_production,
       },
-      agents: (agents.results as unknown[]).map((a: any) => ({
+      agents: agents.results.map((a) => ({
         ...a,
         volumePending: a.volume_pending,
         mlsLink: a.mls_link,
@@ -42,7 +52,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { env } = getRequestContext();
+    const { env } = getRequestContext() as unknown as { env: D1Env };
     const db = env.DB;
     
     if (!db) {
@@ -50,22 +60,18 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { team, agents } = body;
+    const { team, agents } = body as { team: any; agents: any[] };
 
-    // Use a transaction if possible, or batch updates
-    // Update Team Data
     await db.prepare(
       "UPDATE team_data SET goal = ?, ytd_production = ?, last_updated = ? WHERE id = 1"
     ).bind(team.goal, team.ytdProduction, new Date().toISOString()).run();
 
-    // Update Agents - For simplicity, we'll clear and re-insert or use UPSERT
     const statements = [
       db.prepare("DELETE FROM agents"),
-      ...(agents as unknown[]).map((item) => {
-        const a = item as any;
-        return db.prepare("INSERT INTO agents (id, name, goal, closings, volume_pending, buyers, sellers, listings, mls_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-          .bind(a.id, a.name, a.goal, a.closings, a.volumePending, a.buyers, a.sellers, a.listings, a.mlsLink || null);
-      })
+      ...agents.map((a) => 
+        db.prepare("INSERT INTO agents (id, name, goal, closings, volume_pending, buyers, sellers, listings, mls_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+          .bind(a.id, a.name, a.goal, a.closings, a.volumePending, a.buyers, a.sellers, a.listings, a.mlsLink || null)
+      )
     ];
 
     await db.batch(statements);
