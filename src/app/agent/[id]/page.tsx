@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { initialData, DashboardData, AgentData } from "@/lib/data";
+import { useParams } from "next/navigation";
+import { initialData, AgentData } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -14,14 +14,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 export default function AgentDashboard() {
   const params = useParams();
-  const router = useRouter();
-  const [data, setData] = useState<DashboardData>(initialData);
   const [agent, setAgent] = useState<AgentData | null>(null);
 
   useEffect(() => {
     const savedData = localStorage.getItem("nspg_dashboard_data");
     const currentData = savedData ? JSON.parse(savedData) : initialData;
-    setData(currentData);
     
     const foundAgent = currentData.agents.find((a: AgentData) => a.id === params.id);
     if (foundAgent) {
@@ -210,7 +207,7 @@ export default function AgentDashboard() {
                 <h3 className="font-black uppercase tracking-widest text-sm mb-4">Performance Advice</h3>
                 <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                   You are currently performing at <strong>{progressPercentage}%</strong> of your annual goal. 
-                  Increasing your seller listings by just 2 more properties this month could put you on track for the "Platinum Circle" award.
+                  Increasing your seller listings by just 2 more properties this month could put you on track for the &quot;Platinum Circle&quot; award.
                 </p>
               </div>
             </div>
