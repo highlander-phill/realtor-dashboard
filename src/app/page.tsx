@@ -1,65 +1,230 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import { initialData, DashboardData } from "@/lib/data";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Users, TrendingUp, Home, DollarSign, PieChart, Clock, ExternalLink } from "lucide-react";
+import { format } from "date-fns";
+import { motion } from "framer-motion";
+import Link from "next/link";
+
+export default function Dashboard() {
+  const [data, setData] = useState<DashboardData>(initialData);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await fetch('/api/dashboard');
+        if (response.ok) {
+          const cloudData = await response.json();
+          setData(cloudData);
+          localStorage.setItem("nspg_dashboard_data", JSON.stringify(cloudData));
+        } else {
+          // Fallback to local storage if API fails (e.g. offline or during local dev without D1)
+          const savedData = localStorage.getItem("nspg_dashboard_data");
+          if (savedData) {
+            setData(JSON.parse(savedData));
+          }
+        }
+      } catch (err) {
+        console.error("API Error:", err);
+        const savedData = localStorage.getItem("nspg_dashboard_data");
+        if (savedData) {
+          setData(JSON.parse(savedData));
+        }
+      }
+    }
+    fetchData();
+  }, []);
+
+  const teamPercentage = Math.round((data.team.ytdProduction / data.team.goal) * 100);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        {/* Header */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <div className="bg-black text-white p-2 rounded">NS</div>
+              NIK SHEHU PROPERTY GROUP
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400">Team Performance & Sales Dashboard</p>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-full shadow-sm border border-slate-200 dark:border-slate-800">
+            <Clock className="w-4 h-4" />
+            Last updated: {format(new Date(data.lastUpdated), "MMM d, yyyy h:mm a")}
+          </div>
+        </header>
+
+        {/* Team Overall Goal */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card className="border-2 border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600" />
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-xl font-bold">Team Overall Production</CardTitle>
+                <TrendingUp className="text-blue-500 w-6 h-6" />
+              </div>
+              <CardDescription>Year-to-Date Goal Progress</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Current YTD</p>
+                  <p className="text-4xl font-black text-slate-900 dark:text-slate-50">{formatCurrency(data.team.ytdProduction)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Annual Goal</p>
+                  <p className="text-4xl font-black text-slate-400">{formatCurrency(data.team.goal)}</p>
+                </div>
+                <div className="flex items-end justify-start md:justify-end">
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Target Achieved</p>
+                    <p className="text-5xl font-black text-blue-600 dark:text-blue-400">{teamPercentage}%</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm font-bold">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
+                </div>
+                <Progress value={teamPercentage} className="h-4 bg-slate-100 dark:bg-slate-800" />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Individual Agent Performance */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card className="border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-purple-500" />
+                <CardTitle>Agent Performance</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <Table>
+                  <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+                    <TableRow>
+                      <TableHead className="font-bold">Agent Name</TableHead>
+                      <TableHead className="text-right font-bold">Annual Goal</TableHead>
+                      <TableHead className="text-right font-bold">Closings</TableHead>
+                      <TableHead className="text-right font-bold">Volume Pending</TableHead>
+                      <TableHead className="text-center font-bold">B/S Ratio</TableHead>
+                      <TableHead className="text-right font-bold">Listings</TableHead>
+                      <TableHead className="text-right font-bold">Progress</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.agents.map((agent) => {
+                      const agentProgress = Math.round((agent.closings / (agent.goal / 500000)) * 100); // Simplified calculation for demo
+                      return (
+                        <TableRow key={agent.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                          <TableCell className="font-semibold text-slate-900 dark:text-slate-100">
+                            <Link href={`/agent/${agent.id}`} className="hover:text-blue-600 transition-colors flex items-center gap-2 group">
+                              {agent.name}
+                              <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </Link>
+                          </TableCell>
+                          <TableCell className="text-right text-slate-500">{formatCurrency(agent.goal)}</TableCell>
+                          <TableCell className="text-right font-bold">{agent.closings}</TableCell>
+                          <TableCell className="text-right text-blue-600 dark:text-blue-400 font-medium">{formatCurrency(agent.volumePending)}</TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex justify-center gap-1">
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
+                                {agent.buyers}B
+                              </Badge>
+                              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800">
+                                {agent.sellers}S
+                              </Badge>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-slate-700 dark:text-slate-300">{agent.listings}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="text-xs font-bold">{agentProgress}%</span>
+                              <div className="w-24 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                <div 
+                                  className="bg-green-500 h-full rounded-full" 
+                                  style={{ width: `${Math.min(agentProgress, 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Bottom Widgets */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Home className="w-4 h-4 text-orange-500" />
+                Active Team Listings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{data.agents.reduce((sum, a) => sum + a.listings, 0)}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-green-500" />
+                Total Pending Volume
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{formatCurrency(data.agents.reduce((sum, a) => sum + a.volumePending, 0))}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <PieChart className="w-4 h-4 text-blue-500" />
+                Total Closings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{data.agents.reduce((sum, a) => sum + a.closings, 0)}</p>
+            </CardContent>
+          </Card>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+      </div>
     </div>
   );
 }

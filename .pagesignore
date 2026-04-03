@@ -1,0 +1,7 @@
+node_modules
+.next/cache
+.next/server
+.next/static/webpack
+.next/static/development
+.git
+.vercel
