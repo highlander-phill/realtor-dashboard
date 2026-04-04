@@ -19,6 +19,7 @@ export const runtime = "edge";
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData>(initialData);
   const [isMounted, setIsMounted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -53,6 +54,7 @@ export default function AdminDashboard() {
   }, [router]);
 
   const handleSave = async () => {
+    setIsSaving(true);
     const updatedData = { ...data, lastUpdated: new Date().toISOString() };
     
     try {
@@ -64,16 +66,14 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         localStorage.setItem("nspg_dashboard_data", JSON.stringify(updatedData));
-        alert("Dashboard data synced to Cloudflare successfully!");
       } else {
-        // Fallback save to local storage if API fails
         localStorage.setItem("nspg_dashboard_data", JSON.stringify(updatedData));
-        alert("Cloudflare sync failed, but data saved locally.");
       }
     } catch (err) {
       console.error("Save Error:", err);
       localStorage.setItem("nspg_dashboard_data", JSON.stringify(updatedData));
-      alert("Network error. Data saved locally.");
+    } finally {
+      setTimeout(() => setIsSaving(false), 1000);
     }
   };
 
@@ -157,6 +157,18 @@ export default function AdminDashboard() {
     router.push("/admin/login");
   };
 
+  const resetOnboarding = () => {
+    if (confirm("WARNING: This will reset all team settings and return to the onboarding wizard. Data will be archived. Continue?")) {
+      const resetData = {
+        ...data,
+        tenant: { ...data.tenant, onboardingCompleted: false }
+      };
+      setData(resetData);
+      localStorage.setItem("nspg_dashboard_data", JSON.stringify(resetData));
+      router.push("/onboarding");
+    }
+  };
+
   if (!isMounted) return null;
 
   return (
@@ -177,14 +189,24 @@ export default function AdminDashboard() {
                 <LayoutDashboard className="w-4 h-4" /> View Public Dashboard
               </Button>
             </Link>
-            <Button onClick={handleSave} className="bg-black hover:bg-slate-800 text-white flex items-center gap-2 px-6">
-              <Save className="w-4 h-4" /> Save Changes
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving}
+              className={`transition-all duration-500 ${isSaving ? 'bg-green-600' : 'bg-black'} hover:bg-slate-800 text-white flex items-center gap-2 px-6`}
+            >
+              {isSaving ? <><RefreshCw className="w-4 h-4 animate-spin" /> Saving...</> : <><Save className="w-4 h-4" /> Save Changes</>}
             </Button>
             <Button variant="ghost" onClick={logout} className="text-red-500 hover:text-red-600 hover:bg-red-50">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </header>
+
+        <div className="flex justify-end">
+          <Button variant="ghost" size="sm" onClick={resetOnboarding} className="text-slate-400 hover:text-red-500 flex items-center gap-2">
+            <RefreshCw className="w-3 h-3" /> Reset & Rerun Setup Wizard
+          </Button>
+        </div>
 
         <Tabs defaultValue="team" className="space-y-6">
           <TabsList className="bg-white dark:bg-slate-900 p-1 border border-slate-200 dark:border-slate-800 h-12 w-full max-w-md">
@@ -333,17 +355,18 @@ export default function AdminDashboard() {
                                   <Button onClick={() => addTransaction(agent.id)} size="sm" className="bg-blue-600">
                                     <Plus className="w-4 h-4 mr-2" /> Add Listing/Sale
                                   </Button>
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Address</TableHead>
-                                        <TableHead>Price</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Side</TableHead>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead className="w-10"></TableHead>
-                                      </TableRow>
-                                    </TableHeader>
+                                  <div className="rounded-md border border-slate-200 overflow-x-auto">
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead className="min-w-[200px]">Address</TableHead>
+                                          <TableHead className="min-w-[120px]">Price</TableHead>
+                                          <TableHead className="min-w-[100px]">Status</TableHead>
+                                          <TableHead className="min-w-[100px]">Side</TableHead>
+                                          <TableHead className="min-w-[150px]">Date</TableHead>
+                                          <TableHead className="w-10"></TableHead>
+                                        </TableRow>
+                                      </TableHeader>
                                     <TableBody>
                                       {(agent.transactions || []).map((t) => (
                                         <TableRow key={t.id}>

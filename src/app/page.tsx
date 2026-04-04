@@ -106,9 +106,16 @@ export default function Dashboard() {
             </h1>
             <p className="text-slate-500 dark:text-slate-400">Team Performance & Sales Dashboard</p>
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-full shadow-sm border border-slate-200 dark:border-slate-800">
-            <Clock className="w-4 h-4" />
-            Last updated: {format(new Date(data.lastUpdated), "MMM d, yyyy h:mm a")}
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-full shadow-sm border border-slate-200 dark:border-slate-800">
+              <Clock className="w-4 h-4" />
+              Last updated: {format(new Date(data.lastUpdated), "MMM d, yyyy h:mm a")}
+            </div>
+            <Link href="/admin/login">
+              <Button variant="ghost" size="sm" className="text-slate-400 hover:text-black">
+                Admin Login
+              </Button>
+            </Link>
           </div>
         </header>
 

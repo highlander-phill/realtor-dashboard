@@ -73,6 +73,73 @@ export default function OnboardingWizard() {
     setStep(4);
   };
 
+  const handleSubmit = async () => {
+    const isDemo = formData.subdomain === 'empire';
+    
+    const updatedData = {
+      tenant: {
+        id: Math.random().toString(36).substr(2, 9),
+        name: formData.companyName,
+        subdomain: formData.subdomain,
+        primaryColor: formData.primaryColor,
+        onboardingCompleted: true,
+      },
+      team: {
+        goal: Number(formData.annualGoal),
+        ytdProduction: isDemo ? 24500000 : 0,
+      },
+      agents: isDemo ? [
+        {
+          id: 'demo-1',
+          name: 'Sarah Jenkins',
+          goal: 15000000,
+          closings: 12,
+          volumePending: 4200000,
+          buyers: 8,
+          sellers: 4,
+          listings: 6,
+          transactions: [
+            { id: 'dt1', agentId: 'demo-1', address: '123 Ocean View Dr', price: 1250000, status: 'Sold', side: 'Seller', date: '2026-02-10' },
+            { id: 'dt2', agentId: 'demo-1', address: '789 Canyon Road', price: 850000, status: 'Pending', side: 'Buyer', date: '2026-03-22' },
+          ]
+        },
+        {
+          id: 'demo-2',
+          name: 'Marcus Thorne',
+          goal: 12000000,
+          closings: 9,
+          volumePending: 2100000,
+          buyers: 3,
+          sellers: 6,
+          listings: 10,
+          transactions: [
+            { id: 'dt3', agentId: 'demo-2', address: '456 Skyline Blvd', price: 2100000, status: 'Active', side: 'Seller', date: '2026-04-01' },
+          ]
+        }
+      ] : [],
+      lastUpdated: new Date().toISOString(),
+    };
+
+    localStorage.setItem("nspg_dashboard_data", JSON.stringify(updatedData));
+    
+    try {
+      await fetch('/api/dashboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData),
+      });
+    } catch (err) {
+      console.error("Cloud save failed during onboarding", err);
+    }
+
+    alert("Success! Your professional dashboard is ready.");
+    router.push("/");
+  };
+
+  const handleCancel = () => {
+    router.push("/");
+  };
+
   const handleClearAll = () => {
     if (confirm("Are you sure? This will remove all local configuration and reset the wizard.")) {
       localStorage.clear();
@@ -80,12 +147,7 @@ export default function OnboardingWizard() {
     }
   };
 
-  const steps = [
-    { title: "Identity", icon: Building, description: "Set your group name and URL" },
-    { title: "Security", icon: Shield, description: "Secure your admin portal" },
-    { title: "Branding", icon: Palette, description: "Customize the look" },
-    { title: "Launch", icon: Rocket, description: "Set your initial goals" },
-  ];
+// ... existing code ...
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -95,6 +157,9 @@ export default function OnboardingWizard() {
         <div className="flex justify-end gap-2 px-4">
           <Button variant="outline" size="sm" onClick={handleDemoData} className="text-xs bg-white">
             Create Demo Information
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleCancel} className="text-xs text-slate-400">
+            Cancel
           </Button>
           <Button variant="ghost" size="sm" onClick={handleClearAll} className="text-xs text-red-400 hover:text-red-500">
             Remove All Old Information
