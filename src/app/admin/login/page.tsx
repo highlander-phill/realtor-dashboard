@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Lock } from "lucide-react";
 
+export const runtime = "edge";
+
 export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

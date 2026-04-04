@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Save, Plus, Trash2, LogOut, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 
+export const runtime = "edge";
+
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData>(initialData);
   const [isMounted, setIsMounted] = useState(false);

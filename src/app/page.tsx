@@ -11,6 +11,8 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
+export const runtime = "edge";
+
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData>(initialData);
 

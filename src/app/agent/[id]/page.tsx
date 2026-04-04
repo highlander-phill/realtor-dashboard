@@ -12,6 +12,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
+export const runtime = "edge";
+
 export default function AgentDashboard() {
   const params = useParams();
   const [agent, setAgent] = useState<AgentData | null>(null);
