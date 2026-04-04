@@ -20,12 +20,15 @@ import {
   Lock,
   ArrowRight,
   Info,
-  HelpCircle
+  HelpCircle,
+  Tv,
+  RefreshCcw
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { 
   Table, 
   TableBody, 

@@ -534,7 +534,7 @@ function AgentDetailContent() {
                    )})}
                    {(!agent.transactions || agent.transactions.length === 0) && (
                       <TableRow>
-                         <TableCell colSpan={5} className="h-40 text-center text-slate-400 font-bold uppercase text-[10px] tracking-widest italic">No transaction history recorded for {selectedYear}.</TableCell>
+                         <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-bold uppercase text-[10px] tracking-widest italic">No transaction history recorded for {selectedYear}.</TableCell>
                       </TableRow>
                    )}
                 </TableBody>
