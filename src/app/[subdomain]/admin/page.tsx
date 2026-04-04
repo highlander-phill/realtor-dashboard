@@ -11,7 +11,13 @@ import {
   Plus, 
   Trash2, 
   Settings, 
-  RefreshCcw 
+  RefreshCcw,
+  Lock,
+  Image as ImageIcon,
+  UserMinus,
+  UserCheck,
+  LayoutGrid,
+  Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -32,6 +38,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 interface Transaction {
@@ -46,6 +53,7 @@ interface Transaction {
 
 interface AgentData {
   id: string;
+  subTeamId?: string;
   name: string;
   goal: number;
   volumeClosed: number;
@@ -56,7 +64,15 @@ interface AgentData {
   sellers?: number;
   closings?: number;
   mlsLink?: string;
+  status: string;
+  countInTotal: boolean;
   transactions: Transaction[];
+}
+
+interface SubTeam {
+  id: string;
+  name: string;
+  goal: number;
 }
 
 interface DashboardData {
@@ -73,6 +89,7 @@ interface DashboardData {
     goal: number;
     ytdProduction: number;
   };
+  subTeams: SubTeam[];
   agents: AgentData[];
   lastUpdated: string;
 }
@@ -89,6 +106,7 @@ const initialData: DashboardData = {
     goal: 1,
     ytdProduction: 0,
   },
+  subTeams: [],
   agents: [],
   lastUpdated: new Date().toISOString(),
 };
@@ -99,10 +117,11 @@ export default function AdminPanel() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData>(initialData);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"agents" | "settings">("agents");
+  const [activeTab, setActiveTab] = useState<"agents" | "subteams" | "settings">("agents");
+  
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
-    // Check local auth
     const auth = localStorage.getItem(`tg_auth_${subdomain}`);
     if (!auth) {
       router.push(`/${subdomain}/admin/login`);
@@ -139,6 +158,32 @@ export default function AdminPanel() {
     }
   };
 
+  const updateSettings = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/dashboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'update_settings',
+          tenant: { subdomain },
+          name: data.tenant.name,
+          primaryColor: data.tenant.primaryColor,
+          logoUrl: data.tenant.logoUrl,
+          adminPassword: newPassword || undefined
+        }),
+      });
+      if (response.ok) {
+        alert("Settings updated successfully!");
+        setNewPassword("");
+      }
+    } catch (err) {
+      alert("Failed to update settings.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const addAgent = () => {
     const newAgent: AgentData = {
       id: Math.random().toString(36).substr(2, 9),
@@ -150,15 +195,20 @@ export default function AdminPanel() {
       listingsVolume: 0,
       buyers: 0,
       sellers: 0,
+      status: 'active',
+      countInTotal: true,
       transactions: []
     };
     setData({ ...data, agents: [...data.agents, newAgent] });
   };
 
-  const removeAgent = (id: string) => {
-    if (confirm("Are you sure you want to remove this agent?")) {
-      setData({ ...data, agents: data.agents.filter(a => a.id !== id) });
-    }
+  const addSubTeam = () => {
+    const newST: SubTeam = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: "New Team",
+      goal: 25000000
+    };
+    setData({ ...data, subTeams: [...(data.subTeams || []), newST] });
   };
 
   const updateAgent = (id: string, field: keyof AgentData, value: any) => {
@@ -173,14 +223,8 @@ export default function AdminPanel() {
     router.push(`/${subdomain}`);
   };
 
-  const resetOnboarding = () => {
-    if (confirm("This will clear all team data and reset the dashboard. Are you sure?")) {
-      router.push(`/${subdomain}/onboarding`);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 text-slate-900 dark:text-slate-100">
       <div className="max-w-7xl mx-auto space-y-8">
         
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -191,40 +235,40 @@ export default function AdminPanel() {
                </Button>
              </Link>
              <div>
-                <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Admin Management</h1>
-                <p className="text-slate-500 text-sm font-medium">{data.tenant.name} • {subdomain}</p>
+                <h1 className="text-2xl font-black uppercase tracking-tight">Admin Management</h1>
+                <p className="text-slate-500 text-sm font-medium">{data.tenant.name} • Dashboard Controls</p>
              </div>
           </div>
           <div className="flex gap-3 w-full md:w-auto">
             <Button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl gap-2">
               {isSaving ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save Changes
+              Publish Updates
             </Button>
             <Button onClick={handleLogout} variant="outline" className="rounded-xl font-bold gap-2">
-              <LogOut className="w-4 h-4" /> Logout
+              <LogOut className="w-4 h-4" /> Exit
             </Button>
           </div>
         </header>
 
-        <div className="flex gap-4">
-           <Button 
-            variant={activeTab === "agents" ? "default" : "ghost"} 
-            onClick={() => setActiveTab("agents")}
-            className="rounded-full font-bold uppercase text-[10px] tracking-widest px-6"
-           >
-             Agent Management
-           </Button>
-           <Button 
-            variant={activeTab === "settings" ? "default" : "ghost"} 
-            onClick={() => setActiveTab("settings")}
-            className="rounded-full font-bold uppercase text-[10px] tracking-widest px-6"
-           >
-             Team Settings
-           </Button>
+        <div className="flex gap-2 overflow-x-auto pb-2">
+           {[
+             { id: 'agents', label: 'Roster', icon: Users },
+             { id: 'subteams', label: 'Sub-Teams', icon: LayoutGrid },
+             { id: 'settings', label: 'Branding & Security', icon: Settings }
+           ].map((tab) => (
+             <Button 
+              key={tab.id}
+              variant={activeTab === tab.id ? "default" : "ghost"} 
+              onClick={() => setActiveTab(tab.id as any)}
+              className="rounded-full font-black uppercase text-[10px] tracking-widest px-6 gap-2"
+             >
+               <tab.icon className="w-3 h-3" /> {tab.label}
+             </Button>
+           ))}
         </div>
 
         <AnimatePresence mode="wait">
-          {activeTab === "agents" ? (
+          {activeTab === "agents" && (
             <motion.div
               key="agents"
               initial={{ opacity: 0, y: 10 }}
@@ -235,23 +279,22 @@ export default function AdminPanel() {
               <Card className="border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden rounded-3xl">
                 <CardHeader className="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between py-6 px-8">
                   <div>
-                    <CardTitle className="text-lg font-bold">Roster & Production</CardTitle>
-                    <CardDescription>Manage your team members and their individual targets.</CardDescription>
+                    <CardTitle className="text-lg font-bold uppercase">Active Roster</CardTitle>
+                    <CardDescription>Manage individual agent goals and team assignments.</CardDescription>
                   </div>
                   <Button onClick={addAgent} variant="outline" className="bg-white border-slate-200 font-bold gap-2 rounded-xl">
-                    <Plus className="w-4 h-4" /> Add Agent
+                    <Plus className="w-4 h-4" /> New Agent
                   </Button>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader className="bg-slate-50/50">
                       <TableRow className="border-slate-100 dark:border-slate-800">
-                        <TableHead className="px-8 py-4 font-bold text-[10px] uppercase tracking-widest">Name</TableHead>
-                        <TableHead className="font-bold text-[10px] uppercase tracking-widest">Goal ($)</TableHead>
-                        <TableHead className="font-bold text-[10px] uppercase tracking-widest">Closed ($)</TableHead>
-                        <TableHead className="font-bold text-[10px] uppercase tracking-widest">Pending ($)</TableHead>
-                        <TableHead className="font-bold text-[10px] uppercase tracking-widest">Inventory ($)</TableHead>
-                        <TableHead className="text-right px-8 font-bold text-[10px] uppercase tracking-widest">Actions</TableHead>
+                        <TableHead className="px-8 py-4 font-black text-[10px] uppercase tracking-widest">Agent Name</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Sub-Team</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Goal ($)</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Status</TableHead>
+                        <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -265,6 +308,16 @@ export default function AdminPanel() {
                             />
                           </TableCell>
                           <TableCell>
+                             <select 
+                              value={agent.subTeamId || ""} 
+                              onChange={(e) => updateAgent(agent.id, "subTeamId", e.target.value || undefined)}
+                              className="bg-transparent border border-slate-200 rounded px-2 h-10 font-bold text-xs"
+                             >
+                               <option value="">No Team</option>
+                               {data.subTeams.map(st => <option key={st.id} value={st.id}>{st.name}</option>)}
+                             </select>
+                          </TableCell>
+                          <TableCell>
                             <Input 
                               type="number"
                               value={agent.goal} 
@@ -273,54 +326,108 @@ export default function AdminPanel() {
                             />
                           </TableCell>
                           <TableCell>
-                            <Input 
-                              type="number"
-                              value={agent.volumeClosed} 
-                              onChange={(e) => updateAgent(agent.id, "volumeClosed", Number(e.target.value))}
-                              className="bg-transparent border-slate-200 focus:bg-white h-10 font-mono text-xs font-bold text-green-600"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input 
-                              type="number"
-                              value={agent.volumePending} 
-                              onChange={(e) => updateAgent(agent.id, "volumePending", Number(e.target.value))}
-                              className="bg-transparent border-slate-200 focus:bg-white h-10 font-mono text-xs font-bold text-blue-600"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input 
-                              type="number"
-                              value={agent.listingsVolume} 
-                              onChange={(e) => updateAgent(agent.id, "listingsVolume", Number(e.target.value))}
-                              className="bg-transparent border-slate-200 focus:bg-white h-10 font-mono text-xs font-bold text-orange-600"
-                            />
+                             <div className="flex items-center gap-2">
+                                <Badge variant={agent.status === 'active' ? 'default' : 'outline'} className="uppercase text-[9px]">
+                                   {agent.status}
+                                </Badge>
+                                <label className="flex items-center gap-1 text-[9px] font-bold text-slate-400">
+                                   <input 
+                                    type="checkbox" 
+                                    checked={agent.countInTotal} 
+                                    onChange={(e) => updateAgent(agent.id, "countInTotal", e.target.checked)} 
+                                   /> Count Progress
+                                </label>
+                             </div>
                           </TableCell>
                           <TableCell className="text-right px-8">
                             <div className="flex justify-end gap-2">
+                               <Button 
+                                onClick={() => updateAgent(agent.id, "status", agent.status === 'active' ? 'expired' : 'active')}
+                                variant="ghost" size="icon" className="text-slate-400"
+                               >
+                                 {agent.status === 'active' ? <UserMinus className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                               </Button>
                                <Link href={`/${subdomain}/agent/${agent.id}`}>
                                  <Button variant="ghost" size="icon" className="text-slate-400 hover:text-blue-600">
                                    <Settings className="w-4 h-4" />
                                  </Button>
                                </Link>
-                               <Button onClick={() => removeAgent(agent.id)} variant="ghost" size="icon" className="text-slate-400 hover:text-red-600">
+                               <Button onClick={() => {
+                                 if(confirm("Remove agent entirely?")) setData({ ...data, agents: data.agents.filter(a => a.id !== agent.id) });
+                               }} variant="ghost" size="icon" className="text-slate-400 hover:text-red-600">
                                  <Trash2 className="w-4 h-4" />
                                </Button>
                             </div>
                           </TableCell>
                         </TableRow>
                       ))}
-                      {data.agents.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={6} className="h-40 text-center text-slate-400 font-medium italic">No agents added yet. Click 'Add Agent' to begin.</TableCell>
-                        </TableRow>
-                      )}
                     </TableBody>
                   </Table>
                 </CardContent>
               </Card>
             </motion.div>
-          ) : (
+          )}
+
+          {activeTab === "subteams" && (
+            <motion.div
+              key="subteams"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-6"
+            >
+              <Card className="border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden rounded-3xl">
+                <CardHeader className="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between py-6 px-8">
+                  <div>
+                    <CardTitle className="text-lg font-bold uppercase italic">Sub-Teams</CardTitle>
+                    <CardDescription>Divide your roster into groups with their own production goals.</CardDescription>
+                  </div>
+                  <Button onClick={addSubTeam} variant="outline" className="bg-white border-slate-200 font-bold gap-2 rounded-xl">
+                    <Plus className="w-4 h-4" /> Add Sub-Team
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader className="bg-slate-50/50">
+                      <TableRow className="border-slate-100 dark:border-slate-800">
+                        <TableHead className="px-8 py-4 font-black text-[10px] uppercase tracking-widest">Team Name</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Annual Goal ($)</TableHead>
+                        <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.subTeams?.map((st) => (
+                        <TableRow key={st.id} className="border-slate-100 dark:border-slate-800">
+                          <TableCell className="px-8 py-4">
+                            <Input 
+                              value={st.name} 
+                              onChange={(e) => setData({...data, subTeams: data.subTeams.map(s => s.id === st.id ? {...s, name: e.target.value} : s)})}
+                              className="bg-transparent border-slate-200 h-10 font-bold"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input 
+                              type="number"
+                              value={st.goal} 
+                              onChange={(e) => setData({...data, subTeams: data.subTeams.map(s => s.id === st.id ? {...s, goal: Number(e.target.value)} : s)})}
+                              className="bg-transparent border-slate-200 h-10 font-mono text-xs font-bold"
+                            />
+                          </TableCell>
+                          <TableCell className="text-right px-8">
+                             <Button onClick={() => setData({...data, subTeams: data.subTeams.filter(s => s.id !== st.id)})} variant="ghost" size="icon" className="text-slate-400 hover:text-red-600">
+                               <Trash2 className="w-4 h-4" />
+                             </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {activeTab === "settings" && (
             <motion.div
               key="settings"
               initial={{ opacity: 0, y: 10 }}
@@ -328,60 +435,71 @@ export default function AdminPanel() {
               exit={{ opacity: 0, y: -10 }}
               className="grid grid-cols-1 md:grid-cols-2 gap-8"
             >
-              <Card className="border-slate-200 dark:border-slate-800 shadow-xl rounded-3xl overflow-hidden">
-                <CardHeader>
-                  <CardTitle>Team Configuration</CardTitle>
-                  <CardDescription>Global settings for your dashboard.</CardDescription>
+              <Card className="border-slate-200 dark:border-slate-800 shadow-xl rounded-3xl overflow-hidden bg-white dark:bg-slate-900">
+                <CardHeader className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                     <ImageIcon className="w-4 h-4" /> Visual Identity
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-8 space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Company Name</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Company Display Name</Label>
                     <Input 
                       value={data.tenant.name}
                       onChange={(e) => setData({...data, tenant: {...data.tenant, name: e.target.value}})}
-                      className="h-12 font-bold"
+                      className="h-12 font-bold text-lg"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Team Annual Goal ($)</Label>
-                    <Input 
-                      type="number"
-                      value={data.team.goal}
-                      onChange={(e) => setData({...data, team: {...data.team, goal: Number(e.target.value)}})}
-                      className="h-12 font-bold text-blue-600"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Primary Brand Color</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Brand Color</Label>
                     <div className="flex gap-4">
                       <Input 
                         type="color"
                         value={data.tenant.primaryColor}
                         onChange={(e) => setData({...data, tenant: {...data.tenant, primaryColor: e.target.value}})}
-                        className="w-12 h-12 p-1 rounded-lg border-none outline-none"
+                        className="w-12 h-12 p-1 rounded-lg border-none"
                       />
                       <Input 
                         value={data.tenant.primaryColor}
                         onChange={(e) => setData({...data, tenant: {...data.tenant, primaryColor: e.target.value}})}
-                        className="flex-1 font-mono uppercase"
+                        className="flex-1 font-mono uppercase font-bold"
                       />
                     </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Logo URL</Label>
+                    <Input 
+                      value={data.tenant.logoUrl || ""}
+                      onChange={(e) => setData({...data, tenant: {...data.tenant, logoUrl: e.target.value}})}
+                      placeholder="https://example.com/logo.png"
+                      className="h-12 font-medium"
+                    />
+                    <p className="text-[10px] text-slate-500">Provide a direct link to your PNG/SVG logo.</p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-red-100 dark:border-red-900 shadow-xl rounded-3xl overflow-hidden">
-                <CardHeader className="bg-red-50 dark:bg-red-950/20">
-                  <CardTitle className="text-red-600 font-bold uppercase tracking-widest text-xs">Danger Zone</CardTitle>
-                  <CardDescription>Destructive actions that cannot be undone.</CardDescription>
+              <Card className="border-slate-200 dark:border-slate-800 shadow-xl rounded-3xl overflow-hidden bg-white dark:bg-slate-900">
+                <CardHeader className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                     <Lock className="w-4 h-4" /> Security
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="p-8 space-y-6">
-                   <div className="space-y-4">
-                      <p className="text-sm font-medium text-slate-500 italic">Need to start over? This will wipe your current configuration and take you back to the setup wizard.</p>
-                      <Button onClick={resetOnboarding} variant="destructive" className="w-full h-12 font-black uppercase tracking-[0.2em] text-[10px] rounded-xl shadow-lg shadow-red-900/20">
-                        Reset & Rerun Onboarding
-                      </Button>
+                   <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Change Admin Password</Label>
+                      <Input 
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new management password"
+                        className="h-12"
+                      />
+                      <p className="text-[10px] text-slate-500 italic">Leave blank to keep your current password.</p>
                    </div>
+                   <Button onClick={updateSettings} disabled={isSaving} className="w-full h-12 bg-slate-900 dark:bg-white dark:text-slate-900 font-black uppercase tracking-widest text-xs rounded-xl">
+                      Save Branding & Security
+                   </Button>
                 </CardContent>
               </Card>
             </motion.div>
