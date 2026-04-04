@@ -10,4 +10,4 @@ database_id = "138c69f7-f596-41f4-9e3c-6a517c7dbbf3"
 
 [[kv_namespaces]]
 binding = "SETTINGS"
-id = "YOUR_KV_NAMESPACE_ID" # TODO: Replace with actual KV ID from Cloudflare dashboard
+id = "e8ea5a64822e4548b87b8c2938b62695"
