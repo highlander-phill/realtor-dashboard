@@ -33,11 +33,16 @@ export default function AdminDashboard() {
         const response = await fetch('/api/dashboard');
         if (response.ok) {
           const cloudData = await response.json();
-          setData(cloudData);
+          if (cloudData.tenant) {
+            setData(cloudData);
+          }
         } else {
           const savedData = localStorage.getItem("nspg_dashboard_data");
           if (savedData) {
-            setData(JSON.parse(savedData));
+            const parsed = JSON.parse(savedData);
+            if (parsed.tenant) {
+              setData(parsed);
+            }
           }
         }
       } catch (err) {

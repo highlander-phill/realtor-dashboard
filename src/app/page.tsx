@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { initialData, DashboardData } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -15,6 +16,7 @@ export const runtime = "edge";
 
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData>(initialData);
+  const router = useRouter();
 
   useEffect(() => {
     // Version checking for TV auto-refresh
@@ -49,25 +51,35 @@ export default function Dashboard() {
         const response = await fetch('/api/dashboard');
         if (response.ok) {
           const cloudData = await response.json();
+          // Reset local storage if structure is old
+          if (!cloudData.tenant) {
+             console.warn("Old data format detected from API, skipping update");
+             router.push("/onboarding");
+             return;
+          }
           setData(cloudData);
           localStorage.setItem("nspg_dashboard_data", JSON.stringify(cloudData));
         } else {
-          // Fallback to local storage if API fails (e.g. offline or during local dev without D1)
+          // If API fails and no local data, go to onboarding
           const savedData = localStorage.getItem("nspg_dashboard_data");
-          if (savedData) {
-            setData(JSON.parse(savedData));
+          if (!savedData) {
+            router.push("/onboarding");
+          } else {
+            const parsed = JSON.parse(savedData);
+            if (parsed.tenant) {
+              setData(parsed);
+            } else {
+              router.push("/onboarding");
+            }
           }
         }
       } catch (err) {
         console.error("API Error:", err);
-        const savedData = localStorage.getItem("nspg_dashboard_data");
-        if (savedData) {
-          setData(JSON.parse(savedData));
-        }
+        router.push("/onboarding");
       }
     }
     fetchData();
-  }, []);
+  }, [router]);
 
   const teamPercentage = Math.round((data.team.ytdProduction / data.team.goal) * 100);
 

@@ -34,6 +34,24 @@ export default function OnboardingWizard() {
     router.push("/admin/login");
   };
 
+  const handleDemoData = () => {
+    setFormData({
+      companyName: "Empire Realty Group",
+      subdomain: "empire",
+      adminPassword: "demo",
+      primaryColor: "#0f172a",
+      annualGoal: "75000000",
+    });
+    setStep(4);
+  };
+
+  const handleClearAll = () => {
+    if (confirm("Are you sure? This will remove all local configuration and reset the wizard.")) {
+      localStorage.clear();
+      window.location.reload();
+    }
+  };
+
   const steps = [
     { title: "Identity", icon: Building, description: "Set your group name and URL" },
     { title: "Security", icon: Shield, description: "Secure your admin portal" },
@@ -45,6 +63,16 @@ export default function OnboardingWizard() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full space-y-8">
         
+        {/* Helper Actions */}
+        <div className="flex justify-end gap-2 px-4">
+          <Button variant="outline" size="sm" onClick={handleDemoData} className="text-xs bg-white">
+            Create Demo Information
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleClearAll} className="text-xs text-red-400 hover:text-red-500">
+            Remove All Old Information
+          </Button>
+        </div>
+
         {/* Progress Stepper */}
         <div className="flex justify-between items-center px-4">
           {steps.map((s, i) => (
