@@ -29,9 +29,37 @@ export default function OnboardingWizard() {
   const prevStep = () => setStep(s => s - 1);
 
   const handleSubmit = async () => {
-    // In a real SaaS, this would call a /api/setup endpoint
-    alert("Creating your professional dashboard instance...");
-    router.push("/admin/login");
+    const updatedData = {
+      tenant: {
+        id: Math.random().toString(36).substr(2, 9),
+        name: formData.companyName,
+        subdomain: formData.subdomain,
+        primaryColor: formData.primaryColor,
+        onboardingCompleted: true,
+      },
+      team: {
+        goal: Number(formData.annualGoal),
+        ytdProduction: 0,
+      },
+      agents: [],
+      lastUpdated: new Date().toISOString(),
+    };
+
+    localStorage.setItem("nspg_dashboard_data", JSON.stringify(updatedData));
+    
+    // In a real SaaS, this would call a /api/setup endpoint to save to D1
+    try {
+      await fetch('/api/dashboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData),
+      });
+    } catch (err) {
+      console.error("Cloud save failed during onboarding", err);
+    }
+
+    alert("Success! Your professional dashboard is ready.");
+    router.push("/");
   };
 
   const handleDemoData = () => {

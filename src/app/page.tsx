@@ -51,9 +51,9 @@ export default function Dashboard() {
         const response = await fetch('/api/dashboard');
         if (response.ok) {
           const cloudData = await response.json();
-          // Reset local storage if structure is old
-          if (!cloudData.tenant) {
-             console.warn("Old data format detected from API, skipping update");
+          // Reset local storage if structure is old or onboarding not complete
+          if (!cloudData.tenant || !cloudData.tenant.onboardingCompleted) {
+             console.warn("Onboarding not completed or old format, redirecting");
              router.push("/onboarding");
              return;
           }
@@ -66,7 +66,7 @@ export default function Dashboard() {
             router.push("/onboarding");
           } else {
             const parsed = JSON.parse(savedData);
-            if (parsed.tenant) {
+            if (parsed.tenant && parsed.tenant.onboardingCompleted) {
               setData(parsed);
             } else {
               router.push("/onboarding");
