@@ -17,6 +17,33 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData>(initialData);
 
   useEffect(() => {
+    // Version checking for TV auto-refresh
+    let currentVersion: string | null = null;
+    
+    async function checkVersion() {
+      try {
+        const res = await fetch('/api/version');
+        if (res.ok) {
+          const { version } = await res.json();
+          if (!currentVersion) {
+            currentVersion = version;
+          } else if (currentVersion !== version) {
+            console.log("New version detected, reloading...");
+            window.location.reload();
+          }
+        }
+      } catch (err) {
+        console.error("Version check failed", err);
+      }
+    }
+
+    const interval = setInterval(checkVersion, 60000); // Check every minute
+    checkVersion();
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     async function fetchData() {
       try {
         const response = await fetch('/api/dashboard');

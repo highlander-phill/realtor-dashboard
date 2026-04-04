@@ -175,45 +175,49 @@ export default function AgentDashboard() {
             </CardContent>
           </Card>
 
-          {/* Action Center */}
-          <div className="space-y-6">
-            <Card className="border-none shadow-xl bg-slate-900 text-white p-6 overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-8 opacity-10">
-                <Briefcase className="w-24 h-24" />
+          {/* Listings & Sales Inventory */}
+          <Card className="border-none shadow-2xl bg-white dark:bg-slate-900 p-6">
+            <CardHeader className="px-0 pt-0">
+              <CardTitle className="text-xl font-bold flex items-center gap-2 uppercase tracking-tight">
+                <HomeIcon className="w-5 h-5 text-blue-500" /> Current Inventory & Sales
+              </CardTitle>
+              <CardDescription>Active and recently sold properties</CardDescription>
+            </CardHeader>
+            <CardContent className="px-0">
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                {agent.transactions && agent.transactions.length > 0 ? (
+                  agent.transactions.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <div>
+                        <p className="font-bold text-slate-900 dark:text-slate-100">{t.address}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-[10px] uppercase font-black px-1.5 py-0">
+                            {t.side} Side
+                          </Badge>
+                          <span className="text-xs text-slate-500">{t.date}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-black text-slate-900 dark:text-slate-100">{formatCurrency(t.price)}</p>
+                        <Badge className={`mt-1 ${
+                          t.status === 'Sold' ? 'bg-green-500' : 
+                          t.status === 'Pending' ? 'bg-orange-500' : 'bg-blue-500'
+                        }`}>
+                          {t.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-slate-400">
+                    <p>No transactions listed yet.</p>
+                  </div>
+                )}
               </div>
-              <CardHeader className="px-0 pt-0 relative z-10">
-                <CardTitle className="text-xl font-black uppercase tracking-widest">Business Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="px-0 relative z-10 grid grid-cols-2 gap-6">
-                <div className="bg-slate-800/50 p-4 rounded-xl">
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Buyers Representative</p>
-                  <p className="text-3xl font-black mt-1">{agent.buyers}</p>
-                </div>
-                <div className="bg-slate-800/50 p-4 rounded-xl">
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Sellers Representative</p>
-                  <p className="text-3xl font-black mt-1">{agent.sellers}</p>
-                </div>
-                <div className="bg-slate-800/50 p-4 rounded-xl">
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Active Listings</p>
-                  <p className="text-3xl font-black mt-1">{agent.listings}</p>
-                </div>
-                <div className="bg-slate-800/50 p-4 rounded-xl">
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Total Closings</p>
-                  <p className="text-3xl font-black mt-1">{agent.closings}</p>
-                </div>
-              </CardContent>
-            </Card>
+            </CardContent>
+          </Card>
 
-            <div className="bg-gradient-to-br from-orange-400 to-pink-600 p-[2px] rounded-2xl shadow-xl">
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl">
-                <h3 className="font-black uppercase tracking-widest text-sm mb-4">Performance Advice</h3>
-                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                  You are currently performing at <strong>{progressPercentage}%</strong> of your annual goal. 
-                  Increasing your seller listings by just 2 more properties this month could put you on track for the &quot;Platinum Circle&quot; award.
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Action Center - Moved down or replaced */}
         </div>
 
       </div>
