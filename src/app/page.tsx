@@ -226,6 +226,14 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Footer */}
+        <footer className="pt-8 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-slate-400 text-xs">
+          <p>© 2026 Nik Shehu Property Group. All rights reserved.</p>
+          <Link href="/admin/login" className="hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+            Admin Access
+          </Link>
+        </footer>
+
       </div>
     </div>
   );
