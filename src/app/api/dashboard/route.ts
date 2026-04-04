@@ -14,7 +14,7 @@ interface D1Env {
   };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     let env: D1Env;
     try {
@@ -24,11 +24,25 @@ export async function GET() {
     }
     const db = env.DB;
 
-    // TODO: Get subdomain from headers (set by middleware)
-    const subdomain = "nspg"; 
+    const host = req.headers.get('host') || '';
+    let subdomain = 'nspg';
+    if (host.includes('.')) {
+      subdomain = host.split('.')[0];
+    }
+    if (subdomain === 'www' || subdomain === 'realtor-dashboard') {
+      subdomain = 'nspg';
+    }
 
     const tenant = await db.prepare("SELECT * FROM tenants WHERE subdomain = ?").bind(subdomain).first();
-    if (!tenant) return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
+    if (!tenant) {
+      // Return a "not found" state that triggers onboarding
+      return NextResponse.json({ 
+        tenant: { name: "New Team", onboardingCompleted: false, subdomain },
+        team: { goal: 50000000, ytdProduction: 0 },
+        agents: [],
+        lastUpdated: new Date().toISOString()
+      });
+    }
 
     const teamData = await db.prepare("SELECT * FROM team_data WHERE tenant_id = ? AND year = 2026").bind(tenant.id).first();
     const agents = await db.prepare("SELECT * FROM agents WHERE tenant_id = ?").bind(tenant.id).all();
@@ -41,21 +55,24 @@ export async function GET() {
         subdomain: tenant.subdomain,
         logoUrl: tenant.logo_url,
         primaryColor: tenant.primary_color,
+        onboardingCompleted: !!tenant.onboarding_completed,
       },
       team: {
-        goal: teamData.goal,
-        ytdProduction: teamData.ytd_production,
+        goal: teamData?.goal || 50000000,
+        ytdProduction: teamData?.ytd_production || 0,
       },
       agents: agents.results.map((a) => ({
         ...a,
-        volumePending: a.volume_pending,
+        volumeClosed: a.volume_closed || 0,
+        volumePending: a.volume_pending || 0,
+        listingsVolume: a.listings_volume || 0,
         mlsLink: a.mls_link,
         transactions: transactions.results.filter(t => t.agent_id === a.id).map(t => ({
           ...t,
           agentId: t.agent_id,
         })),
       })),
-      lastUpdated: teamData.last_updated,
+      lastUpdated: teamData?.last_updated || new Date().toISOString(),
     });
   } catch (error) {
     console.error(error);
@@ -71,16 +88,24 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { tenant, team, agents } = body as { tenant: any; team: any; agents: any[] };
 
+    // 1. Upsert Tenant
     await db.prepare(
-      "UPDATE team_data SET goal = ?, ytd_production = ?, last_updated = ? WHERE tenant_id = ? AND year = 2026"
-    ).bind(team.goal, team.ytdProduction, new Date().toISOString(), tenant.id).run();
+      "INSERT INTO tenants (id, name, subdomain, primary_color, onboarding_completed) VALUES (?, ?, ?, ?, ?) " +
+      "ON CONFLICT(id) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, onboarding_completed=excluded.onboarding_completed"
+    ).bind(tenant.id, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.onboardingCompleted ? 1 : 0).run();
+
+    // 2. Upsert Team Data
+    await db.prepare(
+      "INSERT INTO team_data (tenant_id, year, goal, ytd_production, last_updated) VALUES (?, 2026, ?, ?, ?) " +
+      "ON CONFLICT(tenant_id, year) DO UPDATE SET goal=excluded.goal, ytd_production=excluded.ytd_production, last_updated=excluded.last_updated"
+    ).bind(tenant.id, team.goal, team.ytdProduction, new Date().toISOString()).run();
 
     const statements = [
       db.prepare("DELETE FROM agents WHERE tenant_id = ?").bind(tenant.id),
       db.prepare("DELETE FROM transactions WHERE tenant_id = ?").bind(tenant.id),
       ...agents.map((a) => 
-        db.prepare("INSERT INTO agents (id, tenant_id, name, goal, closings, volume_pending, buyers, sellers, listings, mls_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-          .bind(a.id, tenant.id, a.name, a.goal, a.closings, a.volumePending, a.buyers, a.sellers, a.listings, a.mlsLink || null)
+        db.prepare("INSERT INTO agents (id, tenant_id, name, goal, closings, volume_pending, volume_closed, listings_volume, buyers, sellers, listings, mls_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+          .bind(a.id, tenant.id, a.name, a.goal, a.closings || 0, a.volumePending || 0, a.volumeClosed || 0, a.listingsVolume || 0, a.buyers || 0, a.sellers || 0, a.listings || 0, a.mlsLink || null)
       ),
       ...agents.flatMap((a) => 
         (a.transactions || []).map((t: any) => 

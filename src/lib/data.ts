@@ -12,11 +12,11 @@ export interface AgentData {
   id: string;
   name: string;
   goal: number;
-  closings: number;
+  volumeClosed: number;
   volumePending: number;
+  listingsVolume: number;
   buyers: number;
   sellers: number;
-  listings: number;
   mlsLink?: string;
   transactions?: Transaction[];
 }
@@ -44,15 +44,15 @@ export interface DashboardData {
 
 export const initialData: DashboardData = {
   tenant: {
-    id: 'nspg-group',
-    name: 'Nik Shehu Property Group',
-    subdomain: 'nspg',
-    primaryColor: '#000000',
-    onboardingCompleted: false, // Set to false to trigger onboarding flow for new users
+    id: 'new-team',
+    name: 'Your Real Estate Team',
+    subdomain: 'demo',
+    primaryColor: '#2563eb',
+    onboardingCompleted: false,
   },
   team: {
     goal: 50000000, 
-    ytdProduction: 18500000,
+    ytdProduction: 0,
   },
   agents: [],
   lastUpdated: new Date().toISOString(),

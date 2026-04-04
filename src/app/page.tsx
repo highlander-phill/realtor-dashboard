@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { initialData, DashboardData } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Users, TrendingUp, Home, DollarSign, PieChart, Clock, ExternalLink } from "lucide-react";
@@ -112,7 +113,7 @@ export default function Dashboard() {
               Last updated: {format(new Date(data.lastUpdated), "MMM d, yyyy h:mm a")}
             </div>
             <Link href="/admin/login">
-              <Button variant="ghost" size="sm" className="text-slate-400 hover:text-black">
+              <Button variant="outline" size="sm" className="bg-white hover:bg-slate-100 text-slate-700 font-bold border-slate-200">
                 Admin Login
               </Button>
             </Link>
@@ -184,16 +185,16 @@ export default function Dashboard() {
                     <TableRow>
                       <TableHead className="font-bold cursor-help" title="The full name of the agent">Agent Name</TableHead>
                       <TableHead className="text-right font-bold cursor-help" title="The annual production goal set for this agent">Annual Goal</TableHead>
-                      <TableHead className="text-right font-bold cursor-help" title="Total number of successfully closed transactions YTD">Closings</TableHead>
+                      <TableHead className="text-right font-bold cursor-help" title="Total dollar volume of successfully closed transactions YTD">Volume Closed</TableHead>
                       <TableHead className="text-right font-bold cursor-help" title="Total dollar volume currently in the pending phase">Volume Pending</TableHead>
+                      <TableHead className="text-right font-bold cursor-help" title="Total dollar volume of active properties currently listed">Active Listings (V)</TableHead>
                       <TableHead className="text-center font-bold cursor-help" title="Ratio of Buyer represented vs Seller represented transactions">B/S Ratio</TableHead>
-                      <TableHead className="text-right font-bold cursor-help" title="Number of active properties currently listed by this agent">Listings</TableHead>
-                      <TableHead className="text-right font-bold cursor-help" title="Percent of annual goal achieved so far">Progress</TableHead>
+                      <TableHead className="text-right font-bold cursor-help" title="Percent of annual goal achieved so far">Progress %</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {data.agents.map((agent) => {
-                      const agentProgress = Math.round((agent.closings / (agent.goal / 500000)) * 100); // Simplified calculation for demo
+                      const agentProgress = Math.round((agent.volumeClosed / agent.goal) * 100); 
                       return (
                         <TableRow key={agent.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                           <TableCell className="font-semibold text-slate-900 dark:text-slate-100">
@@ -203,8 +204,9 @@ export default function Dashboard() {
                             </Link>
                           </TableCell>
                           <TableCell className="text-right text-slate-500">{formatCurrency(agent.goal)}</TableCell>
-                          <TableCell className="text-right font-bold">{agent.closings}</TableCell>
+                          <TableCell className="text-right font-bold text-green-600">{formatCurrency(agent.volumeClosed)}</TableCell>
                           <TableCell className="text-right text-blue-600 dark:text-blue-400 font-medium">{formatCurrency(agent.volumePending)}</TableCell>
+                          <TableCell className="text-right font-bold text-slate-700 dark:text-slate-300">{formatCurrency(agent.listingsVolume)}</TableCell>
                           <TableCell className="text-center">
                             <div className="flex justify-center gap-1">
                               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
@@ -215,7 +217,6 @@ export default function Dashboard() {
                               </Badge>
                             </div>
                           </TableCell>
-                          <TableCell className="text-right font-bold text-slate-700 dark:text-slate-300">{agent.listings}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex flex-col items-end gap-1">
                               <span className="text-xs font-bold">{agentProgress}%</span>
