@@ -1,14 +1,32 @@
--- Team performance data
-CREATE TABLE IF NOT EXISTS team_data (
-  id INTEGER PRIMARY KEY CHECK (id = 1),
-  goal REAL NOT NULL DEFAULT 0,
-  ytd_production REAL NOT NULL DEFAULT 0,
-  last_updated TEXT NOT NULL
+-- RealtorDash Multi-Tenant Schema
+
+-- Main tenant (property group) table
+CREATE TABLE IF NOT EXISTS tenants (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  subdomain TEXT UNIQUE NOT NULL,
+  logo_url TEXT,
+  primary_color TEXT DEFAULT '#000000',
+  admin_password_hash TEXT NOT NULL,
+  viewer_password_hash TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Individual agent statistics
+-- Updated team data with tenant_id and year support
+CREATE TABLE IF NOT EXISTS team_data (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tenant_id TEXT NOT NULL,
+  year INTEGER NOT NULL,
+  goal REAL NOT NULL DEFAULT 0,
+  ytd_production REAL NOT NULL DEFAULT 0,
+  last_updated TEXT NOT NULL,
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+);
+
+-- Updated agents with tenant_id
 CREATE TABLE IF NOT EXISTS agents (
   id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
   name TEXT NOT NULL,
   goal REAL NOT NULL DEFAULT 0,
   closings INTEGER NOT NULL DEFAULT 0,
@@ -16,15 +34,42 @@ CREATE TABLE IF NOT EXISTS agents (
   buyers INTEGER NOT NULL DEFAULT 0,
   sellers INTEGER NOT NULL DEFAULT 0,
   listings INTEGER NOT NULL DEFAULT 0,
-  mls_link TEXT
+  mls_link TEXT,
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id)
 );
 
--- Seed initial data
-INSERT OR IGNORE INTO team_data (id, goal, ytd_production, last_updated) 
-VALUES (1, 50000000, 18500000, CURRENT_TIMESTAMP);
+-- New transactions table (houses sold/selling)
+CREATE TABLE IF NOT EXISTS transactions (
+  id TEXT PRIMARY KEY,
+  agent_id TEXT NOT NULL,
+  tenant_id TEXT NOT NULL,
+  address TEXT NOT NULL,
+  price REAL NOT NULL,
+  status TEXT CHECK (status IN ('Active', 'Pending', 'Sold')) NOT NULL,
+  side TEXT CHECK (side IN ('Buyer', 'Seller')) NOT NULL,
+  date TEXT NOT NULL,
+  FOREIGN KEY (agent_id) REFERENCES agents(id),
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+);
 
-INSERT OR IGNORE INTO agents (id, name, goal, closings, volume_pending, buyers, sellers, listings, mls_link)
+-- Seed Initial Tenant (NSPG)
+INSERT OR IGNORE INTO tenants (id, name, subdomain, logo_url, admin_password_hash)
+VALUES ('nspg-group', 'Nik Shehu Property Group', 'nspg', NULL, 'nspg2026');
+
+-- Seed Team Data for NSPG 2026
+INSERT OR IGNORE INTO team_data (tenant_id, year, goal, ytd_production, last_updated)
+VALUES ('nspg-group', 2026, 50000000, 18500000, CURRENT_TIMESTAMP);
+
+-- Seed Agents for NSPG
+INSERT OR IGNORE INTO agents (id, tenant_id, name, goal, closings, volume_pending, buyers, sellers, listings, mls_link)
 VALUES 
-  ('1', 'Nik Shehu', 10000000, 12, 2500000, 5, 7, 4, 'https://nspgrealty.com/listings'),
-  ('2', 'Agent Two', 8000000, 8, 1200000, 3, 5, 2, 'https://nspgrealty.com/listings'),
-  ('3', 'Agent Three', 6000000, 5, 800000, 4, 1, 3, 'https://nspgrealty.com/listings');
+  ('1', 'nspg-group', 'Nik Shehu', 10000000, 12, 2500000, 5, 7, 4, 'https://nspgrealty.com/listings'),
+  ('2', 'nspg-group', 'Agent Two', 8000000, 8, 1200000, 3, 5, 2, 'https://nspgrealty.com/listings'),
+  ('3', 'nspg-group', 'Agent Three', 6000000, 5, 800000, 4, 1, 3, 'https://nspgrealty.com/listings');
+
+-- Seed Sample Transactions for Nik
+INSERT OR IGNORE INTO transactions (id, agent_id, tenant_id, address, price, status, side, date)
+VALUES
+  ('t1', '1', 'nspg-group', '123 Maple St', 450000, 'Sold', 'Seller', '2026-03-15'),
+  ('t2', '1', 'nspg-group', '456 Oak Ave', 620000, 'Pending', 'Buyer', '2026-04-01'),
+  ('t3', '1', 'nspg-group', '789 Pine Ln', 325000, 'Active', 'Seller', '2026-04-03');

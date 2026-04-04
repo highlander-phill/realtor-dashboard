@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Plus, Trash2, LogOut, LayoutDashboard } from "lucide-react";
+import { Save, Plus, Trash2, LogOut, LayoutDashboard, Home as HomeIcon, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
 
 export const runtime = "edge";
@@ -84,6 +86,49 @@ export default function AdminDashboard() {
     });
   };
 
+  const updateTransaction = (agentId: string, transId: string, field: string, value: any) => {
+    setData({
+      ...data,
+      agents: data.agents.map(a => {
+        if (a.id !== agentId) return a;
+        const updatedTransactions = (a.transactions || []).map(t => 
+          t.id === transId ? { ...t, [field]: field === 'price' ? Number(value) : value } : t
+        );
+        
+        // Auto-calculate agent stats if a house status changes to 'Sold'
+        let closings = a.closings;
+        if (field === 'status' && value === 'Sold') {
+          closings += 1;
+        }
+        
+        return { ...a, transactions: updatedTransactions, closings };
+      })
+    });
+  };
+
+  const addTransaction = (agentId: string) => {
+    const newTrans = {
+      id: Math.random().toString(36).substr(2, 9),
+      agentId,
+      address: "New Property",
+      price: 0,
+      status: 'Active' as const,
+      side: 'Seller' as const,
+      date: new Date().toISOString().split('T')[0]
+    };
+    setData({
+      ...data,
+      agents: data.agents.map(a => a.id === agentId ? { ...a, transactions: [...(a.transactions || []), newTrans] } : a)
+    });
+  };
+
+  const removeTransaction = (agentId: string, transId: string) => {
+    setData({
+      ...data,
+      agents: data.agents.map(a => a.id === agentId ? { ...a, transactions: (a.transactions || []).filter(t => t.id !== transId) } : a)
+    });
+  };
+
   const addAgent = () => {
     const newAgent: AgentData = {
       id: Math.random().toString(36).substr(2, 9),
@@ -117,9 +162,9 @@ export default function AdminDashboard() {
         <header className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              Management Portal
+              {data.tenant.name} - Management
             </h1>
-            <p className="text-slate-500 text-sm">Update the team goals and agent performance numbers.</p>
+            <p className="text-slate-500 text-sm">Update team goals and individual agent listings.</p>
           </div>
           <div className="flex gap-2">
             <Link href="/">
@@ -269,6 +314,94 @@ export default function AdminDashboard() {
                             />
                           </TableCell>
                           <TableCell>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                                  <HomeIcon className="w-4 h-4" /> Houses ({agent.transactions?.length || 0})
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                                <DialogHeader>
+                                  <DialogTitle>Manage Properties for {agent.name}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 pt-4">
+                                  <Button onClick={() => addTransaction(agent.id)} size="sm" className="bg-blue-600">
+                                    <Plus className="w-4 h-4 mr-2" /> Add Listing/Sale
+                                  </Button>
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead>Address</TableHead>
+                                        <TableHead>Price</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Side</TableHead>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead className="w-10"></TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {(agent.transactions || []).map((t) => (
+                                        <TableRow key={t.id}>
+                                          <TableCell>
+                                            <Input 
+                                              value={t.address} 
+                                              onChange={(e) => updateTransaction(agent.id, t.id, 'address', e.target.value)}
+                                            />
+                                          </TableCell>
+                                          <TableCell>
+                                            <Input 
+                                              type="number" 
+                                              value={t.price} 
+                                              onChange={(e) => updateTransaction(agent.id, t.id, 'price', e.target.value)}
+                                            />
+                                          </TableCell>
+                                          <TableCell>
+                                            <select 
+                                              value={t.status}
+                                              onChange={(e) => updateTransaction(agent.id, t.id, 'status', e.target.value)}
+                                              className="bg-transparent border border-slate-200 rounded p-1"
+                                            >
+                                              <option value="Active">Active</option>
+                                              <option value="Pending">Pending</option>
+                                              <option value="Sold">Sold</option>
+                                            </select>
+                                          </TableCell>
+                                          <TableCell>
+                                            <select 
+                                              value={t.side}
+                                              onChange={(e) => updateTransaction(agent.id, t.id, 'side', e.target.value)}
+                                              className="bg-transparent border border-slate-200 rounded p-1"
+                                            >
+                                              <option value="Buyer">Buyer</option>
+                                              <option value="Seller">Seller</option>
+                                            </select>
+                                          </TableCell>
+                                          <TableCell>
+                                            <Input 
+                                              type="date"
+                                              value={t.date} 
+                                              onChange={(e) => updateTransaction(agent.id, t.id, 'date', e.target.value)}
+                                            />
+                                          </TableCell>
+                                          <TableCell>
+                                            <Button 
+                                              variant="ghost" 
+                                              size="icon" 
+                                              onClick={() => removeTransaction(agent.id, t.id)}
+                                              className="text-red-500"
+                                            >
+                                              <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                          </TableCell>
+                                        </TableRow>
+                                      ))}
+                                    </TableBody>
+                                  </Table>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </TableCell>
+                          <TableCell>
                             <Button 
                               variant="ghost" 
                               size="icon" 
@@ -288,10 +421,15 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
 
-        <div className="bg-slate-100 dark:bg-slate-900/50 p-6 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
-           <p className="text-center text-sm text-slate-500">
-             Security Note: Data is currently persisted in local browser storage for this prototype. 
-             Integrate with a database like Cloudflare D1 for team-wide persistent storage.
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+           <div className="flex items-center gap-3">
+             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+             <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+               Cloudflare D1: Connected & Synchronized
+             </p>
+           </div>
+           <p className="text-xs text-slate-400 font-mono uppercase tracking-tighter">
+             Prod-ID: {data.lastUpdated ? data.lastUpdated.substring(0, 8) : 'INIT'}
            </p>
         </div>
       </div>

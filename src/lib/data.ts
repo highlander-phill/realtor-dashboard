@@ -1,3 +1,13 @@
+export interface Transaction {
+  id: string;
+  agentId: string;
+  address: string;
+  price: number;
+  status: 'Active' | 'Pending' | 'Sold';
+  side: 'Buyer' | 'Seller';
+  date: string;
+}
+
 export interface AgentData {
   id: string;
   name: string;
@@ -8,6 +18,7 @@ export interface AgentData {
   sellers: number;
   listings: number;
   mlsLink?: string;
+  transactions?: Transaction[];
 }
 
 export interface TeamData {
@@ -15,16 +26,31 @@ export interface TeamData {
   ytdProduction: number;
 }
 
+export interface TenantSettings {
+  id: string;
+  name: string;
+  subdomain: string;
+  logoUrl?: string;
+  primaryColor: string;
+}
+
 export interface DashboardData {
+  tenant: TenantSettings;
   team: TeamData;
   agents: AgentData[];
   lastUpdated: string;
 }
 
 export const initialData: DashboardData = {
+  tenant: {
+    id: 'nspg-group',
+    name: 'Nik Shehu Property Group',
+    subdomain: 'nspg',
+    primaryColor: '#000000',
+  },
   team: {
-    goal: 50000000, // $50M goal
-    ytdProduction: 18500000, // $18.5M YTD
+    goal: 50000000, 
+    ytdProduction: 18500000,
   },
   agents: [
     {
@@ -37,6 +63,10 @@ export const initialData: DashboardData = {
       sellers: 7,
       listings: 4,
       mlsLink: 'https://nspgrealty.com/listings',
+      transactions: [
+        { id: 't1', agentId: '1', address: '123 Maple St', price: 450000, status: 'Sold', side: 'Seller', date: '2026-03-15' },
+        { id: 't2', agentId: '1', address: '456 Oak Ave', price: 620000, status: 'Pending', side: 'Buyer', date: '2026-04-01' },
+      ]
     },
     {
       id: '2',
@@ -48,6 +78,7 @@ export const initialData: DashboardData = {
       sellers: 5,
       listings: 2,
       mlsLink: 'https://nspgrealty.com/listings',
+      transactions: []
     },
     {
       id: '3',
@@ -59,6 +90,7 @@ export const initialData: DashboardData = {
       sellers: 1,
       listings: 3,
       mlsLink: 'https://nspgrealty.com/listings',
+      transactions: []
     },
   ],
   lastUpdated: new Date().toISOString(),

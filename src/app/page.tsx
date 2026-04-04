@@ -59,9 +59,11 @@ export default function Dashboard() {
         {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <div className="bg-black text-white p-2 rounded">NS</div>
-              NIK SHEHU PROPERTY GROUP
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2 uppercase">
+              <div className="bg-black text-white p-2 rounded" style={{ backgroundColor: data.tenant.primaryColor }}>
+                {data.tenant.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+              </div>
+              {data.tenant.name}
             </h1>
             <p className="text-slate-500 dark:text-slate-400">Team Performance & Sales Dashboard</p>
           </div>

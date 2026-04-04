@@ -20,19 +20,28 @@ export async function GET() {
     try {
       env = getRequestContext().env as unknown as D1Env;
     } catch {
-      console.warn("Cloudflare context not found, using mock data for local dev");
-      return NextResponse.json({ error: "Local development mode: Please use localStorage or configure Cloudflare bindings." }, { status: 500 });
+      return NextResponse.json({ error: "Local development mode" }, { status: 500 });
     }
     const db = env.DB;
 
-    if (!db) {
-      return NextResponse.json({ error: "Database not configured" }, { status: 500 });
-    }
+    // TODO: Get subdomain from headers (set by middleware)
+    const subdomain = "nspg"; 
 
-    const teamData = await db.prepare("SELECT * FROM team_data WHERE id = 1").first();
-    const agents = await db.prepare("SELECT * FROM agents").all();
+    const tenant = await db.prepare("SELECT * FROM tenants WHERE subdomain = ?").bind(subdomain).first();
+    if (!tenant) return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
+
+    const teamData = await db.prepare("SELECT * FROM team_data WHERE tenant_id = ? AND year = 2026").bind(tenant.id).first();
+    const agents = await db.prepare("SELECT * FROM agents WHERE tenant_id = ?").bind(tenant.id).all();
+    const transactions = await db.prepare("SELECT * FROM transactions WHERE tenant_id = ?").bind(tenant.id).all();
 
     return NextResponse.json({
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
+        subdomain: tenant.subdomain,
+        logoUrl: tenant.logo_url,
+        primaryColor: tenant.primary_color,
+      },
       team: {
         goal: teamData.goal,
         ytdProduction: teamData.ytd_production,
@@ -41,6 +50,10 @@ export async function GET() {
         ...a,
         volumePending: a.volume_pending,
         mlsLink: a.mls_link,
+        transactions: transactions.results.filter(t => t.agent_id === a.id).map(t => ({
+          ...t,
+          agentId: t.agent_id,
+        })),
       })),
       lastUpdated: teamData.last_updated,
     });
@@ -55,22 +68,25 @@ export async function POST(req: NextRequest) {
     const { env } = getRequestContext() as unknown as { env: D1Env };
     const db = env.DB;
     
-    if (!db) {
-      return NextResponse.json({ error: "Database not configured" }, { status: 500 });
-    }
-
     const body = await req.json();
-    const { team, agents } = body as { team: any; agents: any[] };
+    const { tenant, team, agents } = body as { tenant: any; team: any; agents: any[] };
 
     await db.prepare(
-      "UPDATE team_data SET goal = ?, ytd_production = ?, last_updated = ? WHERE id = 1"
-    ).bind(team.goal, team.ytdProduction, new Date().toISOString()).run();
+      "UPDATE team_data SET goal = ?, ytd_production = ?, last_updated = ? WHERE tenant_id = ? AND year = 2026"
+    ).bind(team.goal, team.ytdProduction, new Date().toISOString(), tenant.id).run();
 
     const statements = [
-      db.prepare("DELETE FROM agents"),
+      db.prepare("DELETE FROM agents WHERE tenant_id = ?").bind(tenant.id),
+      db.prepare("DELETE FROM transactions WHERE tenant_id = ?").bind(tenant.id),
       ...agents.map((a) => 
-        db.prepare("INSERT INTO agents (id, name, goal, closings, volume_pending, buyers, sellers, listings, mls_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-          .bind(a.id, a.name, a.goal, a.closings, a.volumePending, a.buyers, a.sellers, a.listings, a.mlsLink || null)
+        db.prepare("INSERT INTO agents (id, tenant_id, name, goal, closings, volume_pending, buyers, sellers, listings, mls_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+          .bind(a.id, tenant.id, a.name, a.goal, a.closings, a.volumePending, a.buyers, a.sellers, a.listings, a.mlsLink || null)
+      ),
+      ...agents.flatMap((a) => 
+        (a.transactions || []).map((t: any) => 
+          db.prepare("INSERT INTO transactions (id, agent_id, tenant_id, address, price, status, side, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+            .bind(t.id, a.id, tenant.id, t.address, t.price, t.status, t.side, t.date)
+        )
       )
     ];
 
