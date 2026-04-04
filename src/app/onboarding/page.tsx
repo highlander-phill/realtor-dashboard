@@ -7,23 +7,27 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Rocket, Shield, Palette, Building, ChevronRight, ChevronLeft, Check, AlertTriangle, X } from "lucide-react";
+import { Rocket, Shield, Palette, Building, ChevronRight, ChevronLeft, Check, AlertTriangle, X, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function OnboardingWizard() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0); // Start at 0 for Authorization
   const [hasExistingData, setHasExistingData] = useState(false);
   const [showOverwriteWarning, setShowOverwriteWarning] = useState(false);
+  const [authError, setAuthError] = useState("");
   const [formData, setFormData] = useState({
     companyName: "",
     subdomain: "",
     adminPassword: "",
+    tempPassword: "",
     primaryColor: "#2563eb",
     annualGoal: "50000000",
+    theme: "realtor",
   });
   const router = useRouter();
 
   const steps = [
+    { title: "Authorization", description: "Verify your license", icon: Lock },
     { title: "Company", description: "Your property group details", icon: Building },
     { title: "Security", description: "Management access", icon: Shield },
     { title: "Branding", description: "Colors and logo", icon: Palette },
@@ -40,13 +44,36 @@ export default function OnboardingWizard() {
         }
       } catch (e) {}
     }
+    
+    // Auto-detect subdomain from URL
+    const host = window.location.hostname;
+    if (host.includes('.')) {
+      const sub = host.split('.')[0];
+      if (sub !== 'www' && sub !== 'team-goals') {
+        setFormData(prev => ({ ...prev, subdomain: sub }));
+      }
+    }
   }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
+    if (field === 'tempPassword') setAuthError("");
   };
 
-  const nextStep = () => setStep(s => s + 1);
+  const nextStep = async () => {
+    if (step === 0) {
+      // In a real app, this would hit /api/master/verify
+      // For now, let's assume any password works or handle demo
+      if (!formData.tempPassword) {
+        setAuthError("Please enter your temporary license password.");
+        return;
+      }
+      setStep(1);
+    } else {
+      setStep(s => s + 1);
+    }
+  };
+
   const prevStep = () => setStep(s => s - 1);
 
   const handleSubmit = async () => {
@@ -63,6 +90,7 @@ export default function OnboardingWizard() {
         name: formData.companyName,
         subdomain: formData.subdomain,
         primaryColor: formData.primaryColor,
+        theme: formData.theme,
         onboardingCompleted: true,
       },
       team: {
@@ -98,19 +126,6 @@ export default function OnboardingWizard() {
             { id: 'dt4', agentId: 'demo-2', address: '456 Skyline Blvd', price: 2100000, status: 'Pending', side: 'Seller', date: '2026-04-01' },
             { id: 'dt5', agentId: 'demo-2', address: '111 Pine St', price: 12500000, status: 'Sold', side: 'Buyer', date: '2026-01-15' },
           ]
-        },
-        {
-          id: 'demo-3',
-          name: 'Elena Rodriguez',
-          goal: 10000000,
-          volumeClosed: 7550000,
-          volumePending: 0,
-          listingsVolume: 5200000,
-          buyers: 5,
-          sellers: 7,
-          transactions: [
-            { id: 'dt6', agentId: 'demo-3', address: '222 Valley View', price: 5200000, status: 'Active', side: 'Seller', date: '2026-03-30' },
-          ]
         }
       ] : [],
       lastUpdated: new Date().toISOString(),
@@ -128,7 +143,7 @@ export default function OnboardingWizard() {
       console.error("Cloud save failed during onboarding", err);
     }
 
-    alert("Success! Your professional dashboard is ready.");
+    alert("Success! Your team dashboard is ready.");
     router.push("/");
   };
 
@@ -137,8 +152,10 @@ export default function OnboardingWizard() {
       companyName: "Empire Realty Group",
       subdomain: "empire",
       adminPassword: "demo",
+      tempPassword: "demo",
       primaryColor: "#0f172a",
       annualGoal: "75000000",
+      theme: "realtor",
     });
     setStep(4);
   };
@@ -147,14 +164,7 @@ export default function OnboardingWizard() {
     if (hasExistingData) {
       router.push("/");
     } else {
-      alert("Please complete the setup to use the dashboard.");
-    }
-  };
-
-  const handleClearAll = () => {
-    if (confirm("Are you sure? This will remove all local configuration and reset the wizard.")) {
-      localStorage.clear();
-      window.location.reload();
+      alert("Please complete the authorization to use the dashboard.");
     }
   };
 
@@ -181,7 +191,7 @@ export default function OnboardingWizard() {
                 </div>
                 <div className="text-center space-y-2">
                   <h3 className="text-2xl font-bold">Overwrite Existing Data?</h3>
-                  <p className="text-slate-500">We detected an existing dashboard configuration. Completing this wizard will permanently replace it.</p>
+                  <p className="text-slate-500">Completing this setup will replace your current dashboard configuration for {formData.subdomain}.</p>
                 </div>
                 <div className="flex flex-col gap-3">
                   <Button onClick={handleSubmit} className="bg-red-600 hover:bg-red-700 text-white h-12 text-lg font-bold">
@@ -199,8 +209,8 @@ export default function OnboardingWizard() {
         {/* Helper Actions */}
         <div className="flex justify-between items-center px-4">
           <div className="flex items-center gap-2">
-             <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white font-black text-xs">RD</div>
-             <span className="font-bold tracking-tight">RealtorDash</span>
+             <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white font-black text-xs">TG</div>
+             <span className="font-bold tracking-tight">TeamGoals</span>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleDemoData} className="text-xs bg-white border-slate-200">
@@ -211,9 +221,6 @@ export default function OnboardingWizard() {
                 <X className="w-3 h-3 mr-1" /> Cancel
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={handleClearAll} className="text-xs text-red-400 hover:text-red-500">
-              Reset System
-            </Button>
           </div>
         </div>
 
@@ -221,10 +228,10 @@ export default function OnboardingWizard() {
         <div className="flex justify-between items-center px-4">
           {steps.map((s, i) => (
             <div key={i} className="flex flex-col items-center gap-2">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${step > i + 1 ? 'bg-green-500 text-white shadow-lg shadow-green-100' : step === i + 1 ? 'bg-black text-white shadow-lg shadow-slate-200 scale-110' : 'bg-slate-200 text-slate-400'}`}>
-                {step > i + 1 ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${step > i ? 'bg-green-500 text-white shadow-lg shadow-green-100' : step === i ? 'bg-black text-white shadow-lg shadow-slate-200 scale-110' : 'bg-slate-200 text-slate-400'}`}>
+                {step > i ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
               </div>
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${step === i + 1 ? 'text-black' : 'text-slate-400'}`}>{s.title}</span>
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${step === i ? 'text-black' : 'text-slate-400'}`}>{s.title}</span>
             </div>
           ))}
         </div>
@@ -239,36 +246,70 @@ export default function OnboardingWizard() {
               transition={{ duration: 0.2 }}
             >
               <CardHeader className="text-center pb-8 pt-10">
-                <CardTitle className="text-3xl font-black uppercase tracking-tight">{steps[step-1].title}</CardTitle>
-                <CardDescription className="text-slate-500 font-medium">{steps[step-1].description}</CardDescription>
+                <CardTitle className="text-3xl font-black uppercase tracking-tight">{steps[step].title}</CardTitle>
+                <CardDescription className="text-slate-500 font-medium">{steps[step].description}</CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-6 px-10 min-h-[320px]">
+                {step === 0 && (
+                   <div className="space-y-6">
+                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">License Subdomain</Label>
+                        <div className="h-12 flex items-center bg-white border border-slate-200 rounded-xl px-4 font-black text-blue-600">
+                          {formData.subdomain || 'unknown'}.team-goals.com
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="tempPassword" className="text-xs font-bold uppercase tracking-wider text-slate-400">Temporary License Password</Label>
+                        <Input 
+                          id="tempPassword" 
+                          type="password"
+                          placeholder="Check your SMS invitation" 
+                          value={formData.tempPassword}
+                          onChange={(e) => handleInputChange('tempPassword', e.target.value)}
+                          className={`h-14 text-xl font-bold border-slate-200 focus:ring-black rounded-2xl ${authError ? 'border-red-500' : ''}`}
+                        />
+                        {authError && <p className="text-xs text-red-500 font-bold">{authError}</p>}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed text-center">
+                      A unique license is required to create a new dashboard. If you don't have a password, please contact the administrator.
+                    </p>
+                  </div>
+                )}
+
                 {step === 1 && (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="companyName" className="text-xs font-bold uppercase tracking-wider text-slate-400">Property Group Name</Label>
+                      <Label htmlFor="companyName" className="text-xs font-bold uppercase tracking-wider text-slate-400">Team / Group Name</Label>
                       <Input 
                         id="companyName" 
-                        placeholder="e.g. Nik Shehu Property Group" 
+                        placeholder="e.g. Empire Sales Group" 
                         value={formData.companyName}
                         onChange={(e) => handleInputChange('companyName', e.target.value)}
                         className="h-14 text-xl font-bold border-slate-200 focus:ring-black rounded-2xl"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="subdomain" className="text-xs font-bold uppercase tracking-wider text-slate-400">Desired Subdomain</Label>
-                      <div className="flex items-center">
-                        <Input 
-                          id="subdomain" 
-                          placeholder="nspg" 
-                          value={formData.subdomain}
-                          onChange={(e) => handleInputChange('subdomain', e.target.value.toLowerCase())}
-                          className="h-14 text-xl font-bold rounded-l-2xl rounded-r-none border-r-0 border-slate-200 focus:ring-black"
-                        />
-                        <div className="h-14 px-6 flex items-center bg-slate-50 border border-slate-200 rounded-r-2xl text-slate-400 font-bold">
-                          .realtordash.app
-                        </div>
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Dashboard Theme</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                         <Button 
+                          variant="outline" 
+                          onClick={() => handleInputChange('theme', 'realtor')}
+                          className={`h-20 rounded-2xl border-2 flex flex-col gap-1 ${formData.theme === 'realtor' ? 'border-blue-600 bg-blue-50' : 'border-slate-100'}`}
+                         >
+                           <span className="font-bold">Real Estate</span>
+                           <span className="text-[10px] text-slate-400">Houses & Closings</span>
+                         </Button>
+                         <Button 
+                          variant="outline" 
+                          onClick={() => handleInputChange('theme', 'sales')}
+                          className={`h-20 rounded-2xl border-2 flex flex-col gap-1 ${formData.theme === 'sales' ? 'border-blue-600 bg-blue-50' : 'border-slate-100'}`}
+                         >
+                           <span className="font-bold">General Sales</span>
+                           <span className="text-[10px] text-slate-400">Volume & Targets</span>
+                         </Button>
                       </div>
                     </div>
                   </div>
@@ -277,7 +318,7 @@ export default function OnboardingWizard() {
                 {step === 2 && (
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="adminPassword" className="text-xs font-bold uppercase tracking-wider text-slate-400">Admin Password</Label>
+                      <Label htmlFor="adminPassword" className="text-xs font-bold uppercase tracking-wider text-slate-400">Admin Management Password</Label>
                       <Input 
                         id="adminPassword" 
                         type="password"
@@ -287,7 +328,7 @@ export default function OnboardingWizard() {
                         className="h-14 text-xl font-bold border-slate-200 focus:ring-black rounded-2xl"
                       />
                       <p className="text-xs text-slate-500 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <strong>Note:</strong> This password is for managing agent data. In the production SaaS, you would also link this to a primary email.
+                        This password will be used to access the management portal for your team.
                       </p>
                     </div>
                   </div>
@@ -306,18 +347,18 @@ export default function OnboardingWizard() {
                         />
                         <div className="flex-1 space-y-1">
                           <p className="text-lg font-black uppercase tracking-tighter">{formData.primaryColor}</p>
-                          <p className="text-xs text-slate-500 leading-relaxed">We'll use this color for your dashboard's theme, buttons, and generated brand marks.</p>
+                          <p className="text-xs text-slate-500 leading-relaxed">Choose a color that matches your company branding.</p>
                         </div>
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Generated Logo Preview</Label>
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Logo Preview</Label>
                       <div className="flex justify-center p-10 bg-white rounded-[24px] border-2 border-dashed border-slate-200 shadow-inner">
                         <div 
-                          className="w-28 h-28 rounded-[24px] flex items-center justify-center text-5xl font-black text-white shadow-2xl transition-all duration-500 hover:scale-105 cursor-default"
+                          className="w-28 h-28 rounded-[24px] flex items-center justify-center text-5xl font-black text-white shadow-2xl transition-all duration-500"
                           style={{ backgroundColor: formData.primaryColor }}
                         >
-                          {formData.companyName ? formData.companyName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'RD'}
+                          {formData.companyName ? formData.companyName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'TG'}
                         </div>
                       </div>
                     </div>
@@ -327,7 +368,7 @@ export default function OnboardingWizard() {
                 {step === 4 && (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="annualGoal" className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Team Annual Volume Goal ($)</Label>
+                      <Label htmlFor="annualGoal" className="text-xs font-bold uppercase tracking-wider text-slate-400">Annual Team Volume Goal ($)</Label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300">$</span>
                         <Input 
@@ -344,8 +385,8 @@ export default function OnboardingWizard() {
                         <Check className="w-6 h-6" />
                       </div>
                       <div className="space-y-2">
-                        <h4 className="text-xl font-bold">Ready for Liftoff!</h4>
-                        <p className="text-sm text-blue-50 leading-relaxed">Your professional dashboard will be deployed to <strong>{formData.subdomain || 'yourteam'}.realtordash.app</strong> instantly.</p>
+                        <h4 className="text-xl font-bold">Ready to Launch!</h4>
+                        <p className="text-sm text-blue-100 leading-relaxed">Your dashboard is authorized and ready to go live at <strong>{formData.subdomain}.team-goals.com</strong>.</p>
                       </div>
                     </div>
                   </div>
@@ -356,7 +397,7 @@ export default function OnboardingWizard() {
                 <Button 
                   variant="ghost" 
                   onClick={prevStep} 
-                  disabled={step === 1}
+                  disabled={step === 0}
                   className="flex items-center gap-2 h-12 font-bold text-slate-500 hover:text-black"
                 >
                   <ChevronLeft className="w-4 h-4" /> Previous
@@ -365,7 +406,7 @@ export default function OnboardingWizard() {
                 {step < 4 ? (
                   <Button 
                     onClick={nextStep}
-                    disabled={step === 1 && (!formData.companyName || !formData.subdomain)}
+                    disabled={step === 1 && !formData.companyName}
                     className="bg-black text-white px-10 h-14 rounded-2xl flex items-center gap-2 font-bold shadow-xl shadow-slate-200 hover:scale-105 transition-transform"
                   >
                     Continue <ChevronRight className="w-4 h-4" />
@@ -384,7 +425,7 @@ export default function OnboardingWizard() {
         </Card>
         
         <p className="text-center text-slate-400 text-xs font-medium">
-          Professional Team Tracking Platform • v1.4.2
+          Professional Team Tracking Platform • team-goals.com
         </p>
       </div>
     </div>

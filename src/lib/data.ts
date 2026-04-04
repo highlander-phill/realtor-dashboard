@@ -32,6 +32,7 @@ export interface TenantSettings {
   subdomain: string;
   logoUrl?: string;
   primaryColor: string;
+  theme: 'realtor' | 'sales' | 'insurance' | 'custom';
   onboardingCompleted: boolean;
 }
 
@@ -45,9 +46,10 @@ export interface DashboardData {
 export const initialData: DashboardData = {
   tenant: {
     id: 'new-team',
-    name: 'Your Real Estate Team',
+    name: 'Your Team Dash',
     subdomain: 'demo',
     primaryColor: '#2563eb',
+    theme: 'realtor',
     onboardingCompleted: false,
   },
   team: {

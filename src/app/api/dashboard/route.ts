@@ -90,9 +90,9 @@ export async function POST(req: NextRequest) {
 
     // 1. Upsert Tenant
     await db.prepare(
-      "INSERT INTO tenants (id, name, subdomain, primary_color, onboarding_completed) VALUES (?, ?, ?, ?, ?) " +
-      "ON CONFLICT(id) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, onboarding_completed=excluded.onboarding_completed"
-    ).bind(tenant.id, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.onboardingCompleted ? 1 : 0).run();
+      "INSERT INTO tenants (id, name, subdomain, primary_color, theme, onboarding_completed) VALUES (?, ?, ?, ?, ?, ?) " +
+      "ON CONFLICT(id) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, theme=excluded.theme, onboarding_completed=excluded.onboarding_completed"
+    ).bind(tenant.id, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0).run();
 
     // 2. Upsert Team Data
     await db.prepare(

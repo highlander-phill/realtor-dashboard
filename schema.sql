@@ -7,9 +7,22 @@ CREATE TABLE IF NOT EXISTS tenants (
   subdomain TEXT UNIQUE NOT NULL,
   logo_url TEXT,
   primary_color TEXT DEFAULT '#000000',
+  theme TEXT DEFAULT 'realtor',
   onboarding_completed INTEGER DEFAULT 0,
   admin_password_hash TEXT,
   viewer_password_hash TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Authorized tenants for master dashboard
+CREATE TABLE IF NOT EXISTS authorized_tenants (
+  id TEXT PRIMARY KEY,
+  subdomain TEXT UNIQUE NOT NULL,
+  temp_password TEXT NOT NULL,
+  theme TEXT DEFAULT 'realtor',
+  customer_name TEXT,
+  customer_phone TEXT,
+  status TEXT DEFAULT 'pending',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

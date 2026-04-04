@@ -494,7 +494,7 @@ export default function AdminDashboard() {
            </div>
            <div className="flex items-center gap-4">
              <p className="text-xs text-slate-400 font-mono uppercase tracking-tighter">
-               Instance: {data.tenant.subdomain}.realtordash.app
+               Instance: {data.tenant.subdomain}.team-goals.com
              </p>
              <p className="text-xs text-slate-400 font-mono uppercase tracking-tighter">
                Updated: {data.lastUpdated ? new Date(data.lastUpdated).toLocaleTimeString() : 'INIT'}
