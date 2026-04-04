@@ -3,6 +3,95 @@
 export const runtime = "edge";
 
 import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { 
+  ChevronLeft, 
+  Save, 
+  LogOut, 
+  Plus, 
+  Trash2, 
+  Settings, 
+  RefreshCcw 
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardContent 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import Link from "next/link";
+
+interface Transaction {
+  id: string;
+  agentId: string;
+  address: string;
+  price: number;
+  status: string;
+  side: string;
+  date: string;
+}
+
+interface AgentData {
+  id: string;
+  name: string;
+  goal: number;
+  volumeClosed: number;
+  volumePending: number;
+  listingsVolume: number;
+  listings?: number;
+  buyers?: number;
+  sellers?: number;
+  closings?: number;
+  mlsLink?: string;
+  transactions: Transaction[];
+}
+
+interface DashboardData {
+  tenant: {
+    id: string;
+    name: string;
+    subdomain: string;
+    logoUrl?: string;
+    primaryColor: string;
+    theme?: string;
+    onboardingCompleted: boolean;
+  };
+  team: {
+    goal: number;
+    ytdProduction: number;
+  };
+  agents: AgentData[];
+  lastUpdated: string;
+}
+
+const initialData: DashboardData = {
+  tenant: {
+    id: "",
+    name: "Loading...",
+    subdomain: "",
+    primaryColor: "#000000",
+    onboardingCompleted: true,
+  },
+  team: {
+    goal: 1,
+    ytdProduction: 0,
+  },
+  agents: [],
+  lastUpdated: new Date().toISOString(),
+};
 
 export default function AdminPanel() {
   const params = useParams();
@@ -269,12 +358,12 @@ export default function AdminPanel() {
                         type="color"
                         value={data.tenant.primaryColor}
                         onChange={(e) => setData({...data, tenant: {...data.tenant, primaryColor: e.target.value}})}
-                        className="w-12 h-12 p-1 rounded-lg"
+                        className="w-12 h-12 p-1 rounded-lg border-none outline-none"
                       />
                       <Input 
                         value={data.tenant.primaryColor}
                         onChange={(e) => setData({...data, tenant: {...data.tenant, primaryColor: e.target.value}})}
-                        className="flex-1 font-mono"
+                        className="flex-1 font-mono uppercase"
                       />
                     </div>
                   </div>
@@ -283,13 +372,13 @@ export default function AdminPanel() {
 
               <Card className="border-red-100 dark:border-red-900 shadow-xl rounded-3xl overflow-hidden">
                 <CardHeader className="bg-red-50 dark:bg-red-950/20">
-                  <CardTitle className="text-red-600">Danger Zone</CardTitle>
+                  <CardTitle className="text-red-600 font-bold uppercase tracking-widest text-xs">Danger Zone</CardTitle>
                   <CardDescription>Destructive actions that cannot be undone.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-8 space-y-6">
                    <div className="space-y-4">
-                      <p className="text-sm font-medium text-slate-500">Need to start over? This will wipe your current configuration and take you back to the setup wizard.</p>
-                      <Button onClick={resetOnboarding} variant="destructive" className="w-full h-12 font-bold uppercase tracking-widest text-xs">
+                      <p className="text-sm font-medium text-slate-500 italic">Need to start over? This will wipe your current configuration and take you back to the setup wizard.</p>
+                      <Button onClick={resetOnboarding} variant="destructive" className="w-full h-12 font-black uppercase tracking-[0.2em] text-[10px] rounded-xl shadow-lg shadow-red-900/20">
                         Reset & Rerun Onboarding
                       </Button>
                    </div>

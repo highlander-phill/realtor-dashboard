@@ -3,6 +3,84 @@
 export const runtime = "edge";
 
 import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { 
+  TrendingUp, 
+  Users, 
+  Clock, 
+  ChevronRight,
+  ArrowUpRight,
+  Target
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import Link from "next/link";
+
+interface Transaction {
+  id: string;
+  agentId: string;
+  address: string;
+  price: number;
+  status: string;
+  side: string;
+  date: string;
+}
+
+interface Agent {
+  id: string;
+  name: string;
+  goal: number;
+  volumeClosed: number;
+  volumePending: number;
+  listingsVolume: number;
+  mlsLink?: string;
+  transactions: Transaction[];
+}
+
+interface DashboardData {
+  tenant: {
+    id: string;
+    name: string;
+    subdomain: string;
+    logoUrl?: string;
+    primaryColor: string;
+    theme?: string;
+    onboardingCompleted: boolean;
+  };
+  team: {
+    goal: number;
+    ytdProduction: number;
+  };
+  agents: Agent[];
+  lastUpdated: string;
+}
+
+const initialData: DashboardData = {
+  tenant: {
+    id: "",
+    name: "Loading...",
+    subdomain: "",
+    primaryColor: "#000000",
+    onboardingCompleted: true,
+  },
+  team: {
+    goal: 1,
+    ytdProduction: 0,
+  },
+  agents: [],
+  lastUpdated: new Date().toISOString(),
+};
 
 export default function Dashboard() {
   const params = useParams();
@@ -60,7 +138,12 @@ export default function Dashboard() {
       goal: "Annual Target",
       unit: "Units",
     }
-  }[theme as keyof typeof labels] || labels.realtor;
+  }[theme as keyof typeof labels] || {
+    production: "Volume Closed",
+    pending: "Volume Pending",
+    goal: "Annual Production Goal",
+    unit: "Houses",
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {

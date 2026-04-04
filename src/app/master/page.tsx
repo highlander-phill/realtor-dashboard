@@ -3,6 +3,32 @@
 export const runtime = "edge";
 
 import { useState, useEffect } from "react";
+import { 
+  Shield, 
+  Lock, 
+  Plus, 
+  Send, 
+  Copy, 
+  Check, 
+  Globe, 
+  Layout, 
+  Users,
+  Search,
+  Key
+} from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 export default function MasterDashboard() {
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -28,16 +54,20 @@ export default function MasterDashboard() {
   }, []);
 
   const verifyToken = async (pass: string) => {
-    const res = await fetch('/api/master/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pass }),
-    });
-    if (res.ok) {
-      setIsAuthorized(true);
-      setMasterPass(pass);
-    } else {
-      localStorage.removeItem('master_token');
+    try {
+      const res = await fetch('/api/master/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pass }),
+      });
+      if (res.ok) {
+        setIsAuthorized(true);
+        setMasterPass(pass);
+      } else {
+        localStorage.removeItem('master_token');
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -65,7 +95,7 @@ export default function MasterDashboard() {
 
     if (res.ok) {
       setIsAuthorized(true);
-      localStorage.setItem('master_token', masterPass); // Simple persistence for session
+      localStorage.setItem('master_token', masterPass);
     } else {
       if (res.status === 429) {
         const error = await res.json();
@@ -133,7 +163,7 @@ export default function MasterDashboard() {
             <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg">
               <Shield className="w-8 h-8" />
             </div>
-            <CardTitle className="text-3xl font-black text-white uppercase tracking-tight text-white">Master Control</CardTitle>
+            <CardTitle className="text-3xl font-black text-white uppercase tracking-tight">Master Control</CardTitle>
             <CardDescription className="text-slate-400">Enter master password to continue</CardDescription>
           </CardHeader>
           <CardContent className="px-10 pb-10 space-y-6">
@@ -179,13 +209,15 @@ export default function MasterDashboard() {
               <p className="text-2xl font-black text-orange-400">{authorized.length}</p>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pending Onboarding</p>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setIsAuthorized(false)} className="text-slate-500 hover:text-white">Logout</Button>
+            <Button variant="ghost" size="sm" onClick={() => {
+              setIsAuthorized(false);
+              localStorage.removeItem('master_token');
+            }} className="text-slate-500 hover:text-white">Logout</Button>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Authorize New Tenant */}
           <Card className="lg:col-span-1 bg-slate-900 border-slate-800 shadow-xl rounded-3xl overflow-hidden">
             <CardHeader className="bg-slate-800/50 border-b border-slate-800">
               <CardTitle className="flex items-center gap-2 text-white">
@@ -215,7 +247,7 @@ export default function MasterDashboard() {
               <div className="space-y-2">
                 <Label className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Desired URL ID (Subdirectory)</Label>
                 <div className="flex items-center">
-                  <div className="h-12 px-4 flex items-center bg-slate-800 border border-slate-800 rounded-l-lg text-slate-500 font-bold text-sm">
+                  <div className="h-12 px-4 flex items-center bg-slate-800 border border-slate-800 rounded-l-lg text-slate-500 font-bold text-sm whitespace-nowrap">
                     team-goals.com/
                   </div>
                   <Input 
@@ -253,7 +285,6 @@ export default function MasterDashboard() {
             </CardContent>
           </Card>
 
-          {/* Reset Subconsole Password */}
           <Card className="bg-slate-900 border-slate-800 shadow-xl rounded-3xl overflow-hidden">
             <CardHeader className="bg-slate-800/50 border-b border-slate-800">
               <CardTitle className="flex items-center gap-2 text-white">
@@ -293,9 +324,8 @@ export default function MasterDashboard() {
 
           <div className="lg:col-span-2 space-y-8">
             
-            {/* SMS Generator Display */}
             {generatedSms && (
-              <Card className="bg-blue-600 border-none shadow-2xl rounded-3xl overflow-hidden animate-in slide-in-from-top duration-500">
+              <Card className="bg-blue-600 border-none shadow-2xl rounded-3xl overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-white flex items-center gap-2">
                     <Send className="w-5 h-5" /> SMS Invitation Template
@@ -317,7 +347,6 @@ export default function MasterDashboard() {
               </Card>
             )}
 
-            {/* Pending Authorizations */}
             <Card className="bg-slate-900 border-slate-800 shadow-xl rounded-3xl overflow-hidden">
               <CardHeader className="bg-slate-800/50 border-b border-slate-800">
                 <CardTitle className="text-white">Pending Invitations</CardTitle>
@@ -372,7 +401,6 @@ export default function MasterDashboard() {
               </CardContent>
             </Card>
 
-            {/* Active Tenants */}
             <Card className="bg-slate-900 border-slate-800 shadow-xl rounded-3xl overflow-hidden">
               <CardHeader className="bg-slate-800/50 border-b border-slate-800">
                 <CardTitle className="text-white">Active Tenants</CardTitle>
@@ -393,8 +421,8 @@ export default function MasterDashboard() {
                       <TableRow key={t.id} className="border-slate-800 hover:bg-slate-800/20">
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-xs" style={{ backgroundColor: t.primary_color }}>
-                              {t.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-xs" style={{ backgroundColor: t.primary_color || '#3b82f6' }}>
+                              {(t.name || '??').split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
                             </div>
                             <span className="font-bold text-white">{t.name}</span>
                           </div>
@@ -408,7 +436,7 @@ export default function MasterDashboard() {
                            <Badge variant="outline" className="border-slate-700 text-slate-500 uppercase text-[9px] font-bold">Standard</Badge>
                         </TableCell>
                         <TableCell className="text-xs text-slate-500 font-medium">
-                          {new Date(t.created_at).toLocaleDateString()}
+                          {t.created_at ? new Date(t.created_at).toLocaleDateString() : 'N/A'}
                         </TableCell>
                       </TableRow>
                     ))}

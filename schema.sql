@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS tenants (
   onboarding_completed INTEGER DEFAULT 0,
   admin_password_hash TEXT,
   viewer_password_hash TEXT,
+  trial_ends_at DATETIME DEFAULT (datetime('now', '+30 days')),
+  subscription_status TEXT DEFAULT 'trialing', -- 'trialing', 'active', 'past_due', 'canceled'
+  stripe_customer_id TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

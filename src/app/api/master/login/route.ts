@@ -4,10 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "edge";
 
 interface MasterEnv {
-  SETTINGS?: {
-    get: (key: string) => Promise<string | null>;
-  };
-  MASTER_PASSWORD?: string;
+  SETTINGS: KVNamespace;
 }
 
 export async function POST(req: NextRequest) {
@@ -16,7 +13,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { password } = body;
 
-    // Optional: Basic brute-force protection using KV
     if (env.SETTINGS) {
       const lockoutTime = await env.SETTINGS.get("MASTER_LOCKOUT");
       if (lockoutTime && parseInt(lockoutTime) > Date.now()) {
@@ -35,11 +31,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (password === correctPassword) {
-      // Clear lockout on success
       if (env.SETTINGS) await env.SETTINGS.delete("MASTER_FAIL_COUNT");
       return NextResponse.json({ success: true });
     } else {
-      // Increment fail count and potentially set lockout
       if (env.SETTINGS) {
         const currentFails = parseInt(await env.SETTINGS.get("MASTER_FAIL_COUNT") || "0") + 1;
         await env.SETTINGS.put("MASTER_FAIL_COUNT", currentFails.toString(), { expirationTtl: 3600 });

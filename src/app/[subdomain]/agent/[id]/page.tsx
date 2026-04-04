@@ -3,6 +3,92 @@
 export const runtime = "edge";
 
 import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { 
+  ChevronLeft, 
+  Save, 
+  RefreshCcw, 
+  DollarSign, 
+  PieChart, 
+  Home, 
+  Plus, 
+  MapPin, 
+  Tag, 
+  Trash2 
+} from "lucide-react";
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardContent 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import Link from "next/link";
+
+interface Transaction {
+  id: string;
+  agentId: string;
+  address: string;
+  price: number;
+  status: string;
+  side: string;
+  date: string;
+}
+
+interface AgentData {
+  id: string;
+  name: string;
+  goal: number;
+  volumeClosed: number;
+  volumePending: number;
+  listingsVolume: number;
+  transactions: Transaction[];
+}
+
+interface DashboardData {
+  tenant: {
+    id: string;
+    name: string;
+    subdomain: string;
+    logoUrl?: string;
+    primaryColor: string;
+    theme?: string;
+    onboardingCompleted: boolean;
+  };
+  team: {
+    goal: number;
+    ytdProduction: number;
+  };
+  agents: AgentData[];
+  lastUpdated: string;
+}
+
+const initialData: DashboardData = {
+  tenant: {
+    id: "",
+    name: "Loading...",
+    subdomain: "",
+    primaryColor: "#000000",
+    onboardingCompleted: true,
+  },
+  team: {
+    goal: 1,
+    ytdProduction: 0,
+  },
+  agents: [],
+  lastUpdated: new Date().toISOString(),
+};
 
 export default function AgentDetail() {
   const params = useParams();
@@ -49,7 +135,7 @@ export default function AgentDetail() {
 
   const addTransaction = () => {
     if (!agent) return;
-    const newTx = {
+    const newTx: Transaction = {
       id: Math.random().toString(36).substr(2, 9),
       agentId: agent.id,
       address: "New Property",
@@ -242,7 +328,7 @@ export default function AgentDetail() {
                             ) : (
                               <Badge className={`${t.status === 'Sold' ? 'bg-green-500' : t.status === 'Pending' ? 'bg-blue-500' : 'bg-orange-500'} text-white border-none text-[10px] font-black uppercase`}>
                                  {t.status}
-                              </Badge>
+                               </Badge>
                             )}
                          </TableCell>
                          <TableCell>

@@ -2,9 +2,29 @@
 
 export const runtime = "edge";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { 
+  Lock, 
+  Building, 
+  Shield, 
+  Palette, 
+  Rocket, 
+  Check, 
+  ChevronLeft, 
+  ChevronRight, 
+  AlertTriangle,
+  X,
+  Layout,
+  UserCheck
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-export default function OnboardingWizard() {
+function OnboardingContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const bypassKey = searchParams.get('key');
@@ -40,17 +60,19 @@ export default function OnboardingWizard() {
 
   useEffect(() => {
     async function checkExisting() {
-      const res = await fetch(`/api/dashboard?subdomain=${subdomain}`);
-      if (res.ok) {
-        const data = await res.json();
-        // If not onboarded yet, just let them skip to step 1
-        if (!data.tenant || !data.tenant.onboardingCompleted) {
+      try {
+        const res = await fetch(`/api/dashboard?subdomain=${subdomain}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.tenant || !data.tenant.onboardingCompleted) {
+            setStep(1);
+          } else if (data.tenant.onboardingCompleted) {
+            setHasExistingData(true);
+          }
+        } else {
           setStep(1);
-        } else if (data.tenant.onboardingCompleted) {
-          setHasExistingData(true);
         }
-      } else {
-        // If it doesn't exist at all, it's a new setup
+      } catch (e) {
         setStep(1);
       }
     }
@@ -178,9 +200,9 @@ export default function OnboardingWizard() {
           )}
         </div>
 
-        <div className="flex justify-between items-center px-4">
+        <div className="flex justify-between items-center px-4 overflow-x-auto pb-4">
           {steps.map((s, i) => (
-            <div key={i} className="flex flex-col items-center gap-2">
+            <div key={i} className="flex flex-col items-center gap-2 min-w-[70px]">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${step > i ? 'bg-green-500 text-white shadow-lg shadow-green-100' : step === i ? 'bg-black text-white shadow-lg shadow-slate-200 scale-110' : 'bg-slate-200 text-slate-400'}`}>
                 {step > i ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
               </div>
@@ -349,5 +371,13 @@ export default function OnboardingWizard() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function OnboardingWizard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading Setup...</div>}>
+      <OnboardingContent />
+    </Suspense>
   );
 }
