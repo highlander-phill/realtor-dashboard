@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NSPG Team Dashboard",
-  description: "Nik Shehu Property Group Performance Tracker",
+  title: "TeamGoals Dashboard",
+  description: "Team Performance Tracker",
 };
 
 export default function RootLayout({

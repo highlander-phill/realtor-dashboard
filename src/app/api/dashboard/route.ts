@@ -81,6 +81,9 @@ export async function GET(req: NextRequest) {
     
     const transactions = await db.prepare("SELECT * FROM transactions WHERE tenant_id = ? AND year = ?").bind(tenant.id, year).all();
 
+    // Calculate production from transactions
+    const totalProduction = transactions.results.reduce((acc, t) => acc + (t.price || 0), 0);
+
     // Ratios Calculation
     const stats = agents.results.reduce((acc, a) => {
       acc.closings += (a.closings || 0);
@@ -94,7 +97,7 @@ export async function GET(req: NextRequest) {
     const teamRatios = {
       listingToClose: stats.listings > 0 ? (stats.closings / stats.listings).toFixed(2) : "0",
       buyerToSeller: stats.sellers > 0 ? (stats.buyers / stats.sellers).toFixed(2) : "0",
-      avgDealSize: stats.closings > 0 ? (teamData?.ytd_production / stats.closings).toFixed(0) : "0"
+      avgDealSize: stats.closings > 0 ? (totalProduction / stats.closings).toFixed(0) : "0"
     };
 
     return NextResponse.json({
@@ -112,7 +115,7 @@ export async function GET(req: NextRequest) {
       },
       team: {
         goal: teamData?.goal || 50000000,
-        ytdProduction: teamData?.ytd_production || 0,
+        ytdProduction: totalProduction,
         ratios: teamRatios
       },
       subTeams: subTeams.results,
