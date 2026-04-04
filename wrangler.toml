@@ -7,3 +7,7 @@ compatibility_date = "2026-04-03"
 binding = "DB"
 database_name = "nspg_prod"
 database_id = "138c69f7-f596-41f4-9e3c-6a517c7dbbf3"
+
+[[kv_namespaces]]
+binding = "SETTINGS"
+id = "c31885b57d604b1ca7569b76c8c7c975" # Placeholder for now, user will need to update if not matching their actual KV

@@ -45,6 +45,19 @@ export function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-realtor-subdomain', subdomain);
 
+  // Rewrite if subdomain is present
+  if (subdomain && subdomain !== 'www' && subdomain !== 'demo') {
+    // Avoid infinite loop if the path already starts with the subdomain
+    if (!url.pathname.startsWith(`/${subdomain}`)) {
+      url.pathname = `/${subdomain}${url.pathname === '/' ? '' : url.pathname}`;
+      return NextResponse.rewrite(url, {
+        request: {
+          headers: requestHeaders,
+        },
+      });
+    }
+  }
+
   return NextResponse.next({
     request: {
       headers: requestHeaders,

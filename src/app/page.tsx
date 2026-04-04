@@ -1,11 +1,8 @@
+export const runtime = "edge";
+
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Rocket, Shield, TrendingUp, Users } from "lucide-react";
 
 export default function LandingPage() {
   const [teamId, setTeamId] = useState("");

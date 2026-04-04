@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
       "INSERT INTO authorized_tenants (id, subdomain, temp_password, theme, customer_name, customer_phone, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')"
     ).bind(id, subdomain, tempPassword, theme, customerName, customerPhone).run();
 
-    // Generate SMS Template with PATH-BASED routing
-    const loginUrl = `https://www.team-goals.com/${subdomain}/onboarding`;
+    // Generate SMS Template with PATH-BASED routing and auto-setup key
+    const loginUrl = `https://www.team-goals.com/${subdomain}/onboarding?key=setup`;
     const smsTemplate = `Hi ${customerName}! Your ${theme} performance dashboard is ready. Setup your team at ${loginUrl} with temporary password: ${tempPassword}. - TeamGoals`;
 
     return NextResponse.json({ success: true, id, smsTemplate });

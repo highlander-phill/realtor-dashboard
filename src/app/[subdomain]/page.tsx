@@ -1,19 +1,8 @@
+export const runtime = "edge";
+
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { initialData, DashboardData } from "@/lib/data";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Users, TrendingUp, Home, DollarSign, PieChart, Clock, ExternalLink } from "lucide-react";
-import { format } from "date-fns";
-import { motion } from "framer-motion";
-import Link from "next/link";
-
-export const runtime = "edge";
 
 export default function Dashboard() {
   const params = useParams();
@@ -44,6 +33,34 @@ export default function Dashboard() {
   }, [subdomain, router]);
 
   const teamPercentage = Math.round((data.team.ytdProduction / data.team.goal) * 100);
+
+  const theme = data.tenant.theme || 'realtor';
+  const labels = {
+    realtor: {
+      production: "Volume Closed",
+      pending: "Volume Pending",
+      goal: "Annual Production Goal",
+      unit: "Houses",
+    },
+    sales: {
+      production: "Revenue Closed",
+      pending: "Pipeline Value",
+      goal: "Sales Target",
+      unit: "Deals",
+    },
+    insurance: {
+      production: "Premiums Written",
+      pending: "Pending Quotes",
+      goal: "Premium Target",
+      unit: "Policies",
+    },
+    custom: {
+      production: "Total Production",
+      pending: "In Progress",
+      goal: "Annual Target",
+      unit: "Units",
+    }
+  }[theme as keyof typeof labels] || labels.realtor;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -89,18 +106,18 @@ export default function Dashboard() {
             <div className="h-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600" />
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-xl font-bold">Team Overall Production</CardTitle>
+                <CardTitle className="text-xl font-bold">{labels.production} Tracker</CardTitle>
                 <TrendingUp className="text-blue-500 w-6 h-6" />
               </div>
             </CardHeader>
             <CardContent className="pt-4 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Current YTD</p>
+                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{labels.production} YTD</p>
                   <p className="text-4xl font-black text-slate-900 dark:text-slate-50">{formatCurrency(data.team.ytdProduction)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Annual Goal</p>
+                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{labels.goal}</p>
                   <p className="text-4xl font-black text-slate-400">{formatCurrency(data.team.goal)}</p>
                 </div>
                 <div className="flex items-end justify-start md:justify-end">
@@ -136,8 +153,8 @@ export default function Dashboard() {
                   <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
                     <TableRow>
                       <TableHead>Agent Name</TableHead>
-                      <TableHead className="text-right">Volume Closed</TableHead>
-                      <TableHead className="text-right">Volume Pending</TableHead>
+                      <TableHead className="text-right">{labels.production}</TableHead>
+                      <TableHead className="text-right">{labels.pending}</TableHead>
                       <TableHead className="text-right">Progress %</TableHead>
                     </TableRow>
                   </TableHeader>

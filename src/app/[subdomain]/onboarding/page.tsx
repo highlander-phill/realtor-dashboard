@@ -1,13 +1,8 @@
+export const runtime = "edge";
+
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Rocket, Shield, Palette, Building, ChevronRight, ChevronLeft, Check, AlertTriangle, X, Lock } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function OnboardingWizard() {
   const params = useParams();
@@ -48,13 +43,19 @@ export default function OnboardingWizard() {
       const res = await fetch(`/api/dashboard?subdomain=${subdomain}`);
       if (res.ok) {
         const data = await res.json();
-        if (data.tenant && data.tenant.onboardingCompleted) {
+        // If not onboarded yet, just let them skip to step 1
+        if (!data.tenant || !data.tenant.onboardingCompleted) {
+          setStep(1);
+        } else if (data.tenant.onboardingCompleted) {
           setHasExistingData(true);
         }
+      } else {
+        // If it doesn't exist at all, it's a new setup
+        setStep(1);
       }
     }
-    if (subdomain) checkExisting();
-  }, [subdomain]);
+    if (subdomain && !bypassKey) checkExisting();
+  }, [subdomain, bypassKey]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });

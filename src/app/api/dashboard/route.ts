@@ -96,29 +96,36 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { tenant, team, agents } = body as { tenant: any; team: any; agents: any[] };
 
-    // 1. Upsert Tenant
+    // 1. Resolve Tenant ID (by subdomain)
+    let tenantId = tenant.id;
+    const existing = await db.prepare("SELECT id FROM tenants WHERE subdomain = ?").bind(tenant.subdomain).first();
+    if (existing) {
+      tenantId = existing.id;
+    }
+
+    // 2. Upsert Tenant
     await db.prepare(
       "INSERT INTO tenants (id, name, subdomain, primary_color, theme, onboarding_completed) VALUES (?, ?, ?, ?, ?, ?) " +
-      "ON CONFLICT(id) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, theme=excluded.theme, onboarding_completed=excluded.onboarding_completed"
-    ).bind(tenant.id, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0).run();
+      "ON CONFLICT(subdomain) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, theme=excluded.theme, onboarding_completed=excluded.onboarding_completed"
+    ).bind(tenantId, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0).run();
 
-    // 2. Upsert Team Data
+    // 3. Upsert Team Data
     await db.prepare(
       "INSERT INTO team_data (tenant_id, year, goal, ytd_production, last_updated) VALUES (?, 2026, ?, ?, ?) " +
       "ON CONFLICT(tenant_id, year) DO UPDATE SET goal=excluded.goal, ytd_production=excluded.ytd_production, last_updated=excluded.last_updated"
-    ).bind(tenant.id, team.goal, team.ytdProduction, new Date().toISOString()).run();
+    ).bind(tenantId, team.goal, team.ytdProduction, new Date().toISOString()).run();
 
     const statements = [
-      db.prepare("DELETE FROM agents WHERE tenant_id = ?").bind(tenant.id),
-      db.prepare("DELETE FROM transactions WHERE tenant_id = ?").bind(tenant.id),
+      db.prepare("DELETE FROM agents WHERE tenant_id = ?").bind(tenantId),
+      db.prepare("DELETE FROM transactions WHERE tenant_id = ?").bind(tenantId),
       ...agents.map((a) => 
         db.prepare("INSERT INTO agents (id, tenant_id, name, goal, closings, volume_pending, volume_closed, listings_volume, buyers, sellers, listings, mls_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-          .bind(a.id, tenant.id, a.name, a.goal, a.closings || 0, a.volumePending || 0, a.volumeClosed || 0, a.listingsVolume || 0, a.buyers || 0, a.sellers || 0, a.listings || 0, a.mlsLink || null)
+          .bind(a.id, tenantId, a.name, a.goal, a.closings || 0, a.volumePending || 0, a.volumeClosed || 0, a.listingsVolume || 0, a.buyers || 0, a.sellers || 0, a.listings || 0, a.mlsLink || null)
       ),
       ...agents.flatMap((a) => 
         (a.transactions || []).map((t: any) => 
           db.prepare("INSERT INTO transactions (id, agent_id, tenant_id, address, price, status, side, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-            .bind(t.id, a.id, tenant.id, t.address, t.price, t.status, t.side, t.date)
+            .bind(t.id, a.id, tenantId, t.address, t.price, t.status, t.side, t.date)
         )
       )
     ];

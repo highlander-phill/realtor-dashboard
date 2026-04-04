@@ -1,15 +1,8 @@
+export const runtime = "edge";
+
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Shield, Plus, Send, Copy, Check, Users, Layout, Globe, Lock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-
-export const runtime = "edge";
 
 export default function MasterDashboard() {
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -27,6 +20,27 @@ export default function MasterDashboard() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem('master_token');
+    if (token) {
+      verifyToken(token);
+    }
+  }, []);
+
+  const verifyToken = async (pass: string) => {
+    const res = await fetch('/api/master/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pass }),
+    });
+    if (res.ok) {
+      setIsAuthorized(true);
+      setMasterPass(pass);
+    } else {
+      localStorage.removeItem('master_token');
+    }
+  };
+
+  useEffect(() => {
     if (isAuthorized) {
       fetchData();
     }
@@ -41,9 +55,16 @@ export default function MasterDashboard() {
     }
   };
 
-  const handleLogin = () => {
-    if (masterPass === "4WeeStella$") {
+  const handleLogin = async () => {
+    const res = await fetch('/api/master/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: masterPass }),
+    });
+
+    if (res.ok) {
       setIsAuthorized(true);
+      localStorage.setItem('master_token', masterPass); // Simple persistence for session
     } else {
       alert("Incorrect master password.");
     }
