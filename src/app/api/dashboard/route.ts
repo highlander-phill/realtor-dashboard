@@ -25,17 +25,18 @@ export async function GET(req: NextRequest) {
     const db = env.DB;
 
     const host = req.headers.get('host') || '';
-    let subdomain = '';
+    const url = new URL(req.url);
+    let subdomain = url.searchParams.get('subdomain');
     
-    // Check subdomain
-    if (host.includes('team-goals.com')) {
-      const parts = host.split('.team-goals.com')[0];
-      if (parts && parts !== 'www') subdomain = parts;
-    } else if (host.includes('.pages.dev')) {
-      subdomain = 'nspg';
+    if (!subdomain) {
+      if (host.includes('team-goals.com')) {
+        const parts = host.split('.team-goals.com')[0];
+        if (parts && parts !== 'www') subdomain = parts;
+      } else if (host.includes('.pages.dev')) {
+        subdomain = 'nspg';
+      }
     }
 
-    // Check header (passed by middleware)
     if (!subdomain) {
       subdomain = req.headers.get('x-realtor-subdomain') || 'demo';
     }

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
-interface D1Env {
+interface MasterEnv {
   DB: {
     prepare: (query: string) => {
       first: () => Promise<any>;
@@ -11,11 +11,15 @@ interface D1Env {
       bind: (...args: any[]) => { run: () => Promise<any> };
     };
   };
+  KV?: {
+    get: (key: string) => Promise<string | null>;
+  };
+  MASTER_PASSWORD?: string;
 }
 
 export async function GET() {
   try {
-    const { env } = getRequestContext() as unknown as { env: D1Env };
+    const { env } = getRequestContext() as unknown as { env: MasterEnv };
     const db = env.DB;
 
     const authorized = await db.prepare("SELECT * FROM authorized_tenants ORDER BY created_at DESC").all();
@@ -33,7 +37,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { env } = getRequestContext() as unknown as { env: D1Env };
+    const { env } = getRequestContext() as unknown as { env: MasterEnv };
     const db = env.DB;
     
     const body = await req.json();
@@ -45,9 +49,9 @@ export async function POST(req: NextRequest) {
       "INSERT INTO authorized_tenants (id, subdomain, temp_password, theme, customer_name, customer_phone, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')"
     ).bind(id, subdomain, tempPassword, theme, customerName, customerPhone).run();
 
-    // Generate SMS Template
-    const loginUrl = `https://${subdomain}.team-goals.com/onboarding`;
-    const smsTemplate = `Hi ${customerName}! Your ${theme} performance dashboard is ready. Login at ${loginUrl} with temporary password: ${tempPassword} to begin your setup. - TeamGoals`;
+    // Generate SMS Template with PATH-BASED routing
+    const loginUrl = `https://www.team-goals.com/${subdomain}/onboarding`;
+    const smsTemplate = `Hi ${customerName}! Your ${theme} performance dashboard is ready. Setup your team at ${loginUrl} with temporary password: ${tempPassword}. - TeamGoals`;
 
     return NextResponse.json({ success: true, id, smsTemplate });
   } catch (error) {
