@@ -15,19 +15,30 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Get subdomain (e.g., 'nspg' from 'nspg.team-goals.com')
-  // For local development, we can use a query param or a header
+  // Priority 1: Subdomain (e.g., 'nspg' from 'nspg.team-goals.com')
   let subdomain = '';
   if (hostname.includes('.pages.dev')) {
      subdomain = 'nspg'; 
   } else if (hostname.includes('team-goals.com')) {
-    subdomain = hostname.split('.team-goals.com')[0];
-  } else if (hostname.includes('.')) {
-    subdomain = hostname.split('.')[0];
+    const parts = hostname.split('.team-goals.com')[0];
+    if (parts && parts !== 'www') {
+      subdomain = parts;
+    }
   }
 
-  if (!subdomain || subdomain === 'www' || subdomain === 'realtor-dashboard') {
-    subdomain = 'nspg'; // Default fallback for now
+  // Priority 2: Path-based fallback (e.g., 'team-goals.com/nspg')
+  // This helps if they don't have wildcard DNS setup yet
+  if (!subdomain) {
+    const pathParts = url.pathname.split('/');
+    if (pathParts.length > 1 && pathParts[1] && 
+        !['api', 'admin', 'onboarding', 'favicon.ico', '_next', 'static'].includes(pathParts[1])) {
+      subdomain = pathParts[1];
+    }
+  }
+
+  // Default fallback
+  if (!subdomain) {
+    subdomain = 'demo';
   }
 
   // Pass the subdomain to the app via a header
