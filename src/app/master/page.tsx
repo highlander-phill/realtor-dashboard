@@ -1,6 +1,6 @@
-export const runtime = "edge";
-
 "use client";
+
+export const runtime = "edge";
 
 import { useState, useEffect } from "react";
 
@@ -18,6 +18,7 @@ export default function MasterDashboard() {
   });
   const [generatedSms, setGeneratedSms] = useState("");
   const [copied, setCopied] = useState(false);
+  const [resetData, setResetData] = useState({ tenantId: "", newPassword: "" });
 
   useEffect(() => {
     const token = localStorage.getItem('master_token');
@@ -66,7 +67,34 @@ export default function MasterDashboard() {
       setIsAuthorized(true);
       localStorage.setItem('master_token', masterPass); // Simple persistence for session
     } else {
-      alert("Incorrect master password.");
+      if (res.status === 429) {
+        const error = await res.json();
+        alert(error.error);
+      } else {
+        alert("Incorrect master password.");
+      }
+    }
+  };
+
+  const handleUpdateTenantPassword = async () => {
+    if (!resetData.tenantId || !resetData.newPassword) {
+       alert("Please select a tenant and enter a new password.");
+       return;
+    }
+    const res = await fetch('/api/master', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: 'update_password', 
+        tenantId: resetData.tenantId, 
+        newPassword: resetData.newPassword 
+      }),
+    });
+    if (res.ok) {
+      alert("Tenant password updated successfully.");
+      setResetData({ tenantId: "", newPassword: "" });
+    } else {
+      alert("Failed to update password.");
     }
   };
 
@@ -221,6 +249,44 @@ export default function MasterDashboard() {
               </div>
               <Button onClick={handleAuthorize} className="w-full bg-blue-600 hover:bg-blue-700 text-white h-14 font-black uppercase tracking-widest mt-4 rounded-xl shadow-lg shadow-blue-900/20">
                 Authorize & Generate SMS
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Reset Subconsole Password */}
+          <Card className="bg-slate-900 border-slate-800 shadow-xl rounded-3xl overflow-hidden">
+            <CardHeader className="bg-slate-800/50 border-b border-slate-800">
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Lock className="w-5 h-5 text-orange-500" /> Administrative Reset
+              </CardTitle>
+              <CardDescription className="text-slate-400 font-medium">Overrule tenant management password.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <div className="space-y-2">
+                <Label className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Target Tenant</Label>
+                <select 
+                  value={resetData.tenantId}
+                  onChange={(e) => setResetData({...resetData, tenantId: e.target.value})}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg h-12 px-3 text-slate-100 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">Select an active tenant...</option>
+                  {active.map(t => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.subdomain})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">New Admin Password</Label>
+                <Input 
+                  type="password"
+                  value={resetData.newPassword}
+                  onChange={(e) => setResetData({...resetData, newPassword: e.target.value})}
+                  className="bg-slate-950 border-slate-800 text-white h-12 font-bold"
+                  placeholder="Enter new management pass"
+                />
+              </div>
+              <Button onClick={handleUpdateTenantPassword} variant="outline" className="w-full border-slate-700 hover:bg-slate-800 text-slate-300 h-12 font-bold uppercase tracking-widest text-[10px] mt-2">
+                Override Password
               </Button>
             </CardContent>
           </Card>

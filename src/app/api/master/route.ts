@@ -41,7 +41,12 @@ export async function POST(req: NextRequest) {
     const db = env.DB;
     
     const body = await req.json();
-    const { subdomain, tempPassword, theme, customerName, customerPhone } = body;
+    const { action, subdomain, tempPassword, theme, customerName, customerPhone, tenantId, newPassword } = body;
+
+    if (action === 'update_password') {
+      await db.prepare("UPDATE tenants SET admin_password_hash = ? WHERE id = ?").bind(newPassword, tenantId).run();
+      return NextResponse.json({ success: true, message: "Tenant password updated" });
+    }
 
     const id = Math.random().toString(36).substr(2, 9);
     
