@@ -88,15 +88,15 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="pt-4 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="space-y-1">
+                <div className="space-y-1 cursor-help" title="Total sales volume closed by the entire team year-to-date">
                   <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Current YTD</p>
                   <p className="text-4xl font-black text-slate-900 dark:text-slate-50">{formatCurrency(data.team.ytdProduction)}</p>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 cursor-help" title="The total team production goal for the calendar year">
                   <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Annual Goal</p>
                   <p className="text-4xl font-black text-slate-400">{formatCurrency(data.team.goal)}</p>
                 </div>
-                <div className="flex items-end justify-start md:justify-end">
+                <div className="flex items-end justify-start md:justify-end cursor-help" title="Percentage of the annual goal that has been reached so far">
                   <div className="text-right">
                     <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Target Achieved</p>
                     <p className="text-5xl font-black text-blue-600 dark:text-blue-400">{teamPercentage}%</p>
@@ -134,13 +134,13 @@ export default function Dashboard() {
                 <Table>
                   <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
                     <TableRow>
-                      <TableHead className="font-bold">Agent Name</TableHead>
-                      <TableHead className="text-right font-bold">Annual Goal</TableHead>
-                      <TableHead className="text-right font-bold">Closings</TableHead>
-                      <TableHead className="text-right font-bold">Volume Pending</TableHead>
-                      <TableHead className="text-center font-bold">B/S Ratio</TableHead>
-                      <TableHead className="text-right font-bold">Listings</TableHead>
-                      <TableHead className="text-right font-bold">Progress</TableHead>
+                      <TableHead className="font-bold cursor-help" title="The full name of the agent">Agent Name</TableHead>
+                      <TableHead className="text-right font-bold cursor-help" title="The annual production goal set for this agent">Annual Goal</TableHead>
+                      <TableHead className="text-right font-bold cursor-help" title="Total number of successfully closed transactions YTD">Closings</TableHead>
+                      <TableHead className="text-right font-bold cursor-help" title="Total dollar volume currently in the pending phase">Volume Pending</TableHead>
+                      <TableHead className="text-center font-bold cursor-help" title="Ratio of Buyer represented vs Seller represented transactions">B/S Ratio</TableHead>
+                      <TableHead className="text-right font-bold cursor-help" title="Number of active properties currently listed by this agent">Listings</TableHead>
+                      <TableHead className="text-right font-bold cursor-help" title="Percent of annual goal achieved so far">Progress</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
