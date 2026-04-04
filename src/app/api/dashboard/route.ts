@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
     let subdomain = url.searchParams.get('subdomain');
     const year = parseInt(url.searchParams.get('year') || '2026');
     const subTeamId = url.searchParams.get('subTeamId');
+    const viewerPass = url.searchParams.get('password');
     
     if (!subdomain) {
       if (host.includes('team-goals.com')) {
@@ -49,6 +50,17 @@ export async function GET(req: NextRequest) {
         agents: [],
         lastUpdated: new Date().toISOString()
       });
+    }
+
+    // Check Viewer Password
+    if (tenant.viewer_password_hash && tenant.viewer_password_hash !== viewerPass) {
+       return NextResponse.json({ 
+         error: "Password required", 
+         passwordProtected: true,
+         tenantName: tenant.name,
+         primaryColor: tenant.primary_color,
+         logoUrl: tenant.logo_url
+       }, { status: 403 });
     }
 
     // Fetch team-wide or sub-team specific data
@@ -79,7 +91,7 @@ export async function GET(req: NextRequest) {
       return acc;
     }, { closings: 0, listings: 0, buyers: 0, sellers: 0, pending: 0 });
 
-    const ratios = {
+    const teamRatios = {
       listingToClose: stats.listings > 0 ? (stats.closings / stats.listings).toFixed(2) : "0",
       buyerToSeller: stats.sellers > 0 ? (stats.buyers / stats.sellers).toFixed(2) : "0",
       avgDealSize: stats.closings > 0 ? (teamData?.ytd_production / stats.closings).toFixed(0) : "0"
@@ -94,26 +106,33 @@ export async function GET(req: NextRequest) {
         primaryColor: tenant.primary_color,
         theme: tenant.theme,
         onboardingCompleted: !!tenant.onboarding_completed,
+        showTimeToClose: !!tenant.show_time_to_close,
+        showPriceDelta: !!tenant.show_price_delta,
+        hasViewerPassword: !!tenant.viewer_password_hash
       },
       team: {
         goal: teamData?.goal || 50000000,
         ytdProduction: teamData?.ytd_production || 0,
-        ratios
+        ratios: teamRatios
       },
       subTeams: subTeams.results,
-      agents: agents.results.map((a) => ({
-        ...a,
-        volumeClosed: a.volume_closed || 0,
-        volumePending: a.volume_pending || 0,
-        listingsVolume: a.listings_volume || 0,
-        mlsLink: a.mls_link,
-        status: a.status || 'active',
-        countInTotal: !!a.count_in_total,
-        transactions: transactions.results.filter(t => t.agent_id === a.id).map(t => ({
-          ...t,
-          agentId: t.agent_id,
-        })),
-      })),
+      agents: agents.results.map((a) => {
+        const bsRatio = a.sellers > 0 ? (a.buyers / a.sellers).toFixed(2) : (a.buyers > 0 ? "1.00" : "0.00");
+        return {
+          ...a,
+          volumeClosed: a.volume_closed || 0,
+          volumePending: a.volume_pending || 0,
+          listingsVolume: a.listings_volume || 0,
+          mlsLink: a.mls_link,
+          status: a.status || 'active',
+          countInTotal: !!a.count_in_total,
+          bsRatio,
+          transactions: transactions.results.filter(t => t.agent_id === a.id).map(t => ({
+            ...t,
+            agentId: t.agent_id,
+          })),
+        };
+      }),
       lastUpdated: teamData?.last_updated || new Date().toISOString(),
       year
     });
@@ -131,15 +150,16 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { tenant, team, agents, subTeams, year = 2026, action } = body;
 
-    // Handle password/logo updates if specifically requested
+    // Handle settings updates (Password, logo, column toggles)
     if (action === 'update_settings') {
-      const { adminPassword, logoUrl, name, primaryColor } = body;
-      let query = "UPDATE tenants SET name = ?, primary_color = ?, logo_url = ? WHERE subdomain = ?";
-      let binds = [name, primaryColor, logoUrl, tenant.subdomain];
+      const { adminPassword, viewerPassword, logoUrl, name, primaryColor, showTimeToClose, showPriceDelta } = body;
+      
+      let query = "UPDATE tenants SET name = ?, primary_color = ?, logo_url = ?, show_time_to_close = ?, show_price_delta = ?, viewer_password_hash = ? WHERE subdomain = ?";
+      let binds = [name, primaryColor, logoUrl, showTimeToClose ? 1 : 0, showPriceDelta ? 1 : 0, viewerPassword || null, tenant.subdomain];
       
       if (adminPassword) {
-        query = "UPDATE tenants SET name = ?, primary_color = ?, logo_url = ?, admin_password_hash = ? WHERE subdomain = ?";
-        binds = [name, primaryColor, logoUrl, adminPassword, tenant.subdomain];
+        query = "UPDATE tenants SET name = ?, primary_color = ?, logo_url = ?, show_time_to_close = ?, show_price_delta = ?, viewer_password_hash = ?, admin_password_hash = ? WHERE subdomain = ?";
+        binds = [name, primaryColor, logoUrl, showTimeToClose ? 1 : 0, showPriceDelta ? 1 : 0, viewerPassword || null, adminPassword, tenant.subdomain];
       }
       await db.prepare(query).bind(...binds).run();
       return NextResponse.json({ success: true });
@@ -158,10 +178,10 @@ export async function POST(req: NextRequest) {
       "ON CONFLICT(subdomain) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, theme=excluded.theme, onboarding_completed=excluded.onboarding_completed, logo_url=excluded.logo_url"
     ).bind(tenantId, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0, tenant.logoUrl).run();
 
-    // 3. Upsert Team Data for the specific year
+    // 3. Upsert Team Data
     await db.prepare(
       "INSERT INTO team_data (tenant_id, year, goal, ytd_production, last_updated) VALUES (?, ?, ?, ?, ?) " +
-      "ON CONFLICT(tenant_id, year, sub_team_id) DO UPDATE SET goal=excluded.goal, ytd_production=excluded.ytd_production, last_updated=excluded.last_updated"
+      "ON CONFLICT(tenant_id, year) DO UPDATE SET goal=excluded.goal, ytd_production=excluded.ytd_production, last_updated=excluded.last_updated"
     ).bind(tenantId, year, team.goal, team.ytdProduction, new Date().toISOString()).run();
 
     // 4. Batch update sub-teams, agents, and transactions
@@ -178,8 +198,8 @@ export async function POST(req: NextRequest) {
       ),
       ...agents.flatMap((a: any) => 
         (a.transactions || []).map((t: any) => 
-          db.prepare("INSERT INTO transactions (id, agent_id, tenant_id, address, price, status, side, date, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-            .bind(t.id, a.id, tenantId, t.address, t.price, t.status, t.side, t.date, year)
+          db.prepare("INSERT INTO transactions (id, agent_id, tenant_id, address, price, list_price, date_listed, status, side, date, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            .bind(t.id, a.id, tenantId, t.address, t.price, t.listPrice || null, t.dateListed || null, t.status, t.side, t.date, year)
         )
       )
     ];

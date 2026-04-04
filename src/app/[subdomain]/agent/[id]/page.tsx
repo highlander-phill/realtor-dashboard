@@ -15,7 +15,12 @@ import {
   MapPin, 
   Tag, 
   Trash2,
-  Calendar
+  Calendar,
+  HelpCircle,
+  Clock,
+  ArrowUpRight,
+  TrendingDown,
+  TrendingUp
 } from "lucide-react";
 import { 
   Card, 
@@ -36,12 +41,37 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+
+function Tooltip({ children, content }: { children: React.ReactNode, content: string }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+      {children}
+      <AnimatePresence>
+        {show && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-3 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl shadow-2xl z-50 border border-white/10 text-center leading-relaxed"
+          >
+            {content}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 interface Transaction {
   id: string;
   agentId: string;
   address: string;
   price: number;
+  listPrice?: number;
+  dateListed?: string;
   status: string;
   side: string;
   date: string;
@@ -69,6 +99,8 @@ interface DashboardData {
     primaryColor: string;
     theme?: string;
     onboardingCompleted: boolean;
+    showTimeToClose: boolean;
+    showPriceDelta: boolean;
   };
   team: {
     goal: number;
@@ -147,6 +179,8 @@ function AgentDetailContent() {
       agentId: agent.id,
       address: "New Property",
       price: 0,
+      listPrice: 0,
+      dateListed: new Date().toISOString().split('T')[0],
       status: "Pending",
       side: "Buyer",
       date: new Date().toISOString().split('T')[0],
@@ -248,7 +282,7 @@ function AgentDetailContent() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
           <Card className="bg-white dark:bg-slate-900 border-none shadow-xl">
             <CardHeader className="pb-2">
               <CardTitle className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-2 tracking-[0.2em]">
@@ -279,6 +313,50 @@ function AgentDetailContent() {
               <p className="text-3xl font-black dark:text-white">{formatCurrency(agent.listingsVolume)}</p>
             </CardContent>
           </Card>
+          
+          {data.tenant.showTimeToClose && (
+            <Card className="bg-white dark:bg-slate-900 border-none shadow-xl">
+               <CardHeader className="pb-2">
+                 <CardTitle className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-2 tracking-[0.2em]">
+                   <Clock className="w-3 h-3 text-purple-500" /> Avg Days to Close
+                 </CardTitle>
+               </CardHeader>
+               <CardContent>
+                 <p className="text-3xl font-black dark:text-white">
+                   {(() => {
+                      const closed = agent.transactions.filter(t => t.status === 'Sold' && t.dateListed && t.date);
+                      if (closed.length === 0) return "—";
+                      const totalDays = closed.reduce((acc, t) => {
+                        const start = new Date(t.dateListed!).getTime();
+                        const end = new Date(t.date).getTime();
+                        return acc + Math.max(0, (end - start) / (1000 * 60 * 60 * 24));
+                      }, 0);
+                      return Math.round(totalDays / closed.length);
+                   })()}
+                 </p>
+               </CardContent>
+            </Card>
+          )}
+
+          {data.tenant.showPriceDelta && (
+            <Card className="bg-white dark:bg-slate-900 border-none shadow-xl">
+               <CardHeader className="pb-2">
+                 <CardTitle className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-2 tracking-[0.2em]">
+                   <TrendingUp className="w-3 h-3 text-emerald-500" /> List vs Sale %
+                 </CardTitle>
+               </CardHeader>
+               <CardContent>
+                 <p className="text-3xl font-black dark:text-white">
+                   {(() => {
+                      const sold = agent.transactions.filter(t => t.status === 'Sold' && t.listPrice && t.price);
+                      if (sold.length === 0) return "—";
+                      const totalDelta = sold.reduce((acc, t) => acc + (t.price / t.listPrice!), 0);
+                      return (totalDelta / sold.length * 100).toFixed(1) + "%";
+                   })()}
+                 </p>
+               </CardContent>
+            </Card>
+          )}
         </div>
 
         <Card className="border-none shadow-2xl overflow-hidden rounded-[32px] bg-white dark:bg-slate-900">
@@ -299,13 +377,29 @@ function AgentDetailContent() {
                    <TableRow className="border-slate-100 dark:border-slate-800">
                       <TableHead className="px-10 py-5 font-black uppercase text-[10px] tracking-widest">Property Address</TableHead>
                       <TableHead className="font-black uppercase text-[10px] tracking-widest">Price ($)</TableHead>
+                      {data.tenant.showPriceDelta && (
+                         <TableHead className="font-black uppercase text-[10px] tracking-widest">
+                           <Tooltip content="Initial List Price vs Final Sale Price">List Price</Tooltip>
+                         </TableHead>
+                      )}
                       <TableHead className="font-black uppercase text-[10px] tracking-widest">Status</TableHead>
+                      {data.tenant.showTimeToClose && (
+                         <TableHead className="font-black uppercase text-[10px] tracking-widest">
+                            <Tooltip content="Date the property was first listed">Date Listed</Tooltip>
+                         </TableHead>
+                      )}
+                      <TableHead className="font-black uppercase text-[10px] tracking-widest">Closing/Activity</TableHead>
                       <TableHead className="font-black uppercase text-[10px] tracking-widest">Side</TableHead>
                       {isAuthorized && <TableHead className="text-right px-10 font-black uppercase text-[10px] tracking-widest">Action</TableHead>}
                    </TableRow>
                 </TableHeader>
                 <TableBody>
-                   {(agent.transactions || []).map((t) => (
+                   {(agent.transactions || []).map((t) => {
+                      const daysToClose = (t.date && t.dateListed) ? Math.max(0, Math.round((new Date(t.date).getTime() - new Date(t.dateListed).getTime()) / (1000 * 60 * 60 * 24))) : null;
+                      const priceDelta = (t.price && t.listPrice) ? (t.price - t.listPrice) : null;
+                      const priceDeltaPct = (t.price && t.listPrice) ? ((t.price / t.listPrice) * 100 - 100).toFixed(1) : null;
+
+                      return (
                       <TableRow key={t.id} className="border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                          <TableCell className="px-10 py-6">
                             {isAuthorized ? (
@@ -324,17 +418,40 @@ function AgentDetailContent() {
                             )}
                          </TableCell>
                          <TableCell>
-                            {isAuthorized ? (
-                              <Input 
-                                type="number"
-                                value={t.price} 
-                                onChange={(e) => updateTransaction(t.id, "price", Number(e.target.value))}
-                                className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
-                              />
-                            ) : (
-                              <span className="font-black text-slate-700 dark:text-slate-300">{formatCurrency(t.price)}</span>
-                            )}
+                            <div className="flex flex-col">
+                               {isAuthorized ? (
+                                 <Input 
+                                   type="number"
+                                   value={t.price} 
+                                   onChange={(e) => updateTransaction(t.id, "price", Number(e.target.value))}
+                                   className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
+                                 />
+                               ) : (
+                                 <span className="font-black text-slate-700 dark:text-slate-300">{formatCurrency(t.price)}</span>
+                               )}
+                               {priceDelta !== null && t.status === 'Sold' && (
+                                  <span className={`text-[9px] font-black uppercase ${priceDelta >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                     {priceDelta >= 0 ? '+' : ''}{formatCurrency(priceDelta)} ({priceDeltaPct}%)
+                                  </span>
+                               )}
+                            </div>
                          </TableCell>
+
+                         {data.tenant.showPriceDelta && (
+                            <TableCell>
+                               {isAuthorized ? (
+                                 <Input 
+                                   type="number"
+                                   value={t.listPrice || 0} 
+                                   onChange={(e) => updateTransaction(t.id, "listPrice", Number(e.target.value))}
+                                   className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
+                                 />
+                               ) : (
+                                 <span className="font-bold text-slate-400">{t.listPrice ? formatCurrency(t.listPrice) : "—"}</span>
+                               )}
+                            </TableCell>
+                         )}
+
                          <TableCell>
                             {isAuthorized ? (
                               <select 
@@ -353,6 +470,42 @@ function AgentDetailContent() {
                                </Badge>
                             )}
                          </TableCell>
+
+                         {data.tenant.showTimeToClose && (
+                            <TableCell>
+                               {isAuthorized ? (
+                                 <Input 
+                                   type="date"
+                                   value={t.dateListed || ""} 
+                                   onChange={(e) => updateTransaction(t.id, "dateListed", e.target.value)}
+                                   className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-bold text-xs"
+                                 />
+                               ) : (
+                                 <div className="flex flex-col">
+                                    <span className="font-bold text-slate-500 text-xs">{t.dateListed || "—"}</span>
+                                    {daysToClose !== null && t.status === 'Sold' && (
+                                       <span className="text-[9px] font-black text-purple-500 uppercase tracking-tighter flex items-center gap-1">
+                                          <Clock className="w-2 h-2" /> {daysToClose} Days
+                                       </span>
+                                    )}
+                                 </div>
+                               )}
+                            </TableCell>
+                         )}
+
+                         <TableCell>
+                            {isAuthorized ? (
+                              <Input 
+                                type="date"
+                                value={t.date} 
+                                onChange={(e) => updateTransaction(t.id, "date", e.target.value)}
+                                className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-bold text-xs"
+                              />
+                            ) : (
+                              <span className="font-bold text-slate-500 text-xs">{t.date}</span>
+                            )}
+                         </TableCell>
+
                          <TableCell>
                             {isAuthorized ? (
                               <select 
@@ -378,7 +531,7 @@ function AgentDetailContent() {
                             </TableCell>
                          )}
                       </TableRow>
-                   ))}
+                   )})}
                    {(!agent.transactions || agent.transactions.length === 0) && (
                       <TableRow>
                          <TableCell colSpan={5} className="h-40 text-center text-slate-400 font-bold uppercase text-[10px] tracking-widest italic">No transaction history recorded for {selectedYear}.</TableCell>
