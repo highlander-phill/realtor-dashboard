@@ -4,4 +4,3 @@ node_modules
 .next/static/webpack
 .next/static/development
 .git
-.vercel
