@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS tenants (
   subdomain TEXT UNIQUE NOT NULL,
   logo_url TEXT,
   primary_color TEXT DEFAULT '#000000',
-  admin_password_hash TEXT NOT NULL,
+  onboarding_completed INTEGER DEFAULT 0,
+  admin_password_hash TEXT,
   viewer_password_hash TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -20,17 +21,20 @@ CREATE TABLE IF NOT EXISTS team_data (
   goal REAL NOT NULL DEFAULT 0,
   ytd_production REAL NOT NULL DEFAULT 0,
   last_updated TEXT NOT NULL,
+  UNIQUE(tenant_id, year),
   FOREIGN KEY (tenant_id) REFERENCES tenants(id)
 );
 
--- Updated agents with tenant_id
+-- Updated agents with tenant_id and volume metrics
 CREATE TABLE IF NOT EXISTS agents (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL,
   name TEXT NOT NULL,
   goal REAL NOT NULL DEFAULT 0,
   closings INTEGER NOT NULL DEFAULT 0,
+  volume_closed REAL NOT NULL DEFAULT 0,
   volume_pending REAL NOT NULL DEFAULT 0,
+  listings_volume REAL NOT NULL DEFAULT 0,
   buyers INTEGER NOT NULL DEFAULT 0,
   sellers INTEGER NOT NULL DEFAULT 0,
   listings INTEGER NOT NULL DEFAULT 0,
@@ -53,19 +57,19 @@ CREATE TABLE IF NOT EXISTS transactions (
 );
 
 -- Seed Initial Tenant (NSPG)
-INSERT OR IGNORE INTO tenants (id, name, subdomain, logo_url, admin_password_hash)
-VALUES ('nspg-group', 'Nik Shehu Property Group', 'nspg', NULL, 'nspg2026');
+INSERT OR IGNORE INTO tenants (id, name, subdomain, logo_url, primary_color, onboarding_completed, admin_password_hash)
+VALUES ('nspg-group', 'Nik Shehu Property Group', 'nspg', NULL, '#000000', 1, 'nspg2026');
 
 -- Seed Team Data for NSPG 2026
 INSERT OR IGNORE INTO team_data (tenant_id, year, goal, ytd_production, last_updated)
 VALUES ('nspg-group', 2026, 50000000, 18500000, CURRENT_TIMESTAMP);
 
 -- Seed Agents for NSPG
-INSERT OR IGNORE INTO agents (id, tenant_id, name, goal, closings, volume_pending, buyers, sellers, listings, mls_link)
+INSERT OR IGNORE INTO agents (id, tenant_id, name, goal, closings, volume_closed, volume_pending, listings_volume, buyers, sellers, listings, mls_link)
 VALUES 
-  ('1', 'nspg-group', 'Nik Shehu', 10000000, 12, 2500000, 5, 7, 4, 'https://nspgrealty.com/listings'),
-  ('2', 'nspg-group', 'Agent Two', 8000000, 8, 1200000, 3, 5, 2, 'https://nspgrealty.com/listings'),
-  ('3', 'nspg-group', 'Agent Three', 6000000, 5, 800000, 4, 1, 3, 'https://nspgrealty.com/listings');
+  ('1', 'nspg-group', 'Nik Shehu', 10000000, 12, 8500000, 2500000, 1500000, 5, 7, 4, 'https://nspgrealty.com/listings'),
+  ('2', 'nspg-group', 'Agent Two', 8000000, 8, 4200000, 1200000, 600000, 3, 5, 2, 'https://nspgrealty.com/listings'),
+  ('3', 'nspg-group', 'Agent Three', 6000000, 5, 2100000, 800000, 400000, 4, 1, 3, 'https://nspgrealty.com/listings');
 
 -- Seed Sample Transactions for Nik
 INSERT OR IGNORE INTO transactions (id, agent_id, tenant_id, address, price, status, side, date)
