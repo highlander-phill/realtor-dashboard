@@ -329,15 +329,16 @@ function DashboardContent() {
                 {data.tenant.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
               </div>
             )}
-            <div className="space-y-1">
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 uppercase italic">
-                {data.tenant.name}
-              </h1>
-              <div className="flex items-center gap-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
-                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {selectedYear} Performance</span>
-                {selectedSubTeam && <span className="flex items-center gap-1 text-blue-600"><Users className="w-3 h-3" /> {data.subTeams.find(s => s.id === selectedSubTeam)?.name}</span>}
+              <div className="space-y-1">
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 uppercase italic">
+                  {data.tenant.name}
+                </h1>
+                <div className="flex items-center gap-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {selectedYear} Performance</span>
+                  {selectedSubTeam && <span className="flex items-center gap-1 text-blue-600"><Users className="w-3 h-3" /> {data.subTeams.find(s => s.id === selectedSubTeam)?.name}</span>}
+                  <span className="text-[9px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-400">v2.1.0</span>
+                </div>
               </div>
-            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">

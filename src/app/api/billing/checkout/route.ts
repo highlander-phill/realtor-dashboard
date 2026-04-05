@@ -2,19 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getRequestContext } from "@cloudflare/next-on-pages";
 
-export const runtime = "edge";
-
-interface D1Env {
-  DB: {
-    prepare: (query: string) => {
-      bind: (...args: any[]) => {
-        run: () => Promise<any>;
-        first: () => Promise<any>;
-      };
-    };
-  };
-}
-
 export async function POST(req: NextRequest) {
   try {
     const { env } = getRequestContext() as unknown as { env: D1Env };
