@@ -197,7 +197,7 @@ export default function AdminPanel() {
 
   const [sortConfig, setSortConfig] = useState<{ key: keyof AgentData, direction: 'asc' | 'desc' } | null>(null);
 
-  const sortedAgents = [...data.agents].sort((a, b) => {
+  const sortedAgents = [...(data?.agents || [])].sort((a, b) => {
     if (!sortConfig) return 0;
     const { key, direction } = sortConfig;
     if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
@@ -250,6 +250,10 @@ export default function AdminPanel() {
 
   if (status === "loading") {
     return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center font-black uppercase tracking-widest text-slate-500">Authenticating...</div>;
+  }
+
+  if (!data || !data.tenant) {
+    return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center font-black uppercase tracking-widest text-slate-500">Loading Data...</div>;
   }
 
   return (
