@@ -82,6 +82,7 @@ interface DashboardData {
     logoUrl?: string;
     primaryColor: string;
     theme?: string;
+    darkMode: boolean;
     onboardingCompleted: boolean;
     showTimeToClose: boolean;
     showPriceDelta: boolean;
@@ -102,6 +103,7 @@ const initialData: DashboardData = {
     name: "Loading...",
     subdomain: "",
     primaryColor: "#000000",
+    darkMode: false,
     onboardingCompleted: true,
     showTimeToClose: false,
     showPriceDelta: false,
@@ -177,6 +179,7 @@ export default function AdminPanel() {
           name: data.tenant.name,
           primaryColor: data.tenant.primaryColor,
           logoUrl: data.tenant.logoUrl,
+          darkMode: data.tenant.darkMode,
           adminPassword: newPassword || undefined,
           viewerPassword: viewerPassword || undefined,
           showTimeToClose: data.tenant.showTimeToClose,
@@ -538,6 +541,17 @@ export default function AdminPanel() {
                             type="checkbox" 
                             checked={data.tenant.showPriceDelta} 
                             onChange={(e) => setData({...data, tenant: {...data.tenant, showPriceDelta: e.target.checked}})} 
+                            className="w-5 h-5 rounded border-slate-300"
+                          />
+                       </label>
+                       <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl cursor-pointer">
+                          <span className="flex items-center gap-3 font-bold text-sm">
+                             <Lock className="w-4 h-4 text-purple-500" /> Force Dark Mode
+                          </span>
+                          <input 
+                            type="checkbox" 
+                            checked={data.tenant.darkMode} 
+                            onChange={(e) => setData({...data, tenant: {...data.tenant, darkMode: e.target.checked}})} 
                             className="w-5 h-5 rounded border-slate-300"
                           />
                        </label>

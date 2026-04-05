@@ -35,17 +35,36 @@ export async function GET() {
   }
 }
 
+import { hashPassword } from "@/lib/crypto";
+
 export async function POST(req: NextRequest) {
   try {
     const { env } = getRequestContext() as unknown as { env: MasterEnv };
     const db = env.DB;
     
     const body = await req.json();
-    const { action, subdomain, tempPassword, theme, customerName, customerPhone, tenantId, newPassword } = body;
+    const { action, subdomain, tempPassword, theme, customerName, customerPhone, tenantId, newPassword, associatedEmail } = body;
 
-    if (action === 'update_password') {
-      await db.prepare("UPDATE tenants SET admin_password_hash = ? WHERE id = ?").bind(newPassword, tenantId).run();
-      return NextResponse.json({ success: true, message: "Tenant password updated" });
+    if (action === 'update_tenant') {
+      if (newPassword) {
+        const aHash = await hashPassword(newPassword);
+        await db.prepare("UPDATE tenants SET admin_password_hash = ? WHERE id = ?").bind(aHash, tenantId).run();
+      }
+      
+      if (associatedEmail) {
+        // Find or create user for this email and link to tenant
+        const existing = await db.prepare("SELECT id FROM users WHERE email = ?").bind(associatedEmail).first();
+        if (existing) {
+           await db.prepare("UPDATE users SET tenant_id = ? WHERE email = ?").bind(tenantId, associatedEmail).run();
+        } else {
+           const userId = Math.random().toString(36).substr(2, 9);
+           // Create user with a random high-entropy password hash that can't be guessed, 
+           // they should use Google login anyway if associated this way.
+           const dummyHash = await hashPassword(Math.random().toString(36));
+           await db.prepare("INSERT INTO users (id, tenant_id, email, password_hash) VALUES (?, ?, ?, ?)").bind(userId, tenantId, associatedEmail, dummyHash).run();
+        }
+      }
+      return NextResponse.json({ success: true, message: "Tenant access updated" });
     }
 
     const id = Math.random().toString(36).substr(2, 9);

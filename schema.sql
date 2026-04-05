@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS tenants (
   logo_url TEXT,
   primary_color TEXT DEFAULT '#000000',
   theme TEXT DEFAULT 'realtor',
+  dark_mode INTEGER DEFAULT 0,
   onboarding_completed INTEGER DEFAULT 0,
   stripe_customer_id TEXT,
   billing_status TEXT DEFAULT 'free',

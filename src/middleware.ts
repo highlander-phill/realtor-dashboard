@@ -61,6 +61,15 @@ export default async function middleware(request: NextRequest) {
   // Route protection
   const isAdminRoute = url.pathname.includes('/admin') || (subdomain && url.pathname.startsWith(`/${subdomain}/admin`));
   const isLoginPage = url.pathname.includes('/login') || (subdomain && url.pathname.startsWith(`/${subdomain}/admin/login`));
+  const isMasterRoute = url.pathname.startsWith('/master');
+
+  // Master Route Protection
+  if (isMasterRoute && !isLoginPage) {
+    const adminEmails = ['phillsimpson@gmail.com'];
+    if (!session || !session.user || !adminEmails.includes(session.user.email || '')) {
+       return NextResponse.redirect(new URL('/master/login', request.url));
+    }
+  }
 
   if (isAdminRoute && !isLoginPage && !session) {
     return NextResponse.redirect(new URL(subdomain ? `/${subdomain}/admin/login` : '/admin/login', request.url));

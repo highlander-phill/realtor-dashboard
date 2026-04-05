@@ -14,7 +14,9 @@ import {
   Layout, 
   Users,
   Search,
-  Key
+  Key,
+  Moon,
+  Sun
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,9 +32,10 @@ import {
   TableRow 
 } from "@/components/ui/table";
 
+import { useSession, signOut } from "next-auth/react";
+
 export default function MasterDashboard() {
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [masterPass, setMasterPass] = useState("");
+  const { data: session, status } = useSession();
   const [authorized, setAuthorized] = useState<any[]>([]);
   const [active, setActive] = useState<any[]>([]);
   const [formData, setFormData] = useState({
@@ -44,38 +47,22 @@ export default function MasterDashboard() {
   });
   const [generatedSms, setGeneratedSms] = useState("");
   const [copied, setCopied] = useState(false);
-  const [resetData, setResetData] = useState({ tenantId: "", newPassword: "" });
+  const [resetData, setResetData] = useState({ tenantId: "", newPassword: "", associatedEmail: "" });
+  const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('master_token');
-    if (token) {
-      verifyToken(token);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
-  }, []);
-
-  const verifyToken = async (pass: string) => {
-    try {
-      const res = await fetch('/api/master/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: pass }),
-      });
-      if (res.ok) {
-        setIsAuthorized(true);
-        setMasterPass(pass);
-      } else {
-        localStorage.removeItem('master_token');
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  }, [isDark]);
 
   useEffect(() => {
-    if (isAuthorized) {
+    if (status === "authenticated") {
       fetchData();
     }
-  }, [isAuthorized]);
+  }, [status]);
 
   const fetchData = async () => {
     const res = await fetch('/api/master');
@@ -86,45 +73,27 @@ export default function MasterDashboard() {
     }
   };
 
-  const handleLogin = async () => {
-    const res = await fetch('/api/master/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: masterPass }),
-    });
-
-    if (res.ok) {
-      setIsAuthorized(true);
-      localStorage.setItem('master_token', masterPass);
-    } else {
-      if (res.status === 429) {
-        const error = await res.json();
-        alert(error.error);
-      } else {
-        alert("Incorrect master password.");
-      }
-    }
-  };
-
-  const handleUpdateTenantPassword = async () => {
-    if (!resetData.tenantId || !resetData.newPassword) {
-       alert("Please select a tenant and enter a new password.");
+  const handleUpdateTenant = async () => {
+    if (!resetData.tenantId) {
+       alert("Please select a tenant.");
        return;
     }
     const res = await fetch('/api/master', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        action: 'update_password', 
+        action: 'update_tenant', 
         tenantId: resetData.tenantId, 
-        newPassword: resetData.newPassword 
+        newPassword: resetData.newPassword,
+        associatedEmail: resetData.associatedEmail
       }),
     });
     if (res.ok) {
-      alert("Tenant password updated successfully.");
-      setResetData({ tenantId: "", newPassword: "" });
+      alert("Tenant updated successfully.");
+      setResetData({ tenantId: "", newPassword: "", associatedEmail: "" });
+      fetchData();
     } else {
-      alert("Failed to update password.");
+      alert("Failed to update tenant.");
     }
   };
 
@@ -155,35 +124,18 @@ export default function MasterDashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (!isAuthorized) {
+  if (status === "loading") {
+    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Authenticating...</div>;
+  }
+
+  if (status === "unauthenticated" || !['phillsimpson@gmail.com'].includes(session?.user?.email || '')) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full bg-slate-900 border-slate-800 shadow-2xl rounded-3xl overflow-hidden">
-          <CardHeader className="text-center pb-8 pt-10">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg">
-              <Shield className="w-8 h-8" />
-            </div>
-            <CardTitle className="text-3xl font-black text-white uppercase tracking-tight">Master Control</CardTitle>
-            <CardDescription className="text-slate-400">Enter master password to continue</CardDescription>
-          </CardHeader>
-          <CardContent className="px-10 pb-10 space-y-6">
-            <div className="space-y-2">
-              <Label className="text-slate-400 font-bold uppercase text-[10px] tracking-widest px-1">Security Key</Label>
-              <Input 
-                type="password"
-                value={masterPass}
-                onChange={(e) => setMasterPass(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                className="bg-slate-950 border-slate-800 text-white h-14 rounded-2xl text-xl text-center font-bold tracking-widest focus:ring-blue-600"
-                placeholder="••••••••"
-              />
-            </div>
-            <Button onClick={handleLogin} className="w-full bg-blue-600 hover:bg-blue-700 text-white h-14 font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-900/20">
-              Access Dashboard <Lock className="w-4 h-4 ml-2" />
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white gap-4">
+          <Shield className="w-16 h-16 text-red-500" />
+          <h2 className="text-2xl font-black uppercase tracking-tight">Access Restricted</h2>
+          <p className="text-slate-500 font-medium">This dashboard is for authorized master accounts only.</p>
+          <Button onClick={() => window.location.href = '/master/login'} className="bg-blue-600 hover:bg-blue-700 h-14 px-8 font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-900/20">Go to Login</Button>
+       </div>
     );
   }
 
@@ -209,9 +161,12 @@ export default function MasterDashboard() {
               <p className="text-2xl font-black text-orange-400">{authorized.length}</p>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pending Onboarding</p>
             </div>
+            <div className="w-px h-10 bg-slate-800" />
+            <Button variant="ghost" size="icon" onClick={() => setIsDark(!isDark)} className="text-slate-500 hover:text-white">
+               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => {
-              setIsAuthorized(false);
-              localStorage.removeItem('master_token');
+              signOut({ callbackUrl: '/master/login' });
             }} className="text-slate-500 hover:text-white">Logout</Button>
           </div>
         </header>
@@ -288,9 +243,9 @@ export default function MasterDashboard() {
           <Card className="bg-slate-900 border-slate-800 shadow-xl rounded-3xl overflow-hidden">
             <CardHeader className="bg-slate-800/50 border-b border-slate-800">
               <CardTitle className="flex items-center gap-2 text-white">
-                <Lock className="w-5 h-5 text-orange-500" /> Administrative Reset
+                <Lock className="w-5 h-5 text-orange-500" /> Tenant Login Control
               </CardTitle>
-              <CardDescription className="text-slate-400 font-medium">Overrule tenant management password.</CardDescription>
+              <CardDescription className="text-slate-400 font-medium">Manage admin passwords & associated emails.</CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <div className="space-y-2">
@@ -307,17 +262,26 @@ export default function MasterDashboard() {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">New Admin Password</Label>
+                <Label className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Associated Gmail (Admin)</Label>
+                <Input 
+                  value={resetData.associatedEmail}
+                  onChange={(e) => setResetData({...resetData, associatedEmail: e.target.value})}
+                  className="bg-slate-950 border-slate-800 text-white h-12 font-bold"
+                  placeholder="e.g. user@gmail.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">New Manual Password</Label>
                 <Input 
                   type="password"
                   value={resetData.newPassword}
                   onChange={(e) => setResetData({...resetData, newPassword: e.target.value})}
                   className="bg-slate-950 border-slate-800 text-white h-12 font-bold"
-                  placeholder="Enter new management pass"
+                  placeholder="Leave blank to keep current"
                 />
               </div>
-              <Button onClick={handleUpdateTenantPassword} variant="outline" className="w-full border-slate-700 hover:bg-slate-800 text-slate-300 h-12 font-bold uppercase tracking-widest text-[10px] mt-2">
-                Override Password
+              <Button onClick={handleUpdateTenant} variant="outline" className="w-full border-slate-700 hover:bg-slate-800 text-slate-300 h-12 font-bold uppercase tracking-widest text-[10px] mt-2">
+                Update Tenant Access
               </Button>
             </CardContent>
           </Card>
