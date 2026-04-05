@@ -99,9 +99,9 @@ export async function GET(req: NextRequest) {
     const totalProduction = yearTransactions.filter(t => t.status === 'Sold').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
     
     const teamRatios = {
-      listingToClose: yearTransactions.filter(t => t.status === 'Active').length > 0 ? (yearTransactions.filter(t => t.status === 'Sold').length / yearTransactions.filter(t => t.status === 'Active').length).toFixed(2) : "0",
-      buyerToSeller: yearTransactions.filter(t => t.side === 'Seller').length > 0 ? (yearTransactions.filter(t => t.side === 'Buyer').length / yearTransactions.filter(t => t.side === 'Seller').length).toFixed(2) : "0",
-      avgDealSize: yearTransactions.filter(t => t.status === 'Sold').length > 0 ? (totalProduction / yearTransactions.filter(t => t.status === 'Sold').length).toFixed(0) : "0"
+      listingToClose: yearTransactions.filter((t: any) => t.status === 'Active').length > 0 ? (yearTransactions.filter((t: any) => t.status === 'Sold').length / yearTransactions.filter((t: any) => t.status === 'Active').length).toFixed(2) : "0",
+      buyerToSeller: yearTransactions.filter((t: any) => t.side === 'Seller').length > 0 ? (yearTransactions.filter((t: any) => t.side === 'Buyer').length / yearTransactions.filter((t: any) => t.side === 'Seller').length).toFixed(2) : "0",
+      avgDealSize: yearTransactions.filter((t: any) => t.status === 'Sold').length > 0 ? (totalProduction / yearTransactions.filter((t: any) => t.status === 'Sold').length).toFixed(0) : "0"
     };
 
     return NextResponse.json({
@@ -124,15 +124,15 @@ export async function GET(req: NextRequest) {
         ytdProduction: totalProduction,
         ratios: teamRatios
       },
-      subTeams: subTeams.results,
-      agents: agents.results.map((a) => {
-        const agentTransactions = transactions.results.filter(t => t.agent_id === a.id && t.year === year);
-        const volumeClosed = agentTransactions.filter(t => t.status === 'Sold').reduce((acc, t) => acc + (t.price || 0), 0);
-        const volumePending = agentTransactions.filter(t => t.status === 'Pending').reduce((acc, t) => acc + (t.price || 0), 0);
-        const listingsVolume = agentTransactions.filter(t => t.status === 'Active').reduce((acc, t) => acc + (t.price || 0), 0);
+      subTeams: subTeams.results || [],
+      agents: (agents.results || []).map((a: any) => {
+        const agentTransactions = (transactions.results || []).filter((t: any) => t.agent_id === a.id && t.year === year);
+        const volumeClosed = agentTransactions.filter((t: any) => t.status === 'Sold').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
+        const volumePending = agentTransactions.filter((t: any) => t.status === 'Pending').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
+        const listingsVolume = agentTransactions.filter((t: any) => t.status === 'Active').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
         
-        const buyers = agentTransactions.filter(t => t.side === 'Buyer').length;
-        const sellers = agentTransactions.filter(t => t.side === 'Seller').length;
+        const buyers = agentTransactions.filter((t: any) => t.side === 'Buyer').length;
+        const sellers = agentTransactions.filter((t: any) => t.side === 'Seller').length;
         const bsRatio = sellers > 0 ? (buyers / sellers).toFixed(2) : (buyers > 0 ? "1.00" : "0.00");
         
         return {
@@ -146,7 +146,7 @@ export async function GET(req: NextRequest) {
           status: a.status || 'active',
           countInTotal: !!a.count_in_total,
           bsRatio,
-          transactions: agentTransactions.map(t => ({
+          transactions: agentTransactions.map((t: any) => ({
             ...t,
             agentId: t.agent_id,
           })),
