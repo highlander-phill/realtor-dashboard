@@ -65,20 +65,30 @@ export default auth(async (request) => {
   }
 
   // Rewrite if we detected a subdomain and we're not already on the subdomain path
+  let response: NextResponse;
   if (subdomain && !url.pathname.startsWith(`/${subdomain}`)) {
     url.pathname = `/${subdomain}${url.pathname === '/' ? '' : url.pathname}`;
-    return NextResponse.rewrite(url, {
+    response = NextResponse.rewrite(url, {
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  } else {
+    response = NextResponse.next({
       request: {
         headers: requestHeaders,
       },
     });
   }
 
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  // Security Headers
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  
+  return response;
 })
 
 export const config = {

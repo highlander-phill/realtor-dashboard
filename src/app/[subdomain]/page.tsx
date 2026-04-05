@@ -212,15 +212,10 @@ function DashboardContent() {
   
   const router = useRouter();
 
-  const fetchData = async (pass?: string) => {
+  const fetchData = async () => {
     try {
       let url = `/api/dashboard?subdomain=${subdomain}&year=${selectedYear}`;
       if (selectedSubTeam) url += `&subTeamId=${selectedSubTeam}`;
-      if (pass) url += `&password=${pass}`;
-      else {
-        const stored = localStorage.getItem(`tg_view_${subdomain}`);
-        if (stored) url += `&password=${stored}`;
-      }
       
       const response = await fetch(url);
       if (response.ok) {
@@ -231,7 +226,6 @@ function DashboardContent() {
         }
         setData(cloudData);
         setIsLocked(false);
-        if (pass) localStorage.setItem(`tg_view_${subdomain}`, pass);
       } else if (response.status === 403) {
         const errData = await response.json();
         setIsLocked(true);
@@ -253,9 +247,22 @@ function DashboardContent() {
     return () => clearInterval(interval);
   }, [subdomain, selectedYear, selectedSubTeam]);
 
-  const handleUnlock = (e: React.FormEvent) => {
+  const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
-    fetchData(viewerPassword);
+    try {
+      const res = await fetch('/api/dashboard/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subdomain, password: viewerPassword }),
+      });
+      if (res.ok) {
+        fetchData(); // This will now work because the cookie is set
+      } else {
+        alert("Invalid password");
+      }
+    } catch (err) {
+      console.error("Unlock error:", err);
+    }
   };
 
   if (isLocked) {

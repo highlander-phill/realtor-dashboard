@@ -1,6 +1,8 @@
-// TeamGoals Dashboard API - Production v1.0.1
 import { getRequestContext } from "@cloudflare/next-on-pages";
 import { NextRequest, NextResponse } from "next/server";
+import { hashPassword, comparePasswords } from "@/lib/crypto";
+import { auth } from "@/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
@@ -17,13 +19,18 @@ interface D1Env {
 
 export async function GET(req: NextRequest) {
   try {
-    let env: D1Env;
+    let env: D1Env & { SETTINGS: any };
     try {
-      env = getRequestContext().env as unknown as D1Env;
+      env = getRequestContext().env as any;
     } catch {
       return NextResponse.json({ error: "Local development mode" }, { status: 500 });
     }
     const db = env.DB;
+    const kv = env.SETTINGS;
+
+    // Rate Limiting
+    const ip = req.headers.get("cf-connecting-ip") || "anonymous";
+    await checkRateLimit(kv, `get_dash:${ip}`, 100, 60); 
 
     const host = req.headers.get('host') || '';
     const url = new URL(req.url);
@@ -54,14 +61,19 @@ export async function GET(req: NextRequest) {
     }
 
     // Check Viewer Password
-    if (tenant.viewer_password_hash && tenant.viewer_password_hash !== viewerPass) {
-       return NextResponse.json({ 
-         error: "Password required", 
-         passwordProtected: true,
-         tenantName: tenant.name,
-         primaryColor: tenant.primary_color,
-         logoUrl: tenant.logo_url
-       }, { status: 403 });
+    if (tenant.viewer_password_hash) {
+      const viewerAuthCookie = req.cookies.get(`tg_viewer_auth_${subdomain}`)?.value;
+      const isAuthorized = viewerAuthCookie === 'true' || (viewerPass && await comparePasswords(viewerPass, tenant.viewer_password_hash));
+
+      if (!isAuthorized) {
+        return NextResponse.json({ 
+          error: "Password required", 
+          passwordProtected: true,
+          tenantName: tenant.name,
+          primaryColor: tenant.primary_color,
+          logoUrl: tenant.logo_url
+        }, { status: 403 });
+      }
     }
 
     // Fetch team-wide or sub-team specific data
@@ -150,22 +162,53 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { env } = getRequestContext() as unknown as { env: D1Env };
+    const { env } = getRequestContext() as any;
     const db = env.DB;
+    const kv = env.SETTINGS;
+
+    // Rate Limiting
+    const ip = req.headers.get("cf-connecting-ip") || "anonymous";
+    const rl = await checkRateLimit(kv, `post_dash:${ip}`, 20, 60);
+    if (!rl.success) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    
+    // Auth Check
+    const session = await auth();
     
     const body = await req.json();
     const { tenant, team, agents, subTeams, year = 2026, action } = body;
 
+    // Resolve Tenant ID from Subdomain
+    const existingTenant = await db.prepare("SELECT * FROM tenants WHERE subdomain = ?").bind(tenant.subdomain).first();
+    
+    // Authorization: Only allow the update if:
+    // 1. The tenant doesn't exist yet (onboarding)
+    // 2. OR The session user is an admin for this specific tenant
+    if (existingTenant) {
+      if (!session || !session.user) {
+         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      
+      // Check if user has access to this tenant
+      const user = await db.prepare("SELECT * FROM users WHERE email = ? AND tenant_id = ?").bind(session.user.email, existingTenant.id).first();
+      const agent = await db.prepare("SELECT * FROM agents WHERE email = ? AND tenant_id = ?").bind(session.user.email, existingTenant.id).first();
+      
+      if (!user && !agent) {
+         return NextResponse.json({ error: "Forbidden: You do not have management access to this tenant" }, { status: 403 });
+      }
+    }
+
     // Handle settings updates (Password, logo, column toggles)
     if (action === 'update_settings') {
       const { adminPassword, viewerPassword, logoUrl, name, primaryColor, showTimeToClose, showPriceDelta } = body;
+      const vHash = viewerPassword ? await hashPassword(viewerPassword) : null;
       
       let query = "UPDATE tenants SET name = ?, primary_color = ?, logo_url = ?, show_time_to_close = ?, show_price_delta = ?, viewer_password_hash = ? WHERE subdomain = ?";
-      let binds = [name, primaryColor, logoUrl, showTimeToClose ? 1 : 0, showPriceDelta ? 1 : 0, viewerPassword || null, tenant.subdomain];
+      let binds = [name, primaryColor, logoUrl, showTimeToClose ? 1 : 0, showPriceDelta ? 1 : 0, vHash, tenant.subdomain];
       
       if (adminPassword) {
+        const aHash = await hashPassword(adminPassword);
         query = "UPDATE tenants SET name = ?, primary_color = ?, logo_url = ?, show_time_to_close = ?, show_price_delta = ?, viewer_password_hash = ?, admin_password_hash = ? WHERE subdomain = ?";
-        binds = [name, primaryColor, logoUrl, showTimeToClose ? 1 : 0, showPriceDelta ? 1 : 0, viewerPassword || null, adminPassword, tenant.subdomain];
+        binds = [name, primaryColor, logoUrl, showTimeToClose ? 1 : 0, showPriceDelta ? 1 : 0, vHash, aHash, tenant.subdomain];
       }
       await db.prepare(query).bind(...binds).run();
       return NextResponse.json({ success: true });
@@ -179,10 +222,11 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Upsert Tenant
+    const aHash = tenant.adminPassword ? await hashPassword(tenant.adminPassword) : null;
     await db.prepare(
       "INSERT INTO tenants (id, name, subdomain, primary_color, theme, onboarding_completed, logo_url, admin_password_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
       "ON CONFLICT(subdomain) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, theme=excluded.theme, onboarding_completed=MAX(tenants.onboarding_completed, excluded.onboarding_completed), logo_url=excluded.logo_url, admin_password_hash=COALESCE(excluded.admin_password_hash, tenants.admin_password_hash)"
-    ).bind(tenantId, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0, tenant.logoUrl || null, tenant.adminPassword || null).run();
+    ).bind(tenantId, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0, tenant.logoUrl || null, aHash).run();
 
     // 3. Upsert Team Data
     await db.prepare(

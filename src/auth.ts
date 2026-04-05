@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
 import { getRequestContext } from "@cloudflare/next-on-pages"
 import { verifyTurnstileToken } from "@/lib/utils"
+import { comparePasswords } from "@/lib/crypto"
 
 export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
   const { env } = getRequestContext() as any;
@@ -23,8 +24,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
           if (!isValid) return null;
           
           const user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(credentials.email).first();
-          if (user && user.password_hash === credentials.password) { // Using plain comparison for now, should be bcrypt
-            return { id: user.id, email: user.email };
+          if (user) {
+            const isMatch = await comparePasswords(credentials.password as string, user.password_hash);
+            if (isMatch) return { id: user.id, email: user.email };
           }
           return null;
         },
