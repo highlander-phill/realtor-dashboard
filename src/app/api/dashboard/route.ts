@@ -180,9 +180,9 @@ export async function POST(req: NextRequest) {
 
     // 2. Upsert Tenant
     await db.prepare(
-      "INSERT INTO tenants (id, name, subdomain, primary_color, theme, onboarding_completed, logo_url) VALUES (?, ?, ?, ?, ?, ?, ?) " +
-      "ON CONFLICT(subdomain) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, theme=excluded.theme, onboarding_completed=excluded.onboarding_completed, logo_url=excluded.logo_url"
-    ).bind(tenantId, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0, tenant.logoUrl).run();
+      "INSERT INTO tenants (id, name, subdomain, primary_color, theme, onboarding_completed, logo_url, admin_password_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+      "ON CONFLICT(subdomain) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, theme=excluded.theme, onboarding_completed=MAX(tenants.onboarding_completed, excluded.onboarding_completed), logo_url=excluded.logo_url, admin_password_hash=COALESCE(excluded.admin_password_hash, tenants.admin_password_hash)"
+    ).bind(tenantId, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0, tenant.logoUrl || null, tenant.adminPassword || null).run();
 
     // 3. Upsert Team Data
     await db.prepare(

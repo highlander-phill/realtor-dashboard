@@ -41,6 +41,7 @@ function OnboardingContent() {
     primaryColor: "#2563eb",
     annualGoal: "50000000",
     theme: "realtor",
+    logoUrl: "",
   });
   const router = useRouter();
 
@@ -113,6 +114,8 @@ function OnboardingContent() {
         subdomain: subdomain, 
         primaryColor: formData.primaryColor,
         theme: formData.theme,
+        logoUrl: formData.logoUrl,
+        adminPassword: formData.adminPassword,
         onboardingCompleted: true,
       },
       team: {
@@ -139,15 +142,20 @@ function OnboardingContent() {
     };
 
     try {
-      await fetch('/api/dashboard', {
+      const response = await fetch('/api/dashboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData),
       });
+      
+      if (!response.ok) throw new Error("Save failed");
+      
       alert("Success! Your team dashboard is ready.");
-      router.push(`/${subdomain}`);
+      // Force a hard navigation to clear cache and ensure state is fresh
+      window.location.href = `/${subdomain}`;
     } catch (err) {
       console.error("Cloud save failed during onboarding", err);
+      alert("Something went wrong saving your setup. Please try again.");
     }
   };
 
@@ -304,7 +312,7 @@ function OnboardingContent() {
                 {step === 3 && (
                   <div className="space-y-8">
                     <div className="space-y-4">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Brand Identity</Label>
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Primary Brand Color</Label>
                       <div className="flex gap-6 items-center bg-slate-50 p-6 rounded-[24px] border border-slate-100">
                         <input 
                           type="color" 
@@ -315,6 +323,38 @@ function OnboardingContent() {
                         <div className="flex-1 space-y-1">
                           <p className="text-lg font-black uppercase tracking-tighter">{formData.primaryColor}</p>
                         </div>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Team Logo</Label>
+                      <div className="space-y-4">
+                        <Input 
+                          placeholder="Logo URL (https://...)" 
+                          value={formData.logoUrl}
+                          onChange={(e) => handleInputChange('logoUrl', e.target.value)}
+                          className="h-12 border-slate-200 focus:ring-black rounded-xl"
+                        />
+                        <div className="flex gap-2">
+                           <Button 
+                             variant="outline" 
+                             className="flex-1 h-12 rounded-xl text-xs font-bold uppercase tracking-widest"
+                             onClick={() => alert("Image upload requires Cloudflare R2 or similar. Please provide a URL for now.")}
+                           >
+                             Upload Image
+                           </Button>
+                           <Button 
+                             variant="outline"
+                             className="flex-1 h-12 rounded-xl text-xs font-bold uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800"
+                             onClick={() => handleInputChange('logoUrl', `https://logo.clearbit.com/${formData.companyName.toLowerCase().replace(/\s+/g, '')}.com`)}
+                           >
+                             Generate from Name
+                           </Button>
+                        </div>
+                        {formData.logoUrl && (
+                          <div className="mt-4 p-4 border border-slate-100 rounded-2xl flex items-center justify-center bg-slate-50">
+                             <img src={formData.logoUrl} alt="Logo Preview" className="h-16 object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
