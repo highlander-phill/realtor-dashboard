@@ -140,16 +140,20 @@ function AgentDetailContent() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const auth = localStorage.getItem(`tg_auth_${subdomain}`);
     if (auth) setIsAuthorized(true);
 
     async function fetchData() {
+      setIsLoading(true);
       const response = await fetch(`/api/dashboard?subdomain=${subdomain}&year=${selectedYear}`);
       if (response.ok) {
         const cloudData = await response.json();
         setData(cloudData);
       }
+      setIsLoading(false);
     }
     if (subdomain) fetchData();
   }, [subdomain, selectedYear]);
@@ -210,6 +214,17 @@ function AgentDetailContent() {
     );
     setData({ ...data, agents: updatedAgents });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+        <div className="text-center space-y-4">
+           <RefreshCcw className="w-8 h-8 animate-spin mx-auto text-blue-500" />
+           <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Syncing Performance Data...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!agent) {
     return (

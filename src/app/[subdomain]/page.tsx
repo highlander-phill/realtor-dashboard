@@ -510,8 +510,10 @@ function DashboardContent() {
                       return (
                         <TableRow 
                           key={agent.id} 
-                          className="border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group cursor-pointer"
-                          onClick={() => router.push(`/${subdomain}/agent/${agent.id}?year=${selectedYear}`)}
+                          className="border-slate-50 dark:border-slate-800 hover:bg-slate-100/80 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer active:bg-slate-200 dark:active:bg-slate-700"
+                          onClick={() => {
+                             router.push(`/${subdomain}/agent/${agent.id}?year=${selectedYear}`);
+                          }}
                         >
                           <TableCell className="px-10 py-6">
                              <div className="flex items-center gap-3">

@@ -135,17 +135,27 @@ export async function GET(req: NextRequest) {
       },
       subTeams: subTeams.results,
       agents: agents.results.map((a) => {
-        const bsRatio = a.sellers > 0 ? (a.buyers / a.sellers).toFixed(2) : (a.buyers > 0 ? "1.00" : "0.00");
+        const agentTransactions = transactions.results.filter(t => t.agent_id === a.id);
+        const volumeClosed = agentTransactions.filter(t => t.status === 'Sold').reduce((acc, t) => acc + (t.price || 0), 0);
+        const volumePending = agentTransactions.filter(t => t.status === 'Pending').reduce((acc, t) => acc + (t.price || 0), 0);
+        const listingsVolume = agentTransactions.filter(t => t.status === 'Active').reduce((acc, t) => acc + (t.price || 0), 0);
+        
+        const buyers = agentTransactions.filter(t => t.side === 'Buyer').length;
+        const sellers = agentTransactions.filter(t => t.side === 'Seller').length;
+        const bsRatio = sellers > 0 ? (buyers / sellers).toFixed(2) : (buyers > 0 ? "1.00" : "0.00");
+        
         return {
           ...a,
-          volumeClosed: a.volume_closed || 0,
-          volumePending: a.volume_pending || 0,
-          listingsVolume: a.listings_volume || 0,
+          volumeClosed,
+          volumePending,
+          listingsVolume,
+          buyers,
+          sellers,
           mlsLink: a.mls_link,
           status: a.status || 'active',
           countInTotal: !!a.count_in_total,
           bsRatio,
-          transactions: transactions.results.filter(t => t.agent_id === a.id).map(t => ({
+          transactions: agentTransactions.map(t => ({
             ...t,
             agentId: t.agent_id,
           })),

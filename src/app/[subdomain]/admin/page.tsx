@@ -4,6 +4,7 @@ export const runtime = "edge";
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession, signOut as nextSignOut } from "next-auth/react";
 import { 
   ChevronLeft, 
   Save, 
@@ -126,9 +127,10 @@ export default function AdminPanel() {
   const [newPassword, setNewPassword] = useState("");
   const [viewerPassword, setViewerPassword] = useState("");
 
+  const { data: session, status } = useSession();
+
   useEffect(() => {
-    const auth = localStorage.getItem(`tg_auth_${subdomain}`);
-    if (!auth) {
+    if (status === "unauthenticated") {
       router.push(`/${subdomain}/admin/login`);
     }
 
@@ -141,8 +143,8 @@ export default function AdminPanel() {
         }
       }
     }
-    if (subdomain) fetchData();
-  }, [subdomain, router]);
+    if (subdomain && status === "authenticated") fetchData();
+  }, [subdomain, router, status]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -211,6 +213,21 @@ export default function AdminPanel() {
     setSortConfig({ key, direction });
   };
 
+  const addAgent = () => {
+    const newAgent: AgentData = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: "New Agent",
+      goal: 5000000,
+      volumeClosed: 0,
+      volumePending: 0,
+      listingsVolume: 0,
+      status: "active",
+      countInTotal: true,
+      transactions: []
+    };
+    setData({ ...data, agents: [...data.agents, newAgent] });
+  };
+
   const addSubTeam = () => {
     const newST: SubTeam = {
       id: Math.random().toString(36).substr(2, 9),
@@ -228,9 +245,12 @@ export default function AdminPanel() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem(`tg_auth_${subdomain}`);
-    router.push(`/${subdomain}`);
+    nextSignOut({ callbackUrl: `/${subdomain}` });
   };
+
+  if (status === "loading") {
+    return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center font-black uppercase tracking-widest text-slate-500">Authenticating...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 text-slate-900 dark:text-slate-100">
