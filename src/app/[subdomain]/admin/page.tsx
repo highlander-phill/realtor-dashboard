@@ -193,19 +193,22 @@ export default function AdminPanel() {
     }
   };
 
-  const addAgent = () => {
-    const newAgent: AgentData = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: "New Agent",
-      goal: 10000000,
-      volumeClosed: 0,
-      volumePending: 0,
-      listingsVolume: 0,
-      status: 'active',
-      countInTotal: true,
-      transactions: []
-    };
-    setData({ ...data, agents: [...data.agents, newAgent] });
+  const [sortConfig, setSortConfig] = useState<{ key: keyof AgentData, direction: 'asc' | 'desc' } | null>(null);
+
+  const sortedAgents = [...data.agents].sort((a, b) => {
+    if (!sortConfig) return 0;
+    const { key, direction } = sortConfig;
+    if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
+    if (a[key] > b[key]) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (key: keyof AgentData) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
   };
 
   const addSubTeam = () => {
@@ -296,15 +299,15 @@ export default function AdminPanel() {
                   <Table>
                     <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
                       <TableRow className="border-slate-100 dark:border-slate-800">
-                        <TableHead className="px-10 py-5 font-black text-[10px] uppercase tracking-widest">Agent Name</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Sub-Team</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Goal ($)</TableHead>
+                        <TableHead onClick={() => handleSort('name')} className="px-10 py-5 font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800">Agent Name ↕</TableHead>
+                        <TableHead onClick={() => handleSort('subTeamId')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800">Sub-Team ↕</TableHead>
+                        <TableHead onClick={() => handleSort('goal')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800">Goal ($) ↕</TableHead>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest">Status</TableHead>
                         <TableHead className="text-right px-10 font-black text-[10px] uppercase tracking-widest">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {data.agents.map((agent) => (
+                      {sortedAgents.map((agent) => (
                         <TableRow key={agent.id} className="border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
                           <TableCell className="px-10 py-6">
                             <Input 
