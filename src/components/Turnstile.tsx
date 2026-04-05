@@ -4,16 +4,16 @@ import { useEffect, useRef, useState } from "react";
 
 export default function Turnstile({ onVerify }: { onVerify: (token: string) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isClient, setIsClient] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
+    setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    if (!isClient || !containerRef.current) return;
+    if (!isMounted || !containerRef.current) return;
 
-    const renderTurnstile = () => {
+    const renderWidget = () => {
       if (window.turnstile && containerRef.current) {
         try {
           window.turnstile.render(containerRef.current, {
@@ -23,26 +23,37 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
             },
           });
         } catch (e) {
-          // Ignore "already rendered" errors
+          // Widget might already be rendered if effect runs twice in dev
         }
       }
     };
 
     if (window.turnstile) {
-      renderTurnstile();
+      renderWidget();
     } else {
       const script = document.createElement("script");
+      script.id = "cf-turnstile-script";
       script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
       script.async = true;
       script.defer = true;
-      script.onload = renderTurnstile;
+      script.onload = renderWidget;
       document.head.appendChild(script);
     }
-  }, [isClient, onVerify]);
+  }, [isMounted, onVerify]);
 
-  if (!isClient) return null;
+  if (!isMounted) return null;
 
-  return <div ref={containerRef} style={{ minHeight: '65px' }} />;
+  return (
+    <div 
+      ref={containerRef} 
+      style={{ 
+        minHeight: '65px', 
+        display: 'flex', 
+        justifyContent: 'center',
+        margin: '1rem 0'
+      }} 
+    />
+  );
 }
 
 declare global {
