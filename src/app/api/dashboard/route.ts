@@ -93,6 +93,8 @@ export async function GET(req: NextRequest) {
     const agents = await db.prepare(agentQuery).bind(...agentBinds).all();
     
     const transactions = await db.prepare("SELECT * FROM transactions WHERE tenant_id = ? AND year = ?").bind(tenant.id, year).all();
+    console.log(`Fetched ${transactions.results.length} transactions for tenant ${tenant.id}, year ${year}`);
+    console.log('Sample transaction:', transactions.results[0]);
 
     // Calculate production from transactions
     const totalProduction = transactions.results.reduce((acc, t) => acc + (t.price || 0), 0);
