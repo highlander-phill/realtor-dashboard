@@ -35,20 +35,20 @@ export async function GET(req: NextRequest) {
     const host = req.headers.get('host') || '';
     const url = new URL(req.url);
     let subdomain = url.searchParams.get('subdomain');
+    const pathParts = url.pathname.split('/').filter(Boolean);
+    
+    if (!subdomain && pathParts.length > 0 && pathParts[0] !== 'api' && pathParts[0] !== 'master') {
+      subdomain = pathParts[0];
+    }
+    
+    if (!subdomain && host.includes('team-goals.com')) {
+      const hostParts = host.split('.');
+      if (hostParts.length >= 3 && hostParts[0] !== 'www') subdomain = hostParts[0];
+    }
+
     const year = parseInt(url.searchParams.get('year') || '2026');
     const subTeamId = url.searchParams.get('subTeamId');
     const viewerPass = url.searchParams.get('password');
-    
-    if (!subdomain) {
-      if (host.includes('team-goals.com')) {
-        const parts = host.split('.');
-        if (parts.length >= 3 && parts[0] !== 'www') subdomain = parts[0];
-      }
-    }
-
-    if (!subdomain) {
-      subdomain = req.headers.get('x-realtor-subdomain') || 'demo';
-    }
 
     const tenant = await db.prepare("SELECT * FROM tenants WHERE subdomain = ?").bind(subdomain).first();
     if (!tenant) {
