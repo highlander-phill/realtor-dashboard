@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { auth } from "@/auth";
 
-export default auth(async (request) => {
+export default async function middleware(request: NextRequest) {
+  // We can call auth() manually inside if we need the session
+  const session = await auth();
   const url = request.nextUrl.clone();
   const hostname = request.headers.get('host') || '';
 
@@ -60,7 +62,7 @@ export default auth(async (request) => {
   const isAdminRoute = url.pathname.includes('/admin') || (subdomain && url.pathname.startsWith(`/${subdomain}/admin`));
   const isLoginPage = url.pathname.includes('/login') || (subdomain && url.pathname.startsWith(`/${subdomain}/admin/login`));
 
-  if (isAdminRoute && !isLoginPage && !request.auth) {
+  if (isAdminRoute && !isLoginPage && !session) {
     return NextResponse.redirect(new URL(subdomain ? `/${subdomain}/admin/login` : '/admin/login', request.url));
   }
 
@@ -89,7 +91,7 @@ export default auth(async (request) => {
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   
   return response;
-})
+}
 
 export const config = {
   matcher: [
