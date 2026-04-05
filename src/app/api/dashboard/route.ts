@@ -92,22 +92,25 @@ export async function GET(req: NextRequest) {
     }
     const agents = await db.prepare(agentQuery).bind(...agentBinds).all();
     
-    const transactions = await db.prepare("SELECT * FROM transactions WHERE tenant_id = ? AND year = ?").bind(tenant.id, year).all();
-    console.log(`Fetched ${transactions.results.length} transactions for tenant ${tenant.id}, year ${year}`);
-    console.log('Sample transaction:', transactions.results[0]);
+    const transactions = await db.prepare("SELECT * FROM transactions WHERE tenant_id = ?").bind(tenant.id).all();
+    console.log(`Fetched ${transactions.results.length} total transactions for tenant ${tenant.id}`);
+    
+    // Calculate production from transactions of the SELECTED YEAR
+    const totalProduction = transactions.results
+      .filter(t => t.year === year && t.status === 'Sold')
+      .reduce((acc, t) => acc + (t.price || 0), 0);
 
-    // Calculate production from transactions
-    const totalProduction = transactions.results.reduce((acc, t) => acc + (t.price || 0), 0);
-
-    // Ratios Calculation
+    // Ratios Calculation (Team Wide, all years for better stats or just selected? Usually selected)
+    const yearTransactions = transactions.results.filter(t => t.year === year);
+    
     const stats = agents.results.reduce((acc, a) => {
-      acc.closings += (a.closings || 0);
-      acc.listings += (a.listings || 0);
-      acc.buyers += (a.buyers || 0);
-      acc.sellers += (a.sellers || 0);
-      acc.pending += (a.volume_pending || 0);
+      const agentTx = transactions.results.filter(t => t.agent_id === a.id && t.year === year);
+      acc.closings += agentTx.filter(t => t.status === 'Sold').length;
+      acc.listings += agentTx.filter(t => t.status === 'Active').length;
+      acc.buyers += agentTx.filter(t => t.side === 'Buyer').length;
+      acc.sellers += agentTx.filter(t => t.side === 'Seller').length;
       return acc;
-    }, { closings: 0, listings: 0, buyers: 0, sellers: 0, pending: 0 });
+    }, { closings: 0, listings: 0, buyers: 0, sellers: 0 });
 
     const teamRatios = {
       listingToClose: stats.listings > 0 ? (stats.closings / stats.listings).toFixed(2) : "0",
@@ -125,7 +128,7 @@ export async function GET(req: NextRequest) {
         theme: tenant.theme,
         onboardingCompleted: !!tenant.onboarding_completed,
         showTimeToClose: !!tenant.show_time_to_close,
-        showPriceDelta: !!tenant.show_price_delta,
+        show_price_delta: !!tenant.show_price_delta,
         hasViewerPassword: !!tenant.viewer_password_hash,
         billingStatus: tenant.billing_status || 'free',
         stripeSubscriptionId: tenant.stripe_subscription_id
@@ -137,7 +140,7 @@ export async function GET(req: NextRequest) {
       },
       subTeams: subTeams.results,
       agents: agents.results.map((a) => {
-        const agentTransactions = transactions.results.filter(t => t.agent_id === a.id);
+        const agentTransactions = transactions.results.filter(t => t.agent_id === a.id && t.year === year);
         const volumeClosed = agentTransactions.filter(t => t.status === 'Sold').reduce((acc, t) => acc + (t.price || 0), 0);
         const volumePending = agentTransactions.filter(t => t.status === 'Pending').reduce((acc, t) => acc + (t.price || 0), 0);
         const listingsVolume = agentTransactions.filter(t => t.status === 'Active').reduce((acc, t) => acc + (t.price || 0), 0);
