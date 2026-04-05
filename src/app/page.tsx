@@ -89,9 +89,6 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4 md:gap-8 text-sm font-bold uppercase tracking-widest text-slate-400">
             <a href="#features" className="hidden md:block hover:text-white transition-colors">Features</a>
-            <Button variant="outline" onClick={() => router.push('/master')} className="border-slate-800 hover:bg-slate-900 text-slate-300 rounded-full px-4 md:px-6 font-black uppercase text-[8px] md:text-[10px] tracking-widest h-8 md:h-10">
-              Master Login
-            </Button>
           </div>
         </div>
       </nav>

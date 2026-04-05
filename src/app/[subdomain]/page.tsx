@@ -517,13 +517,15 @@ function DashboardContent() {
                     {data.agents.filter(a => a.status === 'active' || a.countInTotal).map((agent) => {
                       const agentProgress = Math.round((agent.volumeClosed / agent.goal) * 100); 
                       return (
-                        <TableRow 
-                          key={agent.id} 
-                          className="border-slate-50 dark:border-slate-800 hover:bg-slate-100/80 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer active:bg-slate-200 dark:active:bg-slate-700"
-                          onClick={() => {
-                             router.push(`/${subdomain}/agent/${agent.id}?year=${selectedYear}`);
-                          }}
-                        >
+                          <TableRow 
+                            key={agent.id} 
+                            className="border-slate-50 dark:border-slate-800 hover:bg-slate-100/80 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer active:bg-slate-200 dark:active:bg-slate-700"
+                            onClick={(e) => {
+                               e.preventDefault();
+                               e.stopPropagation();
+                               router.push(`/${subdomain}/agent/${agent.id}?year=${selectedYear}`);
+                            }}
+                          >
                           <TableCell className="px-10 py-6">
                              <div className="flex items-center gap-3">
                                 <div className={`w-2 h-2 rounded-full ${agent.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`} />
