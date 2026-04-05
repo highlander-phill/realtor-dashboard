@@ -7,9 +7,10 @@ import { verifyTurnstileToken } from "@/lib/utils"
 import { comparePasswords } from "@/lib/crypto"
 
 export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
-  const { env } = getRequestContext() as any;
+  const context = getRequestContext();
+  const env = (context?.env || {}) as any;
   return {
-    adapter: D1Adapter(env.DB),
+    adapter: env.DB ? D1Adapter(env.DB) : undefined,
     providers: [
       Credentials({
         credentials: {

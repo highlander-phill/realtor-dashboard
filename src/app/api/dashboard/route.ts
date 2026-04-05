@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
     
     // Ratios Calculation (Team Wide, all years for better stats or just selected? Usually selected)
     const yearTransactions = transactions.results.filter(t => t.year === year);
-    const totalProduction = yearTransactions.filter(t => t.status === 'Sold').reduce((acc, t) => acc + (t.price || 0), 0);
+    const totalProduction = yearTransactions.filter(t => t.status === 'Sold').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
     
     const teamRatios = {
       listingToClose: yearTransactions.filter(t => t.status === 'Active').length > 0 ? (yearTransactions.filter(t => t.status === 'Sold').length / yearTransactions.filter(t => t.status === 'Active').length).toFixed(2) : "0",
