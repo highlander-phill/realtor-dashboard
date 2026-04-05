@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { auth } from "@/auth";
 
-export function middleware(request: NextRequest) {
+export default auth(async (request) => {
   const url = request.nextUrl.clone();
   const hostname = request.headers.get('host') || '';
 
@@ -52,6 +53,14 @@ export function middleware(request: NextRequest) {
     requestHeaders.set('x-realtor-subdomain', 'demo'); // Fallback for marketing page
   }
 
+  // Route protection
+  const isAdminRoute = url.pathname.includes('/admin') || (subdomain && url.pathname.startsWith(`/${subdomain}/admin`));
+  const isLoginPage = url.pathname.includes('/login') || (subdomain && url.pathname.startsWith(`/${subdomain}/admin/login`));
+
+  if (isAdminRoute && !isLoginPage && !request.auth) {
+    return NextResponse.redirect(new URL(subdomain ? `/${subdomain}/admin/login` : '/admin/login', request.url));
+  }
+
   // Rewrite if we detected a subdomain and we're not already on the subdomain path
   if (subdomain && !url.pathname.startsWith(`/${subdomain}`)) {
     url.pathname = `/${subdomain}${url.pathname === '/' ? '' : url.pathname}`;
@@ -67,7 +76,7 @@ export function middleware(request: NextRequest) {
       headers: requestHeaders,
     },
   });
-}
+})
 
 export const config = {
   matcher: [

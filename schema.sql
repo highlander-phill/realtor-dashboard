@@ -9,14 +9,20 @@ CREATE TABLE IF NOT EXISTS tenants (
   primary_color TEXT DEFAULT '#000000',
   theme TEXT DEFAULT 'realtor',
   onboarding_completed INTEGER DEFAULT 0,
-  admin_password_hash TEXT,
-  viewer_password_hash TEXT, -- Password for public dashboard access
-  show_time_to_close INTEGER DEFAULT 0, -- Toggle for tracking days on market
-  show_price_delta INTEGER DEFAULT 0, -- Toggle for tracking above/below list
-  trial_ends_at DATETIME DEFAULT (datetime('now', '+30 days')),
-  subscription_status TEXT DEFAULT 'trialing',
   stripe_customer_id TEXT,
+  billing_status TEXT DEFAULT 'free',
+  stripe_subscription_id TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id)
 );
 
 -- Optional Sub-Teams

@@ -111,7 +111,9 @@ export async function GET(req: NextRequest) {
         onboardingCompleted: !!tenant.onboarding_completed,
         showTimeToClose: !!tenant.show_time_to_close,
         showPriceDelta: !!tenant.show_price_delta,
-        hasViewerPassword: !!tenant.viewer_password_hash
+        hasViewerPassword: !!tenant.viewer_password_hash,
+        billingStatus: tenant.billing_status || 'free',
+        stripeSubscriptionId: tenant.stripe_subscription_id
       },
       team: {
         goal: teamData?.goal || 50000000,
