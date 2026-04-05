@@ -24,7 +24,10 @@ export default auth(async (request) => {
     // If it's something.team-goals.com
     if (hostParts.length >= 3) {
       const sub = hostParts[0].toLowerCase();
-      if (sub !== 'www' && sub !== 'team-goals') {
+      if (sub === 'www') {
+        return NextResponse.redirect(new URL(request.nextUrl.pathname + request.nextUrl.search, 'https://team-goals.com'));
+      }
+      if (sub !== 'team-goals') {
         subdomain = sub;
       }
     }
