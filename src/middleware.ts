@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { auth } from "@/auth";
 
 export default async function middleware(request: NextRequest) {
-  // Comment out auth() to see if it stops the 500 error
-  // const session = await auth();
-  const session = null;
+  // Lazy load auth to prevent initialization issues at top level
+  const { auth } = await import("@/auth");
+  const session = await auth();
   const url = request.nextUrl.clone();
   const hostname = request.headers.get('host') || '';
 

@@ -1,10 +1,15 @@
 import { getRequestContext } from "@cloudflare/next-on-pages";
 import { NextRequest, NextResponse } from "next/server";
 import { hashPassword, comparePasswords } from "@/lib/crypto";
-import { auth } from "@/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "edge";
+
+// Lazy load auth to prevent initialization issues at top level
+async function getAuth() {
+  const { auth } = await import("@/auth");
+  return auth();
+}
 
 interface D1Env {
   DB: {
@@ -173,7 +178,7 @@ export async function POST(req: NextRequest) {
     if (!rl.success) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     
     // Auth Check
-    const session = await auth();
+    const session = await getAuth();
     
     const body = await req.json();
     const { tenant, team, agents, subTeams, year = 2026, action } = body;
