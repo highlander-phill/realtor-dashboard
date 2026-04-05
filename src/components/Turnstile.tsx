@@ -11,9 +11,9 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !containerRef.current) return;
 
-    const initTurnstile = () => {
+    const renderTurnstile = () => {
       if (window.turnstile && containerRef.current) {
         try {
           window.turnstile.render(containerRef.current, {
@@ -23,26 +23,26 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
             },
           });
         } catch (e) {
-          console.warn("Turnstile render failed", e);
+          // Ignore "already rendered" errors
         }
       }
     };
 
-    if (!window.turnstile) {
+    if (window.turnstile) {
+      renderTurnstile();
+    } else {
       const script = document.createElement("script");
       script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
       script.async = true;
       script.defer = true;
-      script.onload = initTurnstile;
+      script.onload = renderTurnstile;
       document.head.appendChild(script);
-    } else {
-      initTurnstile();
     }
-  }, [onVerify, isClient]);
+  }, [isClient, onVerify]);
 
   if (!isClient) return null;
 
-  return <div ref={containerRef} className="min-h-[65px] flex justify-center" />;
+  return <div ref={containerRef} style={{ minHeight: '65px' }} />;
 }
 
 declare global {
