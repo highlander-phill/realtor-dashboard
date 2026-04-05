@@ -164,7 +164,7 @@ function AgentDetailContent() {
     fetchData();
   }, [subdomain, selectedYear]);
 
-  const agent = data.agents.find(a => a.id === id);
+  const agent = data.agents.find(a => String(a.id) === String(id));
 
   const handleSave = async (updatedData: DashboardData) => {
     setIsSaving(true);
