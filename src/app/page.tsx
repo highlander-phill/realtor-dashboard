@@ -130,7 +130,7 @@ export default function LandingPage() {
                   <Input 
                     value={teamId}
                     onChange={(e) => setTeamId(e.target.value)}
-                    placeholder="Enter team handle (e.g. nspg)"
+                    placeholder="Enter team handle (e.g. yourteam)"
                     className="h-12 md:h-16 bg-transparent border-none text-white text-lg md:text-xl font-bold focus:ring-0 px-6 md:px-8 placeholder:text-slate-600"
                   />
                   <Button type="submit" className="h-12 md:h-16 px-8 md:px-10 bg-blue-600 hover:bg-blue-700 text-white rounded-[24px] md:rounded-[32px] font-black uppercase tracking-widest shadow-xl shadow-blue-900/40 group">
@@ -141,7 +141,6 @@ export default function LandingPage() {
             </Card>
             <div className="flex justify-center gap-6 mt-6">
                <p className="text-[10px] uppercase font-black text-slate-600 tracking-[0.3em]">Try it now:</p>
-               <button onClick={() => router.push('/nspg')} className="text-[10px] uppercase font-black text-blue-500 tracking-[0.3em] hover:text-blue-400 transition-colors">/nspg</button>
                <button onClick={() => router.push('/demo')} className="text-[10px] uppercase font-black text-purple-500 tracking-[0.3em] hover:text-purple-400 transition-colors">/demo</button>
             </div>
           </motion.div>
@@ -170,7 +169,7 @@ export default function LandingPage() {
                            <div className="w-2.5 h-2.5 md:w-3 h-3 rounded-full bg-green-500/50" />
                         </div>
                         <div className="mx-auto bg-white/5 px-3 md:px-4 py-0.5 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold text-slate-500 tracking-tight flex items-center gap-2 truncate max-w-[150px] md:max-w-none">
-                           <Lock className="w-2 h-2" /> team-goals.com/nspg
+                           <Lock className="w-2 h-2" /> team-goals.com/demo
                         </div>
                      </div>
                      <div className="p-4 md:p-12 space-y-8 md:space-y-10 origin-top scale-[0.85] md:scale-100">

@@ -147,15 +147,21 @@ function AgentDetailContent() {
     if (auth) setIsAuthorized(true);
 
     async function fetchData() {
+      if (!subdomain) return;
       setIsLoading(true);
-      const response = await fetch(`/api/dashboard?subdomain=${subdomain}&year=${selectedYear}`);
-      if (response.ok) {
-        const cloudData = await response.json();
-        setData(cloudData);
+      try {
+        const response = await fetch(`/api/dashboard?subdomain=${subdomain}&year=${selectedYear}`);
+        if (response.ok) {
+          const cloudData = await response.json();
+          setData(cloudData);
+        }
+      } catch (err) {
+        console.error("Agent fetch failed:", err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
-    if (subdomain) fetchData();
+    fetchData();
   }, [subdomain, selectedYear]);
 
   const agent = data.agents.find(a => a.id === id);

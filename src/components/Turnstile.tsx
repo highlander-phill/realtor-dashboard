@@ -13,8 +13,9 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
     document.head.appendChild(script);
 
     script.onload = () => {
+      const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAAC09M6PclLz1FMym";
       window.turnstile.render(containerRef.current, {
-        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+        sitekey: siteKey,
         callback: (token: string) => {
           onVerify(token);
         },

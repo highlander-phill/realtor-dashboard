@@ -31,16 +31,19 @@ export async function POST(req: NextRequest) {
     }
 
     if (password === correctPassword) {
-      if (env.SETTINGS) await env.SETTINGS.delete("MASTER_FAIL_COUNT");
+      if (env.SETTINGS) {
+        await env.SETTINGS.delete("MASTER_FAIL_COUNT");
+        await env.SETTINGS.delete("MASTER_LOCKOUT");
+      }
       return NextResponse.json({ success: true });
     } else {
       if (env.SETTINGS) {
         const currentFails = parseInt(await env.SETTINGS.get("MASTER_FAIL_COUNT") || "0") + 1;
         await env.SETTINGS.put("MASTER_FAIL_COUNT", currentFails.toString(), { expirationTtl: 3600 });
         
-        if (currentFails >= 5) {
-          const nextLockout = Date.now() + 30000; // 30 second lockout
-          await env.SETTINGS.put("MASTER_LOCKOUT", nextLockout.toString(), { expirationTtl: 60 });
+        if (currentFails >= 3) {
+          const nextLockout = Date.now() + 60000; // 60 second lockout after 3 failures
+          await env.SETTINGS.put("MASTER_LOCKOUT", nextLockout.toString(), { expirationTtl: 120 });
         }
       }
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

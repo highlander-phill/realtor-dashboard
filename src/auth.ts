@@ -33,8 +33,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
         },
       }),
       Google({
-        clientId: env.AUTH_GOOGLE_ID || process.env.AUTH_GOOGLE_ID,
-        clientSecret: env.AUTH_GOOGLE_SECRET || process.env.AUTH_GOOGLE_SECRET,
+        clientId: env.AUTH_GOOGLE_ID || process.env.AUTH_GOOGLE_ID || env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
+        clientSecret: env.AUTH_GOOGLE_SECRET || process.env.AUTH_GOOGLE_SECRET || env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET,
       }),
     ],
   }
