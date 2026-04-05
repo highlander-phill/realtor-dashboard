@@ -16,10 +16,7 @@ import {
   Tag, 
   Trash2,
   Calendar,
-  HelpCircle,
   Clock,
-  ArrowUpRight,
-  TrendingDown,
   TrendingUp
 } from "lucide-react";
 import { 
@@ -41,29 +38,6 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-
-function Tooltip({ children, content }: { children: React.ReactNode, content: string }) {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
-      {children}
-      <AnimatePresence>
-        {show && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-3 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl shadow-2xl z-50 border border-white/10 text-center leading-relaxed"
-          >
-            {content}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 interface Transaction {
   id: string;
@@ -139,11 +113,10 @@ function AgentDetailContent() {
 
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const auth = localStorage.getItem(`tg_auth_${subdomain}`);
+    const auth = typeof window !== 'undefined' ? localStorage.getItem(`tg_auth_${subdomain}`) : null;
     if (auth) setIsAuthorized(true);
 
     async function fetchData() {
@@ -164,7 +137,11 @@ function AgentDetailContent() {
     fetchData();
   }, [subdomain, selectedYear]);
 
-  const agent = data.agents.find(a => String(a.id) === String(id));
+  // FLEXIBLE LOOKUP: Match by ID (exact) or Name (slugified)
+  const agent = data.agents.find(a => 
+    String(a.id) === String(id) || 
+    String(a.name).toLowerCase().replace(/\s+/g, '-') === String(id).toLowerCase()
+  );
 
   const handleSave = async (updatedData: DashboardData) => {
     setIsSaving(true);
@@ -234,11 +211,17 @@ function AgentDetailContent() {
 
   if (!agent) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-        <div className="text-center space-y-4">
-          <p className="text-slate-500">Agent not found.</p>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white p-8">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="bg-red-500/10 border border-red-500/20 p-8 rounded-[32px] space-y-4">
+             <div className="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center mx-auto text-white font-black text-xl italic shadow-lg shadow-red-900/20">?</div>
+             <h2 className="text-xl font-black uppercase italic tracking-tight">Agent Not Found</h2>
+             <p className="text-slate-500 text-sm font-medium">The agent "{id}" could not be located in the {subdomain} roster.</p>
+          </div>
           <Link href={`/${subdomain}`}>
-            <Button variant="outline">Return to Dashboard</Button>
+            <Button variant="outline" className="w-full h-14 rounded-2xl border-white/10 text-white font-black uppercase tracking-widest">
+               <ChevronLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+            </Button>
           </Link>
         </div>
       </div>
@@ -272,7 +255,6 @@ function AgentDetailContent() {
             >
               <option value={2026}>2026</option>
               <option value={2025}>2025</option>
-              <option value={2024}>2024</option>
             </select>
           </div>
         </div>
@@ -398,17 +380,7 @@ function AgentDetailContent() {
                    <TableRow className="border-slate-100 dark:border-slate-800">
                       <TableHead className="px-10 py-5 font-black uppercase text-[10px] tracking-widest">Property Address</TableHead>
                       <TableHead className="font-black uppercase text-[10px] tracking-widest">Price ($)</TableHead>
-                      {data.tenant.showPriceDelta && (
-                         <TableHead className="font-black uppercase text-[10px] tracking-widest">
-                           <Tooltip content="Initial List Price vs Final Sale Price">List Price</Tooltip>
-                         </TableHead>
-                      )}
                       <TableHead className="font-black uppercase text-[10px] tracking-widest">Status</TableHead>
-                      {data.tenant.showTimeToClose && (
-                         <TableHead className="font-black uppercase text-[10px] tracking-widest">
-                            <Tooltip content="Date the property was first listed">Date Listed</Tooltip>
-                         </TableHead>
-                      )}
                       <TableHead className="font-black uppercase text-[10px] tracking-widest">Closing/Activity</TableHead>
                       <TableHead className="font-black uppercase text-[10px] tracking-widest">Side</TableHead>
                       {isAuthorized && <TableHead className="text-right px-10 font-black uppercase text-[10px] tracking-widest">Action</TableHead>}
@@ -416,134 +388,17 @@ function AgentDetailContent() {
                 </TableHeader>
                 <TableBody>
                    {(agent.transactions || []).map((t) => {
-                      const daysToClose = (t.date && t.dateListed) ? Math.max(0, Math.round((new Date(t.date).getTime() - new Date(t.dateListed).getTime()) / (1000 * 60 * 60 * 24))) : null;
-                      const priceDelta = (t.price && t.listPrice) ? (t.price - t.listPrice) : null;
-                      const priceDeltaPct = (t.price && t.listPrice) ? ((t.price / t.listPrice) * 100 - 100).toFixed(1) : null;
-
                       return (
                       <TableRow key={t.id} className="border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                         <TableCell className="px-10 py-6">
-                            {isAuthorized ? (
-                              <Input 
-                                value={t.address} 
-                                onChange={(e) => updateTransaction(t.id, "address", e.target.value)}
-                                className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-bold"
-                              />
-                            ) : (
-                              <div className="flex items-center gap-3">
-                                 <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center">
-                                    <MapPin className="w-4 h-4 text-slate-400" />
-                                 </div>
-                                 <span className="font-bold text-slate-900 dark:text-slate-100">{t.address}</span>
-                              </div>
-                            )}
-                         </TableCell>
+                         <TableCell className="px-10 py-6 font-bold">{t.address}</TableCell>
+                         <TableCell className="font-black">{formatCurrency(t.price)}</TableCell>
                          <TableCell>
-                            <div className="flex flex-col">
-                               {isAuthorized ? (
-                                 <Input 
-                                   type="number"
-                                   value={t.price} 
-                                   onChange={(e) => updateTransaction(t.id, "price", Number(e.target.value))}
-                                   className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
-                                 />
-                               ) : (
-                                 <span className="font-black text-slate-700 dark:text-slate-300">{formatCurrency(t.price)}</span>
-                               )}
-                               {priceDelta !== null && t.status === 'Sold' && (
-                                  <span className={`text-[9px] font-black uppercase ${priceDelta >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                     {priceDelta >= 0 ? '+' : ''}{formatCurrency(priceDelta)} ({priceDeltaPct}%)
-                                  </span>
-                               )}
-                            </div>
+                            <Badge className={`${t.status === 'Sold' ? 'bg-green-500' : t.status === 'Pending' ? 'bg-blue-500' : 'bg-orange-500'} text-white border-none text-[10px] font-black uppercase tracking-tighter`}>
+                               {t.status}
+                             </Badge>
                          </TableCell>
-
-                         {data.tenant.showPriceDelta && (
-                            <TableCell>
-                               {isAuthorized ? (
-                                 <Input 
-                                   type="number"
-                                   value={t.listPrice || 0} 
-                                   onChange={(e) => updateTransaction(t.id, "listPrice", Number(e.target.value))}
-                                   className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
-                                 />
-                               ) : (
-                                 <span className="font-bold text-slate-400">{t.listPrice ? formatCurrency(t.listPrice) : "—"}</span>
-                               )}
-                            </TableCell>
-                         )}
-
-                         <TableCell>
-                            {isAuthorized ? (
-                              <select 
-                                value={t.status}
-                                onChange={(e) => updateTransaction(t.id, "status", e.target.value)}
-                                className="bg-transparent border border-slate-200 dark:border-slate-800 rounded-md h-12 px-3 font-bold text-xs focus:bg-white dark:focus:bg-black"
-                              >
-                                <option value="Sold">Sold</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Active">Active</option>
-                                <option value="Withdrawn">Withdrawn</option>
-                              </select>
-                            ) : (
-                              <Badge className={`${t.status === 'Sold' ? 'bg-green-500' : t.status === 'Pending' ? 'bg-blue-500' : 'bg-orange-500'} text-white border-none text-[10px] font-black uppercase tracking-tighter`}>
-                                 {t.status}
-                               </Badge>
-                            )}
-                         </TableCell>
-
-                         {data.tenant.showTimeToClose && (
-                            <TableCell>
-                               {isAuthorized ? (
-                                 <Input 
-                                   type="date"
-                                   value={t.dateListed || ""} 
-                                   onChange={(e) => updateTransaction(t.id, "dateListed", e.target.value)}
-                                   className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-bold text-xs"
-                                 />
-                               ) : (
-                                 <div className="flex flex-col">
-                                    <span className="font-bold text-slate-500 text-xs">{t.dateListed || "—"}</span>
-                                    {daysToClose !== null && t.status === 'Sold' && (
-                                       <span className="text-[9px] font-black text-purple-500 uppercase tracking-tighter flex items-center gap-1">
-                                          <Clock className="w-2 h-2" /> {daysToClose} Days
-                                       </span>
-                                    )}
-                                 </div>
-                               )}
-                            </TableCell>
-                         )}
-
-                         <TableCell>
-                            {isAuthorized ? (
-                              <Input 
-                                type="date"
-                                value={t.date} 
-                                onChange={(e) => updateTransaction(t.id, "date", e.target.value)}
-                                className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-bold text-xs"
-                              />
-                            ) : (
-                              <span className="font-bold text-slate-500 text-xs">{t.date}</span>
-                            )}
-                         </TableCell>
-
-                         <TableCell>
-                            {isAuthorized ? (
-                              <select 
-                                value={t.side}
-                                onChange={(e) => updateTransaction(t.id, "side", e.target.value)}
-                                className="bg-transparent border border-slate-200 dark:border-slate-800 rounded-md h-12 px-3 font-bold text-xs focus:bg-white dark:focus:bg-black"
-                              >
-                                <option value="Buyer">Buyer</option>
-                                <option value="Seller">Seller</option>
-                                <option value="Dual">Dual</option>
-                              </select>
-                            ) : (
-                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                                 <Tag className="w-3 h-3" /> {t.side} Rep
-                              </span>
-                            )}
-                         </TableCell>
+                         <TableCell className="text-xs font-bold text-slate-500">{t.date}</TableCell>
+                         <TableCell className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{t.side} Rep</TableCell>
                          {isAuthorized && (
                             <TableCell className="px-10 text-right">
                                <Button onClick={() => removeTransaction(t.id)} variant="ghost" size="icon" className="text-slate-400 hover:text-red-600 rounded-full">
@@ -553,11 +408,6 @@ function AgentDetailContent() {
                          )}
                       </TableRow>
                    )})}
-                   {(!agent.transactions || agent.transactions.length === 0) && (
-                      <TableRow>
-                         <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-bold uppercase text-[10px] tracking-widest italic">No transaction history recorded for {selectedYear}.</TableCell>
-                      </TableRow>
-                   )}
                 </TableBody>
              </Table>
           </CardContent>
