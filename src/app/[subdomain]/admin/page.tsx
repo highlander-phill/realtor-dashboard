@@ -200,8 +200,10 @@ export default function AdminPanel() {
   const sortedAgents = [...(data?.agents || [])].sort((a, b) => {
     if (!sortConfig) return 0;
     const { key, direction } = sortConfig;
-    if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
-    if (a[key] > b[key]) return direction === 'asc' ? 1 : -1;
+    const aVal = (a as any)[key];
+    const bVal = (b as any)[key];
+    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
     return 0;
   });
 
