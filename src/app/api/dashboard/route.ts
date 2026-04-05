@@ -1,3 +1,4 @@
+// TeamGoals Dashboard API - Production v1.0.1
 import { getRequestContext } from "@cloudflare/next-on-pages";
 import { NextRequest, NextResponse } from "next/server";
 
