@@ -94,10 +94,14 @@ export async function GET(req: NextRequest) {
     
     const transactions = await db.prepare("SELECT * FROM transactions WHERE tenant_id = ?").bind(tenant.id).all();
     
-    // Calculate production from transactions of the SELECTED YEAR
-    const totalProduction = transactions.results
-      .filter(t => t.year === year && t.status === 'Sold')
-      .reduce((acc, t) => acc + (t.price || 0), 0);
+    // Ratios Calculation (Team Wide, all years for better stats or just selected? Usually selected)
+    const yearTransactions = transactions.results.filter(t => t.year === year);
+    
+    const teamRatios = {
+      listingToClose: yearTransactions.filter(t => t.status === 'Active').length > 0 ? (yearTransactions.filter(t => t.status === 'Sold').length / yearTransactions.filter(t => t.status === 'Active').length).toFixed(2) : "0",
+      buyerToSeller: yearTransactions.filter(t => t.side === 'Seller').length > 0 ? (yearTransactions.filter(t => t.side === 'Buyer').length / yearTransactions.filter(t => t.side === 'Seller').length).toFixed(2) : "0",
+      avgDealSize: yearTransactions.filter(t => t.status === 'Sold').length > 0 ? (totalProduction / yearTransactions.filter(t => t.status === 'Sold').length).toFixed(0) : "0"
+    };
 
     return NextResponse.json({
       tenant: {
@@ -117,11 +121,7 @@ export async function GET(req: NextRequest) {
       team: {
         goal: teamData?.goal || 50000000,
         ytdProduction: totalProduction,
-        ratios: {
-          listingToClose: transactions.results.filter(t => t.year === year && t.status === 'Active').length > 0 ? (transactions.results.filter(t => t.year === year && t.status === 'Sold').length / transactions.results.filter(t => t.year === year && t.status === 'Active').length).toFixed(2) : "0",
-          buyerToSeller: transactions.results.filter(t => t.year === year && t.side === 'Seller').length > 0 ? (transactions.results.filter(t => t.year === year && t.side === 'Buyer').length / transactions.results.filter(t => t.year === year && t.side === 'Seller').length).toFixed(2) : "0",
-          avgDealSize: transactions.results.filter(t => t.year === year && t.status === 'Sold').length > 0 ? (totalProduction / transactions.results.filter(t => t.year === year && t.status === 'Sold').length).toFixed(0) : "0"
-        }
+        ratios: teamRatios
       },
       subTeams: subTeams.results,
       agents: agents.results.map((a) => {
