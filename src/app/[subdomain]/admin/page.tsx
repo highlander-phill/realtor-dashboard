@@ -254,7 +254,11 @@ export default function AdminPanel() {
     return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center font-black uppercase tracking-widest text-slate-500">Authenticating...</div>;
   }
 
-  if (!data || !data.tenant) {
+  if (status === "unauthenticated") {
+    return null; // Let the useEffect handle redirection
+  }
+
+  if (!data || !data.tenant || data.tenant.name === "Loading...") {
     return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center font-black uppercase tracking-widest text-slate-500">Loading Data...</div>;
   }
 
