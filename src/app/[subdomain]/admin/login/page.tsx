@@ -19,7 +19,6 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const subdomain = params.subdomain as string;
   const error = searchParams.get("error");
-  const callbackUrl = searchParams.get("callbackUrl") || `/${subdomain}/admin`;
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,11 +79,7 @@ function LoginContent() {
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 selection:bg-blue-500/30">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(37,99,235,0.1),transparent_50%)] pointer-events-none" />
       
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md space-y-6"
-      >
+      <div className="w-full max-w-md space-y-6">
         <Link href={`/${subdomain}`} className="text-slate-500 hover:text-white flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-colors">
           <ChevronLeft className="w-4 h-4" /> Back to Dashboard
         </Link>
@@ -181,7 +176,7 @@ function LoginContent() {
              </p>
           </CardFooter>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 }

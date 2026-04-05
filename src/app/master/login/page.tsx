@@ -38,10 +38,6 @@ function MasterLoginContent() {
 
       const data = await res.json();
       if (data.success) {
-        // Since master login uses a simple session or cookie (or we just redirect if authorized by password)
-        // For TeamGoals, phillsimpson@gmail.com is the master account in next-auth.
-        // We'll instruct the user to use Google Login as primary, 
-        // but this manual check can set a temporary authorized state if needed.
         window.location.href = "/master";
       } else {
         setError(data.error || "Invalid master password.");
@@ -57,11 +53,7 @@ function MasterLoginContent() {
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 selection:bg-blue-500/30">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(30,58,138,0.2),transparent_50%)] pointer-events-none" />
       
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md"
-      >
+      <div className="w-full max-w-md">
         <Card className="bg-slate-900 border-white/10 shadow-2xl rounded-[32px] overflow-hidden">
           <CardHeader className="pt-12 pb-8 text-center space-y-4">
             <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-blue-600/20 mb-2">
@@ -93,25 +85,18 @@ function MasterLoginContent() {
 
             <AnimatePresence mode="wait">
               {!showManual ? (
-                <motion.div
-                  key="toggle"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
+                <div key="toggle">
                   <Button 
                     variant="ghost" 
                     onClick={() => setShowManual(true)}
-                    className="w-full text-slate-500 hover:text-white font-bold uppercase text-[10px] tracking-[0.2em] h-12"
+                    className="w-full text-slate-500 hover:text-white font-bold uppercase text-[10px] tracking-widest h-12"
                   >
                     Use Master Password <Lock className="w-3 h-3 ml-2" />
                   </Button>
-                </motion.div>
+                </div>
               ) : (
-                <motion.form
+                <form
                   key="form"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
                   onSubmit={handleManualLogin}
                   className="space-y-4"
                 >
@@ -156,7 +141,7 @@ function MasterLoginContent() {
                   >
                     Cancel
                   </Button>
-                </motion.form>
+                </form>
               )}
             </AnimatePresence>
           </CardContent>
@@ -165,7 +150,7 @@ function MasterLoginContent() {
              <p className="text-[9px] font-black text-slate-700 uppercase tracking-[0.4em]">TeamGoals Engine v2.3.1</p>
           </CardFooter>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 }
