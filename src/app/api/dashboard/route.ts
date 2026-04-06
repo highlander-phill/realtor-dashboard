@@ -267,8 +267,8 @@ export async function POST(req: NextRequest) {
 
     // 3. Upsert Team Data
     await safeBind(db.prepare(
-      "INSERT INTO team_data (tenant_id, year, goal, ytd_production, last_updated) VALUES (?, ?, ?, ?, ?) " +
-      "ON CONFLICT(tenant_id, year) DO UPDATE SET goal=excluded.goal, ytd_production=excluded.ytd_production, last_updated=excluded.last_updated"
+      "INSERT INTO team_data (tenant_id, sub_team_id, year, goal, ytd_production, last_updated) VALUES (?, NULL, ?, ?, ?, ?) " +
+      "ON CONFLICT(tenant_id, sub_team_id, year) DO UPDATE SET goal=excluded.goal, ytd_production=excluded.ytd_production, last_updated=excluded.last_updated"
     ), tenantId, year, team.goal, team.ytdProduction, new Date().toISOString()).run();
 
     // 4. Batch update sub-teams, agents, and transactions
