@@ -78,7 +78,8 @@ export async function GET(req: NextRequest) {
     // Check Viewer Password
     if (tenant.viewer_password_hash) {
       const viewerAuthCookie = req.cookies.get(`tg_viewer_auth_${subdomain}`)?.value;
-      const isAuthorized = viewerAuthCookie === 'true' || (viewerPass && await comparePasswords(viewerPass, tenant.viewer_password_hash));
+      // Allow plain text comparison for seed data, otherwise use hash
+      const isAuthorized = viewerAuthCookie === 'true' || (viewerPass && (viewerPass === tenant.viewer_password_hash || await comparePasswords(viewerPass, tenant.viewer_password_hash)));
 
       if (!isAuthorized) {
         return NextResponse.json({ 
@@ -96,7 +97,8 @@ export async function GET(req: NextRequest) {
       .bind(...(subTeamId ? [tenant.id, year, subTeamId] : [tenant.id, year]))
       .first();
 
-    const subTeams = await db.prepare("SELECT * FROM sub_teams WHERE tenant_id = ?").bind(tenant.id).all();
+    const subTeamsResult = await db.prepare("SELECT * FROM sub_teams WHERE tenant_id = ?").bind(tenant.id).all();
+    const subTeams = subTeamsResult.results || [];
     
     // Filter agents by tenant and optional sub-team
     let agentQuery = "SELECT * FROM agents WHERE tenant_id = ?";
@@ -105,7 +107,8 @@ export async function GET(req: NextRequest) {
       agentQuery += " AND sub_team_id = ?";
       agentBinds.push(subTeamId);
     }
-    const agents = await db.prepare(agentQuery).bind(...agentBinds).all();
+    const agentsResult = await db.prepare(agentQuery).bind(...agentBinds).all();
+    const agents = agentsResult.results || [];
     
     const transactionsResult = await db.prepare("SELECT * FROM transactions WHERE tenant_id = ?").bind(tenant.id).all();
     const transactions = transactionsResult.results || [];
@@ -141,8 +144,8 @@ export async function GET(req: NextRequest) {
         ytdProduction: totalProduction,
         ratios: teamRatios
       },
-      subTeams: subTeams.results || [],
-      agents: (agents.results || []).map((a: any) => {
+      subTeams: subTeams,
+      agents: agents.map((a: any) => {
         const agentTransactions = transactions.filter((t: any) => t.agent_id === a.id && t.year === year);
         const volumeClosed = agentTransactions.filter((t: any) => t.status === 'Sold').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
         const volumePending = agentTransactions.filter((t: any) => t.status === 'Pending').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
