@@ -37,5 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
         clientSecret: (env.AUTH_GOOGLE_SECRET || process.env.AUTH_GOOGLE_SECRET || env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || "").toString().replace(/['"\s]/g, ""),
       }),
     ],
+    secret: (env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET || "").toString().replace(/['"\s]/g, ""),
+    trustHost: true,
   }
 })
