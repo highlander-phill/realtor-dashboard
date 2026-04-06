@@ -4,6 +4,8 @@ import { hashPassword, comparePasswords } from "@/lib/crypto";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "edge";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 // Lazy load auth to prevent initialization issues at top level
 async function getAuth() {
