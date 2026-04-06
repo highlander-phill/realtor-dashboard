@@ -1,5 +1,4 @@
 import NextAuth from "next-auth"
-import { D1Adapter } from "@auth/d1-adapter"
 import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
 import { getRequestContext } from "@cloudflare/next-on-pages"
@@ -89,7 +88,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
       strategy: "jwt",
     },
     callbacks: {
-      async jwt({ token, user }) {
+      async jwt({ token, user, account }) {
         if (user) {
           token.id = user.id;
         }
@@ -102,5 +101,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
         return session;
       },
     },
+    // Ensure we use JWT since we don't have the full adapter schema
+    session: { strategy: "jwt" },
   }
 })
