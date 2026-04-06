@@ -7,8 +7,16 @@ import { verifyTurnstileToken } from "@/lib/utils"
 import { comparePasswords } from "@/lib/crypto"
 
 export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
-  const context = getRequestContext();
-  const env = (context?.env || {}) as any;
+  let context: any;
+  try {
+    context = getRequestContext();
+  } catch (e) {
+    console.error("Auth: Failed to get request context", e);
+  }
+  const env = (context?.env || process.env || {}) as any;
+
+  const sanitized = (val: any) => (val || "").toString().replace(/['"\s]/g, "");
+
   return {
     adapter: env.DB ? D1Adapter(env.DB) : undefined,
     providers: [
@@ -20,9 +28,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
         },
         async authorize(credentials) {
           const db = env.DB;
+          if (!db) {
+            console.error("Auth: DB not found in environment");
+            return null;
+          }
           const token = credentials.turnstileToken as string;
-          const isValid = await verifyTurnstileToken(token, env.TURNSTILE_SECRET_KEY);
-          if (!isValid) return null;
+          const turnstileSecret = sanitized(env.TURNSTILE_SECRET_KEY || env.CF_TURNSTILE_SECRET_KEY);
+          
+          const isValid = await verifyTurnstileToken(token, turnstileSecret);
+          if (!isValid) {
+            console.error("Auth: Turnstile verification failed");
+            return null;
+          }
           
           const user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(credentials.email).first();
           if (user) {
@@ -33,11 +50,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
         },
       }),
       Google({
-        clientId: (env.AUTH_GOOGLE_ID || process.env.AUTH_GOOGLE_ID || env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || "").toString().replace(/['"\s]/g, ""),
-        clientSecret: (env.AUTH_GOOGLE_SECRET || process.env.AUTH_GOOGLE_SECRET || env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || "").toString().replace(/['"\s]/g, ""),
+        clientId: sanitized(env.AUTH_GOOGLE_ID || env.GOOGLE_CLIENT_ID),
+        clientSecret: sanitized(env.AUTH_GOOGLE_SECRET || env.GOOGLE_CLIENT_SECRET),
       }),
     ],
-    secret: (env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET || "").toString().replace(/['"\s]/g, ""),
+    secret: sanitized(env.NEXTAUTH_SECRET || env.AUTH_SECRET),
     trustHost: true,
+    pages: {
+      signIn: '/admin/login',
+      error: '/admin/login',
+    },
+    callbacks: {
+      async session({ session, user, token }) {
+        if (token?.sub && session.user) {
+          session.user.id = token.sub;
+        }
+        return session;
+      },
+    },
   }
 })
