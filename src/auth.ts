@@ -56,10 +56,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
     ],
     secret: sanitized(env.NEXTAUTH_SECRET || env.AUTH_SECRET),
     trustHost: true,
-    pages: {
-      signIn: '/admin/login',
-      error: '/admin/login',
-    },
     callbacks: {
       async session({ session, user, token }) {
         if (token?.sub && session.user) {
