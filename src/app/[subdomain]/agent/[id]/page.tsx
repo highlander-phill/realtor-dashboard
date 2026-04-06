@@ -138,10 +138,11 @@ function AgentDetailContent() {
   }, [subdomain, selectedYear]);
 
   // FLEXIBLE LOOKUP: Match by ID (exact) or Name (slugified)
-  const agent = data.agents.find(a => 
-    String(a.id) === String(id) || 
-    String(a.name).toLowerCase().replace(/\s+/g, '-') === String(id).toLowerCase()
-  );
+  const agent = data.agents.find(a => {
+    const slug = String(a.name).toLowerCase().trim().replace(/\s+/g, '-');
+    const paramId = String(id).toLowerCase().trim();
+    return String(a.id) === paramId || slug === paramId;
+  });
 
   const handleSave = async (updatedData: DashboardData) => {
     setIsSaving(true);
