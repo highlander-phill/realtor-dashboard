@@ -16,7 +16,8 @@ export async function checkRateLimit(
   if (!current || now > current.expires) {
     // Start new window
     const newState = { count: 1, expires: now + windowSeconds };
-    await kv.put(kvKey, JSON.stringify(newState), { expirationTtl: windowSeconds });
+    const ttl = Math.max(60, windowSeconds);
+    await kv.put(kvKey, JSON.stringify(newState), { expirationTtl: ttl });
     return { success: true, remaining: limit - 1 };
   }
 
@@ -26,7 +27,8 @@ export async function checkRateLimit(
 
   // Increment count
   const updatedState = { count: current.count + 1, expires: current.expires };
-  await kv.put(kvKey, JSON.stringify(updatedState), { expirationTtl: current.expires - now });
+  const remainingTtl = Math.max(60, current.expires - now);
+  await kv.put(kvKey, JSON.stringify(updatedState), { expirationTtl: remainingTtl });
   
   return { success: true, remaining: limit - updatedState.count };
 }
