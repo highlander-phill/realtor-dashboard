@@ -5,6 +5,7 @@ export interface Transaction {
   price: number;
   status: 'Active' | 'Pending' | 'Sold';
   side: 'Buyer' | 'Seller';
+  dateListed?: string;
   date: string;
 }
 
@@ -34,6 +35,7 @@ export interface TenantSettings {
   primaryColor: string;
   theme: 'realtor' | 'sales' | 'insurance' | 'custom';
   onboardingCompleted: boolean;
+  trackDaysToClose: boolean;
 }
 
 export interface DashboardData {

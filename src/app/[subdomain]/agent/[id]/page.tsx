@@ -74,6 +74,7 @@ interface DashboardData {
     theme?: string;
     onboardingCompleted: boolean;
     showTimeToClose: boolean;
+    trackDaysToClose: boolean;
     showPriceDelta: boolean;
   };
   team: {
@@ -91,6 +92,9 @@ const initialData: DashboardData = {
     subdomain: "",
     primaryColor: "#000000",
     onboardingCompleted: true,
+    showTimeToClose: false,
+    trackDaysToClose: false,
+    showPriceDelta: false,
   },
   team: {
     goal: 1,
@@ -141,18 +145,8 @@ function AgentDetailContent() {
   const agent = data.agents.find(a => {
     const slug = String(a.name).toLowerCase().trim().replace(/\s+/g, '-');
     const paramId = decodeURIComponent(String(id)).toLowerCase().trim();
-    console.log('AGENT_DEBUG: Comparing agent:', { 
-      name: a.name, 
-      slug, 
-      paramId, 
-      id: a.id,
-      match: String(a.id) === paramId || slug === paramId 
-    });
     return String(a.id) === paramId || slug === paramId;
   });
-
-  // Log the result of the find
-  console.log('AGENT_DEBUG: Final agent found:', agent?.name || 'NONE', 'from', data.agents.length, 'agents');
 
   const handleSave = async (updatedData: DashboardData) => {
     setIsSaving(true);
@@ -273,7 +267,7 @@ function AgentDetailContent() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-1">
             <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase italic">{agent.name}</h1>
-            <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em]">{data.tenant.name} • {selectedYear} Profile v2.2.18</p>
+            <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em]">{data.tenant.name} • {selectedYear} Profile v2.2.19</p>
           </div>
           <div className="flex items-center gap-4">
              {isAuthorized && (
@@ -392,7 +386,8 @@ function AgentDetailContent() {
                       <TableHead className="px-10 py-5 font-black uppercase text-[10px] tracking-widest">Property Address</TableHead>
                       <TableHead className="font-black uppercase text-[10px] tracking-widest">Price ($)</TableHead>
                       <TableHead className="font-black uppercase text-[10px] tracking-widest">Status</TableHead>
-                      <TableHead className="font-black uppercase text-[10px] tracking-widest">Closing/Activity</TableHead>
+                      {data.tenant.showTimeToClose && <TableHead className="font-black uppercase text-[10px] tracking-widest">Date Listed</TableHead>}
+                      <TableHead className="font-black uppercase text-[10px] tracking-widest">Closing Date</TableHead>
                       <TableHead className="font-black uppercase text-[10px] tracking-widest">Side</TableHead>
                       {isAuthorized && <TableHead className="text-right px-10 font-black uppercase text-[10px] tracking-widest">Action</TableHead>}
                    </TableRow>
@@ -437,6 +432,18 @@ function AgentDetailContent() {
                                </Badge>
                             )}
                          </TableCell>
+                         {data.tenant.showTimeToClose && (
+                            <TableCell className="text-xs font-bold text-slate-500">
+                               {isAuthorized ? (
+                                  <Input 
+                                    type="date"
+                                    value={t.dateListed || ''} 
+                                    onChange={(e) => updateTransaction(t.id, "dateListed", e.target.value)}
+                                    className="bg-transparent border-slate-200 dark:border-slate-800 h-10 font-bold text-xs"
+                                  />
+                               ) : t.dateListed}
+                            </TableCell>
+                         )}
                          <TableCell className="text-xs font-bold text-slate-500">
                             {isAuthorized ? (
                                <Input 

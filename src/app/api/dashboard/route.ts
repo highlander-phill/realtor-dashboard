@@ -138,6 +138,7 @@ export async function GET(req: NextRequest) {
         darkMode: !!tenant.dark_mode,
         onboardingCompleted: !!tenant.onboarding_completed,
         showTimeToClose: !!tenant.show_time_to_close,
+        trackDaysToClose: !!tenant.track_days_to_close,
         showPriceDelta: !!tenant.show_price_delta,
         hasViewerPassword: !!tenant.viewer_password_hash,
         billingStatus: tenant.billing_status || 'free',
@@ -238,16 +239,16 @@ export async function POST(req: NextRequest) {
 
     // Handle settings updates (Password, logo, column toggles)
     if (action === 'update_settings') {
-      const { adminPassword, viewerPassword, logoUrl, name, primaryColor, showTimeToClose, showPriceDelta, darkMode } = body;
+      const { adminPassword, viewerPassword, logoUrl, name, primaryColor, showTimeToClose, trackDaysToClose, showPriceDelta, darkMode } = body;
       const vHash = viewerPassword ? await hashPassword(viewerPassword) : null;
       
-      let query = "UPDATE tenants SET name = ?, primary_color = ?, logo_url = ?, show_time_to_close = ?, show_price_delta = ?, dark_mode = ?, viewer_password_hash = ? WHERE subdomain = ?";
-      let binds = [name, primaryColor, logoUrl, showTimeToClose ? 1 : 0, showPriceDelta ? 1 : 0, darkMode ? 1 : 0, vHash, tenant.subdomain];
+      let query = "UPDATE tenants SET name = ?, primary_color = ?, logo_url = ?, show_time_to_close = ?, track_days_to_close = ?, show_price_delta = ?, dark_mode = ?, viewer_password_hash = ? WHERE subdomain = ?";
+      let binds = [name, primaryColor, logoUrl, showTimeToClose ? 1 : 0, trackDaysToClose ? 1 : 0, showPriceDelta ? 1 : 0, darkMode ? 1 : 0, vHash, tenant.subdomain];
       
       if (adminPassword) {
         const aHash = await hashPassword(adminPassword);
-        query = "UPDATE tenants SET name = ?, primary_color = ?, logo_url = ?, show_time_to_close = ?, show_price_delta = ?, dark_mode = ?, viewer_password_hash = ?, admin_password_hash = ? WHERE subdomain = ?";
-        binds = [name, primaryColor, logoUrl, showTimeToClose ? 1 : 0, showPriceDelta ? 1 : 0, darkMode ? 1 : 0, vHash, aHash, tenant.subdomain];
+        query = "UPDATE tenants SET name = ?, primary_color = ?, logo_url = ?, show_time_to_close = ?, track_days_to_close = ?, show_price_delta = ?, dark_mode = ?, viewer_password_hash = ?, admin_password_hash = ? WHERE subdomain = ?";
+        binds = [name, primaryColor, logoUrl, showTimeToClose ? 1 : 0, trackDaysToClose ? 1 : 0, showPriceDelta ? 1 : 0, darkMode ? 1 : 0, vHash, aHash, tenant.subdomain];
       }
       await safeBind(db.prepare(query), ...binds).run();
       return NextResponse.json({ success: true });

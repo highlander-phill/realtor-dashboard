@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS tenants (
   admin_password_hash TEXT,
   viewer_password_hash TEXT,
   show_time_to_close INTEGER DEFAULT 1,
+  track_days_to_close INTEGER DEFAULT 0,
   show_price_delta INTEGER DEFAULT 1,
   stripe_customer_id TEXT,
   billing_status TEXT DEFAULT 'free',

@@ -85,6 +85,7 @@ interface DashboardData {
     darkMode: boolean;
     onboardingCompleted: boolean;
     showTimeToClose: boolean;
+    trackDaysToClose: boolean;
     showPriceDelta: boolean;
     hasViewerPassword: boolean;
   };
@@ -106,6 +107,7 @@ const initialData: DashboardData = {
     darkMode: false,
     onboardingCompleted: true,
     showTimeToClose: false,
+    trackDaysToClose: false,
     showPriceDelta: false,
     hasViewerPassword: false
   },
@@ -183,6 +185,7 @@ export default function AdminPanel() {
           adminPassword: newPassword || undefined,
           viewerPassword: viewerPassword || undefined,
           showTimeToClose: data.tenant.showTimeToClose,
+          trackDaysToClose: data.tenant.trackDaysToClose,
           showPriceDelta: data.tenant.showPriceDelta
         }),
       });
@@ -530,6 +533,17 @@ export default function AdminPanel() {
                             type="checkbox" 
                             checked={data.tenant.showTimeToClose} 
                             onChange={(e) => setData({...data, tenant: {...data.tenant, showTimeToClose: e.target.checked}})} 
+                            className="w-5 h-5 rounded border-slate-300"
+                          />
+                       </label>
+                       <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl cursor-pointer">
+                          <span className="flex items-center gap-3 font-bold text-sm">
+                             <CalendarClock className="w-4 h-4 text-purple-500" /> Track 'Days to Close'
+                          </span>
+                          <input 
+                            type="checkbox" 
+                            checked={data.tenant.trackDaysToClose} 
+                            onChange={(e) => setData({...data, tenant: {...data.tenant, trackDaysToClose: e.target.checked}})} 
                             className="w-5 h-5 rounded border-slate-300"
                           />
                        </label>
