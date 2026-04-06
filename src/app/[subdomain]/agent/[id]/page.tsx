@@ -141,6 +141,7 @@ function AgentDetailContent() {
   const agent = data.agents.find(a => {
     const slug = String(a.name).toLowerCase().trim().replace(/\s+/g, '-');
     const paramId = decodeURIComponent(String(id)).toLowerCase().trim();
+    console.log('Comparing agent:', { name: a.name, slug, paramId, id: a.id });
     return String(a.id) === paramId || slug === paramId;
   });
 
