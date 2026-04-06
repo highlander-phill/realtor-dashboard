@@ -15,15 +15,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
   }
   const env = (context?.env || process.env || {}) as any;
 
+  console.log("Auth: Env keys available:", Object.keys(env));
+
   const sanitized = (val: any) => (val || "").toString().replace(/['"\s]/g, "");
-  const secret = sanitized(env.NEXTAUTH_SECRET || env.AUTH_SECRET);
-  if (!secret) {
-    console.error("Auth: NEXTAUTH_SECRET is missing");
-  }
+  const secret = sanitized(env.NEXTAUTH_SECRET || env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET);
+  
+  const googleId = sanitized(env.AUTH_GOOGLE_ID || env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID);
+  const googleSecret = sanitized(env.AUTH_GOOGLE_SECRET || env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET);
 
   return {
     debug: true,
-    adapter: env.DB ? D1Adapter(env.DB) : undefined,
     providers: [
       Credentials({
         credentials: {
@@ -33,13 +34,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
         },
         async authorize(credentials) {
           try {
-            const db = env.DB;
+            const db = env.DB || (process.env as any).DB;
             if (!db) {
               console.error("Auth: DB not found in environment");
               return null;
             }
             const token = (credentials.turnstileToken as string) || "";
-            const turnstileSecret = sanitized(env.TURNSTILE_SECRET_KEY || env.CF_TURNSTILE_SECRET_KEY);
+            const turnstileSecret = sanitized(env.TURNSTILE_SECRET_KEY || env.CF_TURNSTILE_SECRET_KEY || process.env.TURNSTILE_SECRET_KEY || process.env.CF_TURNSTILE_SECRET_KEY);
             
             if (token) {
               const isValid = await verifyTurnstileToken(token, turnstileSecret);
@@ -47,8 +48,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
                 console.error("Auth: Turnstile verification failed");
                 return null;
               }
-            } else {
-              console.warn("Auth: No Turnstile token provided");
             }
             
             const user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(credentials.email).first();
@@ -64,8 +63,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
         },
       }),
       Google({
-        clientId: sanitized(env.AUTH_GOOGLE_ID || env.GOOGLE_CLIENT_ID),
-        clientSecret: sanitized(env.AUTH_GOOGLE_SECRET || env.GOOGLE_CLIENT_SECRET),
+        clientId: googleId,
+        clientSecret: googleSecret,
       }),
     ],
     secret: secret,

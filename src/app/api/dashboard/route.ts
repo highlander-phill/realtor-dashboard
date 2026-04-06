@@ -195,9 +195,9 @@ export async function POST(req: NextRequest) {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       
-      // Check if user has access to this tenant
+      // Check if user has access to this tenant (as user or as an agent by name/email)
       const user = await db.prepare("SELECT * FROM users WHERE email = ? AND tenant_id = ?").bind(session.user.email, existingTenant.id).first();
-      const agent = await db.prepare("SELECT * FROM agents WHERE email = ? AND tenant_id = ?").bind(session.user.email, existingTenant.id).first();
+      const agent = await db.prepare("SELECT * FROM agents WHERE (name = ? OR id = ?) AND tenant_id = ?").bind(session.user.name || '', session.user.id || '', existingTenant.id).first();
       
       if (!user && !agent) {
          return NextResponse.json({ error: "Forbidden: You do not have management access to this tenant" }, { status: 403 });
