@@ -41,7 +41,7 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
     }
   }, [isMounted, onVerify]);
 
-  if (!isMounted) return null;
+  if (!isMounted) return <div style={{ minHeight: '65px' }} />;
 
   return (
     <div 
