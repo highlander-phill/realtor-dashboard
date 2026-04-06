@@ -33,8 +33,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
         },
       }),
       Google({
-        clientId: (env.AUTH_GOOGLE_ID || process.env.AUTH_GOOGLE_ID || env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || "").replace(/['"]/g, "").trim(),
-        clientSecret: (env.AUTH_GOOGLE_SECRET || process.env.AUTH_GOOGLE_SECRET || env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || "").replace(/['"]/g, "").trim(),
+        clientId: (env.AUTH_GOOGLE_ID || process.env.AUTH_GOOGLE_ID || env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || "").toString().replace(/['"]/g, "").trim(),
+        clientSecret: (env.AUTH_GOOGLE_SECRET || process.env.AUTH_GOOGLE_SECRET || env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || "").toString().replace(/['"]/g, "").trim(),
       }),
     ],
   }
