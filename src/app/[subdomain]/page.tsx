@@ -523,7 +523,7 @@ function DashboardContent() {
                             onClick={(e) => {
                                e.preventDefault();
                                e.stopPropagation();
-                               router.push(`/${subdomain}/agent/${agent.id}?year=${selectedYear}`);
+                               router.push(`/${subdomain}/agent/${String(agent.name).toLowerCase().replace(/\s+/g, '-')}?year=${selectedYear}`);
                             }}
                           >
                           <TableCell className="px-10 py-6">
