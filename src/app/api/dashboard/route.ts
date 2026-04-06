@@ -45,7 +45,9 @@ export async function GET(req: NextRequest) {
 
     // Rate Limiting
     const ip = req.headers.get("cf-connecting-ip") || "anonymous";
-    await checkRateLimit(kv, `get_dash:${ip}`, 100, 60); 
+    if (kv) {
+       await checkRateLimit(kv, `get_dash:${ip}`, 100, 60); 
+    }
 
     const host = req.headers.get('host') || '';
     const url = new URL(req.url);
