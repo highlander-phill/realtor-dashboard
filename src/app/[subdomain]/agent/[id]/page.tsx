@@ -140,7 +140,7 @@ function AgentDetailContent() {
   // FLEXIBLE LOOKUP: Match by ID (exact) or Name (slugified)
   const agent = data.agents.find(a => {
     const slug = String(a.name).toLowerCase().trim().replace(/\s+/g, '-');
-    const paramId = String(id).toLowerCase().trim();
+    const paramId = decodeURIComponent(String(id)).toLowerCase().trim();
     return String(a.id) === paramId || slug === paramId;
   });
 
