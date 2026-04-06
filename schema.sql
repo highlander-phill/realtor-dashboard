@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS agents (
   tenant_id TEXT NOT NULL,
   sub_team_id TEXT,
   name TEXT NOT NULL,
+  email TEXT,
   goal REAL NOT NULL DEFAULT 0,
   closings INTEGER NOT NULL DEFAULT 0,
   volume_closed REAL NOT NULL DEFAULT 0,
@@ -109,14 +110,14 @@ INSERT OR IGNORE INTO team_data (tenant_id, sub_team_id, year, goal, ytd_product
 VALUES ('nspg-group', NULL, 2026, 50000000, 22450000, CURRENT_TIMESTAMP);
 
 -- Seed Agents for NSPG (Including 3 more as requested)
-INSERT OR IGNORE INTO agents (id, tenant_id, name, goal, closings, volume_closed, volume_pending, listings_volume, buyers, sellers, listings, mls_link, status, count_in_total)
+INSERT OR IGNORE INTO agents (id, tenant_id, name, email, goal, closings, volume_closed, volume_pending, listings_volume, buyers, sellers, listings, mls_link, status, count_in_total)
 VALUES 
-  ('1', 'nspg-group', 'Nik Shehu', 10000000, 15, 8500000, 2500000, 1500000, 8, 7, 4, 'https://nspgrealty.com/listings', 'active', 1),
-  ('2', 'nspg-group', 'Sarah Jenkins', 8000000, 10, 4200000, 1200000, 600000, 4, 6, 2, 'https://nspgrealty.com/listings', 'active', 1),
-  ('3', 'nspg-group', 'Mike Ross', 6000000, 8, 2100000, 800000, 400000, 3, 5, 3, 'https://nspgrealty.com/listings', 'active', 1),
-  ('4', 'nspg-group', 'Jessica Pearson', 12000000, 12, 5400000, 1500000, 2200000, 7, 5, 5, 'https://nspgrealty.com/listings', 'active', 1),
-  ('5', 'nspg-group', 'Harvey Specter', 15000000, 18, 9200000, 3500000, 4500000, 10, 8, 8, 'https://nspgrealty.com/listings', 'active', 1),
-  ('6', 'nspg-group', 'Louis Litt', 7000000, 6, 1850000, 450000, 850000, 2, 4, 4, 'https://nspgrealty.com/listings', 'active', 1);
+  ('1', 'nspg-group', 'Nik Shehu', 'nik@realestatebastrop.com', 10000000, 15, 8500000, 2500000, 1500000, 8, 7, 4, 'https://nspgrealty.com/listings', 'active', 1),
+  ('2', 'nspg-group', 'Sarah Jenkins', 'sarah@example.com', 8000000, 10, 4200000, 1200000, 600000, 4, 6, 2, 'https://nspgrealty.com/listings', 'active', 1),
+  ('3', 'nspg-group', 'Mike Ross', 'mike@example.com', 6000000, 8, 2100000, 800000, 400000, 3, 5, 3, 'https://nspgrealty.com/listings', 'active', 1),
+  ('4', 'nspg-group', 'Jessica Pearson', 'jessica@example.com', 12000000, 12, 5400000, 1500000, 2200000, 7, 5, 5, 'https://nspgrealty.com/listings', 'active', 1),
+  ('5', 'nspg-group', 'Harvey Specter', 'harvey@example.com', 15000000, 18, 9200000, 3500000, 4500000, 10, 8, 8, 'https://nspgrealty.com/listings', 'active', 1),
+  ('6', 'nspg-group', 'Louis Litt', 'louis@example.com', 7000000, 6, 1850000, 450000, 850000, 2, 4, 4, 'https://nspgrealty.com/listings', 'active', 1);
 
 -- Seed Sample Transactions
 INSERT OR IGNORE INTO transactions (id, agent_id, tenant_id, address, price, list_price, date_listed, status, side, date, year)

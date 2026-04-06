@@ -271,8 +271,8 @@ export async function POST(req: NextRequest) {
       db.prepare("DELETE FROM agents WHERE tenant_id = ?").bind(tenantId),
       db.prepare("DELETE FROM transactions WHERE tenant_id = ?").bind(tenantId),
       ...agents.map((a: any) => 
-        db.prepare("INSERT INTO agents (id, tenant_id, sub_team_id, name, goal, closings, volume_pending, volume_closed, listings_volume, buyers, sellers, listings, mls_link, status, count_in_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-          .bind(a.id, tenantId, a.subTeamId || null, a.name, a.goal, a.closings || 0, a.volumePending || 0, a.volumeClosed || 0, a.listingsVolume || 0, a.buyers || 0, a.sellers || 0, a.listings || 0, a.mlsLink || null, a.status || 'active', a.countInTotal ? 1 : 0)
+        db.prepare("INSERT INTO agents (id, tenant_id, sub_team_id, name, email, goal, closings, volume_pending, volume_closed, listings_volume, buyers, sellers, listings, mls_link, status, count_in_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+          .bind(a.id, tenantId, a.subTeamId || null, a.name, a.email || null, a.goal, a.closings || 0, a.volumePending || 0, a.volumeClosed || 0, a.listingsVolume || 0, a.buyers || 0, a.sellers || 0, a.listings || 0, a.mlsLink || null, a.status || 'active', a.countInTotal ? 1 : 0)
       ),
       ...agents.flatMap((a: any) => 
         (a.transactions || []).map((t: any) => 
