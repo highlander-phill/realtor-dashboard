@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
         <div style={{ background: '#0f172a', padding: '40px', borderRadius: '24px', border: '1px solid #1e293b' }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0' }}>ADMIN LOGIN</h2>
-            <p style={{ fontSize: '12px', color: '#64748b', margin: '8px 0 0', textTransform: 'uppercase' }}>{subdomain} Console v2.2.14</p>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: '8px 0 0', textTransform: 'uppercase' }}>{subdomain} Console v2.2.15</p>
           </div>
           
           {authError && <div style={{ color: '#f87171', padding: '12px', borderRadius: '12px', marginBottom: '20px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', border: '1px solid #ef4444' }}>{authError}</div>}

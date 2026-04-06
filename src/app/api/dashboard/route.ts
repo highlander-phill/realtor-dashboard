@@ -207,6 +207,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { tenant, team, agents, subTeams, year = 2026, action } = body;
 
+    // Helper to ensure no undefined values are sent to D1
+    const safeBind = (stmt: any, ...args: any[]) => {
+      const sanitizedArgs = args.map(arg => arg === undefined ? null : arg);
+      return stmt.bind(...sanitizedArgs);
+    };
+
     // Resolve Tenant ID from Subdomain
     const existingTenant = await db.prepare("SELECT * FROM tenants WHERE subdomain = ?").bind(tenant.subdomain).first();
     
@@ -241,7 +247,7 @@ export async function POST(req: NextRequest) {
         query = "UPDATE tenants SET name = ?, primary_color = ?, logo_url = ?, show_time_to_close = ?, show_price_delta = ?, dark_mode = ?, viewer_password_hash = ?, admin_password_hash = ? WHERE subdomain = ?";
         binds = [name, primaryColor, logoUrl, showTimeToClose ? 1 : 0, showPriceDelta ? 1 : 0, darkMode ? 1 : 0, vHash, aHash, tenant.subdomain];
       }
-      await db.prepare(query).bind(...binds).run();
+      await safeBind(db.prepare(query), ...binds).run();
       return NextResponse.json({ success: true });
     }
 
@@ -254,30 +260,24 @@ export async function POST(req: NextRequest) {
 
     // 2. Upsert Tenant
     const aHash = tenant.adminPassword ? await hashPassword(tenant.adminPassword) : null;
-    await db.prepare(
+    await safeBind(db.prepare(
       "INSERT INTO tenants (id, name, subdomain, primary_color, theme, onboarding_completed, logo_url, admin_password_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
       "ON CONFLICT(subdomain) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, theme=excluded.theme, onboarding_completed=MAX(tenants.onboarding_completed, excluded.onboarding_completed), logo_url=excluded.logo_url, admin_password_hash=COALESCE(excluded.admin_password_hash, tenants.admin_password_hash)"
-    ).bind(tenantId, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0, tenant.logoUrl || null, aHash).run();
+    ), tenantId, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0, tenant.logoUrl || null, aHash).run();
 
     // 3. Upsert Team Data
-    await db.prepare(
+    await safeBind(db.prepare(
       "INSERT INTO team_data (tenant_id, year, goal, ytd_production, last_updated) VALUES (?, ?, ?, ?, ?) " +
       "ON CONFLICT(tenant_id, year) DO UPDATE SET goal=excluded.goal, ytd_production=excluded.ytd_production, last_updated=excluded.last_updated"
-    ).bind(tenantId, year, team.goal, team.ytdProduction, new Date().toISOString()).run();
+    ), tenantId, year, team.goal, team.ytdProduction, new Date().toISOString()).run();
 
     // 4. Batch update sub-teams, agents, and transactions
     const statements: any[] = [];
     
-    // Helper to ensure no undefined values are sent to D1
-    const safeBind = (stmt: any, ...args: any[]) => {
-      const sanitizedArgs = args.map(arg => arg === undefined ? null : arg);
-      return stmt.bind(...sanitizedArgs);
-    };
-    
     // Delete in reverse order of dependencies to avoid foreign key violations
-    statements.push(db.prepare("DELETE FROM transactions WHERE tenant_id = ?").bind(tenantId));
-    statements.push(db.prepare("DELETE FROM agents WHERE tenant_id = ?").bind(tenantId));
-    statements.push(db.prepare("DELETE FROM sub_teams WHERE tenant_id = ?").bind(tenantId));
+    statements.push(safeBind(db.prepare("DELETE FROM transactions WHERE tenant_id = ?"), tenantId));
+    statements.push(safeBind(db.prepare("DELETE FROM agents WHERE tenant_id = ?"), tenantId));
+    statements.push(safeBind(db.prepare("DELETE FROM sub_teams WHERE tenant_id = ?"), tenantId));
     
     if (subTeams && subTeams.length > 0) {
       for (const st of subTeams) {
