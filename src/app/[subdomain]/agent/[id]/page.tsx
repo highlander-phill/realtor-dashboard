@@ -273,7 +273,7 @@ function AgentDetailContent() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-1">
             <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase italic">{agent.name}</h1>
-            <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em]">{data.tenant.name} • {selectedYear} Profile v2.2.17</p>
+            <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em]">{data.tenant.name} • {selectedYear} Profile v2.2.18</p>
           </div>
           <div className="flex items-center gap-4">
              {isAuthorized && (
@@ -401,15 +401,64 @@ function AgentDetailContent() {
                    {(agent.transactions || []).map((t) => {
                       return (
                       <TableRow key={t.id} className="border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                         <TableCell className="px-10 py-6 font-bold">{t.address}</TableCell>
-                         <TableCell className="font-black">{formatCurrency(t.price)}</TableCell>
-                         <TableCell>
-                            <Badge className={`${t.status === 'Sold' ? 'bg-green-500' : t.status === 'Pending' ? 'bg-blue-500' : 'bg-orange-500'} text-white border-none text-[10px] font-black uppercase tracking-tighter`}>
-                               {t.status}
-                             </Badge>
+                         <TableCell className="px-10 py-6 font-bold">
+                            {isAuthorized ? (
+                               <Input 
+                                 value={t.address} 
+                                 onChange={(e) => updateTransaction(t.id, "address", e.target.value)}
+                                 className="bg-transparent border-slate-200 dark:border-slate-800 h-10 font-bold"
+                               />
+                            ) : t.address}
                          </TableCell>
-                         <TableCell className="text-xs font-bold text-slate-500">{t.date}</TableCell>
-                         <TableCell className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{t.side} Rep</TableCell>
+                         <TableCell className="font-black">
+                            {isAuthorized ? (
+                               <Input 
+                                 type="number"
+                                 value={t.price} 
+                                 onChange={(e) => updateTransaction(t.id, "price", Number(e.target.value))}
+                                 className="bg-transparent border-slate-200 dark:border-slate-800 h-10 font-black w-32"
+                               />
+                            ) : formatCurrency(t.price)}
+                         </TableCell>
+                         <TableCell>
+                            {isAuthorized ? (
+                               <select 
+                                 value={t.status} 
+                                 onChange={(e) => updateTransaction(t.id, "status", e.target.value)}
+                                 className="bg-transparent border border-slate-200 dark:border-slate-800 rounded-lg px-2 h-10 font-black text-[10px] uppercase"
+                               >
+                                 <option value="Sold">Sold</option>
+                                 <option value="Pending">Pending</option>
+                                 <option value="Active">Active</option>
+                               </select>
+                            ) : (
+                               <Badge className={`${t.status === 'Sold' ? 'bg-green-500' : t.status === 'Pending' ? 'bg-blue-500' : 'bg-orange-500'} text-white border-none text-[10px] font-black uppercase tracking-tighter`}>
+                                 {t.status}
+                               </Badge>
+                            )}
+                         </TableCell>
+                         <TableCell className="text-xs font-bold text-slate-500">
+                            {isAuthorized ? (
+                               <Input 
+                                 type="date"
+                                 value={t.date} 
+                                 onChange={(e) => updateTransaction(t.id, "date", e.target.value)}
+                                 className="bg-transparent border-slate-200 dark:border-slate-800 h-10 font-bold text-xs"
+                               />
+                            ) : t.date}
+                         </TableCell>
+                         <TableCell className="text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                            {isAuthorized ? (
+                               <select 
+                                 value={t.side} 
+                                 onChange={(e) => updateTransaction(t.id, "side", e.target.value)}
+                                 className="bg-transparent border border-slate-200 dark:border-slate-800 rounded-lg px-2 h-10 font-black text-[10px] uppercase"
+                               >
+                                 <option value="Buyer">Buyer</option>
+                                 <option value="Seller">Seller</option>
+                               </select>
+                            ) : `${t.side} Rep`}
+                         </TableCell>
                          {isAuthorized && (
                             <TableCell className="px-10 text-right">
                                <Button onClick={() => removeTransaction(t.id)} variant="ghost" size="icon" className="text-slate-400 hover:text-red-600 rounded-full">
