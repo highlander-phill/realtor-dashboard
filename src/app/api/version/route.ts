@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export const runtime = 'edge';
 
 // This will be replaced at build time or we can use a hardcoded value that changes per deploy
-const DEPLOY_ID = new Date().toISOString();
+const DEPLOY_ID = "v2.2.17-" + new Date().toISOString();
 
 export async function GET() {
   return NextResponse.json({ 
