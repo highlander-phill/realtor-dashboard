@@ -344,7 +344,7 @@ function DashboardContent() {
                 <div className="flex items-center gap-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {selectedYear} Performance</span>
                   {selectedSubTeam && <span className="flex items-center gap-1 text-blue-600"><Users className="w-3 h-3" /> {data.subTeams.find(s => s.id === selectedSubTeam)?.name}</span>}
-                  <span className="text-[9px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-400">v2.2.16</span>
+                  <span className="text-[9px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-400">v2.2.17</span>
                 </div>
               </div>
           </div>
@@ -379,7 +379,7 @@ function DashboardContent() {
 
             <TVHelpModal />
 
-            <Link href={`/${subdomain}/admin`}>
+            <Link href={`/${subdomain}/admin/login`}>
               <Button variant="outline" size="sm" className="bg-white hover:bg-slate-100 text-slate-700 font-black uppercase text-[10px] tracking-widest border-slate-200 h-9 px-4">
                 Admin Console
               </Button>

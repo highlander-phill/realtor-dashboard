@@ -278,7 +278,7 @@ export default function AdminPanel() {
              </Link>
              <div>
                 <h1 className="text-2xl font-black uppercase tracking-tight italic">Admin Management</h1>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">{data.tenant.name} • Master Controls</p>
+                <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">{data.tenant.name} • Master Controls v2.2.17</p>
              </div>
           </div>
           <div className="flex gap-3 w-full md:w-auto">
@@ -568,7 +568,10 @@ export default function AdminPanel() {
                 </CardHeader>
                 <CardContent className="p-8 space-y-6">
                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Admin Password</Label>
+                      <div className="flex justify-between items-center">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Admin Password</Label>
+                        <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-800">{session?.user?.email}</span>
+                      </div>
                       <Input 
                         type="password"
                         value={newPassword}
@@ -576,7 +579,7 @@ export default function AdminPanel() {
                         placeholder="••••••••"
                         className="h-14 font-bold"
                       />
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Required for Admin Console access</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Updating this will change the password for the account shown above</p>
                    </div>
 
                    <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
