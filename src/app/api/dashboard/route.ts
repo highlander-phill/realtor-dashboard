@@ -26,9 +26,19 @@ export async function GET(req: NextRequest) {
   try {
     let env: D1Env & { SETTINGS: any };
     try {
-      env = getRequestContext().env as any;
+      const context = getRequestContext();
+      if (!context || !context.env) {
+         // Fallback for local development or missing context
+         env = process.env as any;
+      } else {
+         env = context.env as any;
+      }
     } catch {
-      return NextResponse.json({ error: "Local development mode" }, { status: 500 });
+      env = process.env as any;
+    }
+    
+    if (!env || !env.DB) {
+       return NextResponse.json({ error: "Database not configured" }, { status: 500 });
     }
     const db = env.DB;
     const kv = env.SETTINGS;
@@ -97,11 +107,12 @@ export async function GET(req: NextRequest) {
     }
     const agents = await db.prepare(agentQuery).bind(...agentBinds).all();
     
-    const transactions = await db.prepare("SELECT * FROM transactions WHERE tenant_id = ?").bind(tenant.id).all();
+    const transactionsResult = await db.prepare("SELECT * FROM transactions WHERE tenant_id = ?").bind(tenant.id).all();
+    const transactions = transactionsResult.results || [];
     
     // Ratios Calculation (Team Wide, all years for better stats or just selected? Usually selected)
-    const yearTransactions = transactions.results.filter(t => t.year === year);
-    const totalProduction = yearTransactions.filter(t => t.status === 'Sold').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
+    const yearTransactions = transactions.filter((t: any) => t.year === year);
+    const totalProduction = yearTransactions.filter((t: any) => t.status === 'Sold').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
     
     const teamRatios = {
       listingToClose: yearTransactions.filter((t: any) => t.status === 'Active').length > 0 ? (yearTransactions.filter((t: any) => t.status === 'Sold').length / yearTransactions.filter((t: any) => t.status === 'Active').length).toFixed(2) : "0",
@@ -132,7 +143,7 @@ export async function GET(req: NextRequest) {
       },
       subTeams: subTeams.results || [],
       agents: (agents.results || []).map((a: any) => {
-        const agentTransactions = (transactions.results || []).filter((t: any) => t.agent_id === a.id && t.year === year);
+        const agentTransactions = transactions.filter((t: any) => t.agent_id === a.id && t.year === year);
         const volumeClosed = agentTransactions.filter((t: any) => t.status === 'Sold').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
         const volumePending = agentTransactions.filter((t: any) => t.status === 'Pending').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
         const listingsVolume = agentTransactions.filter((t: any) => t.status === 'Active').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
@@ -169,9 +180,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { env } = getRequestContext() as any;
+    const context = getRequestContext();
+    const env = (context?.env || process.env || {}) as any;
     const db = env.DB;
     const kv = env.SETTINGS;
+
+    if (!db) {
+       return NextResponse.json({ error: "Database not configured" }, { status: 500 });
+    }
 
     // Rate Limiting
     const ip = req.headers.get("cf-connecting-ip") || "anonymous";
