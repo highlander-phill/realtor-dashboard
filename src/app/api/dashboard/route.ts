@@ -266,30 +266,42 @@ export async function POST(req: NextRequest) {
     ).bind(tenantId, year, team.goal, team.ytdProduction, new Date().toISOString()).run();
 
     // 4. Batch update sub-teams, agents, and transactions
-    const statements = [
-      db.prepare("DELETE FROM sub_teams WHERE tenant_id = ?").bind(tenantId),
-      ...(subTeams || []).map((st: any) => 
-        db.prepare("INSERT INTO sub_teams (id, tenant_id, name, goal) VALUES (?, ?, ?, ?)").bind(st.id, tenantId, st.name, st.goal)
-      ),
-      db.prepare("DELETE FROM agents WHERE tenant_id = ?").bind(tenantId),
-      db.prepare("DELETE FROM transactions WHERE tenant_id = ?").bind(tenantId),
-      ...agents.map((a: any) => 
-        db.prepare("INSERT INTO agents (id, tenant_id, sub_team_id, name, goal, closings, volume_pending, volume_closed, listings_volume, buyers, sellers, listings, mls_link, status, count_in_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-          .bind(a.id, tenantId, a.subTeamId || null, a.name, a.goal, a.closings || 0, a.volumePending || 0, a.volumeClosed || 0, a.listingsVolume || 0, a.buyers || 0, a.sellers || 0, a.listings || 0, a.mlsLink || null, a.status || 'active', a.countInTotal ? 1 : 0)
-      ),
-      ...agents.flatMap((a: any) => 
-        (a.transactions || []).map((t: any) => 
-          db.prepare("INSERT INTO transactions (id, agent_id, tenant_id, address, price, list_price, date_listed, status, side, date, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-            .bind(t.id, a.id, tenantId, t.address, t.price, t.listPrice || null, t.dateListed || null, t.status, t.side, t.date, year)
-        )
-      )
-    ];
+    const statements: any[] = [];
+    
+    // Delete in reverse order of dependencies to avoid foreign key violations
+    statements.push(db.prepare("DELETE FROM transactions WHERE tenant_id = ?").bind(tenantId));
+    statements.push(db.prepare("DELETE FROM agents WHERE tenant_id = ?").bind(tenantId));
+    statements.push(db.prepare("DELETE FROM sub_teams WHERE tenant_id = ?").bind(tenantId));
+    
+    if (subTeams && subTeams.length > 0) {
+      for (const st of subTeams) {
+        statements.push(db.prepare("INSERT INTO sub_teams (id, tenant_id, name, goal) VALUES (?, ?, ?, ?)").bind(st.id, tenantId, st.name, st.goal));
+      }
+    }
+    
+    if (agents && agents.length > 0) {
+      for (const a of agents) {
+        statements.push(db.prepare("INSERT INTO agents (id, tenant_id, sub_team_id, name, goal, closings, volume_pending, volume_closed, listings_volume, buyers, sellers, listings, mls_link, status, count_in_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+          .bind(a.id, tenantId, a.subTeamId || null, a.name, a.goal, a.closings || 0, a.volumePending || 0, a.volumeClosed || 0, a.listingsVolume || 0, a.buyers || 0, a.sellers || 0, a.listings || 0, a.mlsLink || null, a.status || 'active', a.countInTotal ? 1 : 0));
+          
+        if (a.transactions && a.transactions.length > 0) {
+          for (const t of a.transactions) {
+            statements.push(db.prepare("INSERT INTO transactions (id, agent_id, tenant_id, address, price, list_price, date_listed, status, side, date, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+              .bind(t.id, a.id, tenantId, t.address, t.price, t.listPrice || null, t.dateListed || null, t.status, t.side, t.date, year));
+          }
+        }
+      }
+    }
 
     await db.batch(statements);
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Failed to save data" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Dashboard POST error:", error);
+    return NextResponse.json({ 
+      error: "Failed to save data", 
+      details: error?.message || String(error),
+      stack: error?.stack
+    }, { status: 500 });
   }
 }
