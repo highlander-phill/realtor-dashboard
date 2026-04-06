@@ -14,18 +14,21 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
     if (!isMounted || !containerRef.current) return;
 
     const renderWidget = () => {
-      if (window.turnstile && containerRef.current) {
-        try {
-          window.turnstile.render(containerRef.current, {
-            sitekey: "0x4AAAAAAC09M6PclLz1FMym",
-            callback: (token: string) => {
-              onVerify(token);
-            },
-          });
-        } catch (e) {
-          // Widget might already be rendered if effect runs twice in dev
+      // Small delay to ensure container is ready in DOM
+      setTimeout(() => {
+        if (window.turnstile && containerRef.current) {
+          try {
+            window.turnstile.render(containerRef.current, {
+              sitekey: "0x4AAAAAAC09M6PclLz1FMym",
+              callback: (token: string) => {
+                onVerify(token);
+              },
+            });
+          } catch (e) {
+            // Already rendered
+          }
         }
-      }
+      }, 100);
     };
 
     if (window.turnstile) {
