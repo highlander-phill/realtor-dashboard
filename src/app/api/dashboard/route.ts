@@ -254,6 +254,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    console.log("Saving data for tenant:", tenant.subdomain, "Agents count:", agents?.length);
     // 1. Resolve Tenant ID
     let tenantId = tenant.id;
     const existing = await db.prepare("SELECT id FROM tenants WHERE subdomain = ?").bind(tenant.subdomain).first();
