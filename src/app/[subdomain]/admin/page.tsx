@@ -230,8 +230,7 @@ export default function AdminPanel() {
       volumePending: 0,
       listingsVolume: 0,
       status: "active",
-      countInTotal: true,
-      transactions: []
+      countInTotal: true
     };
     setData({ ...data, agents: [...(data.agents || []), newAgent] });
   };
