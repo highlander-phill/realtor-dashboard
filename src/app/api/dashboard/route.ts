@@ -208,6 +208,7 @@ export async function POST(req: NextRequest) {
     const session = await getAuth();
     
     const body = await req.json();
+    console.log("Dashboard POST received:", JSON.stringify(body, null, 2));
     const { tenant, team, agents, subTeams, year = 2026, action } = body;
 
     // Helper to ensure no undefined values are sent to D1
@@ -267,6 +268,14 @@ export async function POST(req: NextRequest) {
       "INSERT INTO tenants (id, name, subdomain, primary_color, theme, onboarding_completed, logo_url, admin_password_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
       "ON CONFLICT(subdomain) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, theme=excluded.theme, onboarding_completed=MAX(tenants.onboarding_completed, excluded.onboarding_completed), logo_url=excluded.logo_url, admin_password_hash=COALESCE(excluded.admin_password_hash, tenants.admin_password_hash)"
     ), tenantId, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0, tenant.logoUrl || null, aHash).run();
+
+    // Insert/Upsert User
+    if (tenant.adminEmail && tenant.adminPassword) {
+      await safeBind(db.prepare(
+        "INSERT INTO users (id, tenant_id, email, password_hash) VALUES (?, ?, ?, ?) " +
+        "ON CONFLICT(email) DO UPDATE SET password_hash=excluded.password_hash"
+      ), Math.random().toString(36).substr(2, 9), tenantId, tenant.adminEmail, aHash).run();
+    }
 
     // 3. Upsert Team Data
     await safeBind(db.prepare(

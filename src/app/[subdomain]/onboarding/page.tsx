@@ -23,6 +23,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Turnstile from "@/components/Turnstile";
 
 function OnboardingContent() {
   const params = useParams();
@@ -32,12 +33,12 @@ function OnboardingContent() {
   const [step, setStep] = useState(0); 
   const [hasExistingData, setHasExistingData] = useState(false);
   const [showOverwriteWarning, setShowOverwriteWarning] = useState(false);
-  const [authError, setAuthError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     companyName: "",
     subdomain: subdomain || "",
+    adminEmail: "",
     adminPassword: "",
-    tempPassword: "",
     primaryColor: "#2563eb",
     annualGoal: "50000000",
     theme: "realtor",
@@ -46,7 +47,6 @@ function OnboardingContent() {
   const router = useRouter();
 
   const steps = [
-    { title: "Authorization", description: "Verify your license", icon: Lock },
     { title: "Company", description: "Your property group details", icon: Building },
     { title: "Security", description: "Management access", icon: Shield },
     { title: "Branding", description: "Colors and logo", icon: Palette },
@@ -55,7 +55,7 @@ function OnboardingContent() {
 
   useEffect(() => {
     if (bypassKey === 'setup' || bypassKey === 'master') {
-      setStep(1);
+      setStep(0);
     }
   }, [bypassKey]);
 
@@ -66,15 +66,15 @@ function OnboardingContent() {
         if (res.ok) {
           const data = await res.json();
           if (!data.tenant || !data.tenant.onboardingCompleted) {
-            setStep(1);
+            setStep(0);
           } else if (data.tenant.onboardingCompleted) {
             setHasExistingData(true);
           }
         } else {
-          setStep(1);
+          setStep(0);
         }
       } catch (e) {
-        setStep(1);
+        setStep(0);
       }
     }
     if (subdomain && !bypassKey) checkExisting();
@@ -82,15 +82,10 @@ function OnboardingContent() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
-    if (field === 'tempPassword') setAuthError("");
   };
 
   const nextStep = async () => {
-    if (step === 0) {
-      setStep(1);
-    } else {
-      setStep(s => s + 1);
-    }
+    setStep(s => s + 1);
   };
 
   const prevStep = () => setStep(s => s - 1);
@@ -112,6 +107,7 @@ function OnboardingContent() {
         theme: formData.theme,
         logoUrl: formData.logoUrl,
         adminPassword: formData.adminPassword,
+        adminEmail: formData.adminEmail,
         onboardingCompleted: true,
       },
       team: {
@@ -231,31 +227,6 @@ function OnboardingContent() {
 
               <CardContent className="space-y-6 px-10 min-h-[320px]">
                 {step === 0 && (
-                   <div className="space-y-6">
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Target Path</Label>
-                        <div className="h-12 flex items-center bg-white border border-slate-200 rounded-xl px-4 font-black text-blue-600 uppercase tracking-tighter">
-                          team-goals.com/{subdomain}
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="tempPassword" className="text-xs font-bold uppercase tracking-wider text-slate-400">Temporary License Password</Label>
-                        <Input 
-                          id="tempPassword" 
-                          type="password"
-                          placeholder="Check your SMS invitation" 
-                          value={formData.tempPassword}
-                          onChange={(e) => handleInputChange('tempPassword', e.target.value)}
-                          className={`h-14 text-xl font-bold border-slate-200 focus:ring-black rounded-2xl ${authError ? 'border-red-500' : ''}`}
-                        />
-                        {authError && <p className="text-xs text-red-500 font-bold">{authError}</p>}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {step === 1 && (
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <Label htmlFor="companyName" className="text-xs font-bold uppercase tracking-wider text-slate-400">Team / Group Name</Label>
@@ -284,15 +255,33 @@ function OnboardingContent() {
                          >
                            <span className="font-bold">General Sales</span>
                          </Button>
+                         <Button 
+                          variant="outline" 
+                          onClick={() => handleInputChange('theme', 'car_sales')}
+                          className={`h-20 rounded-2xl border-2 flex flex-col gap-1 ${formData.theme === 'car_sales' ? 'border-blue-600 bg-blue-50' : 'border-slate-100'}`}
+                         >
+                           <span className="font-bold">Car Sales</span>
+                         </Button>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {step === 2 && (
+                {step === 1 && (
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="adminPassword" className="text-xs font-bold uppercase tracking-wider text-slate-400">Admin Management Password</Label>
+                      <Label htmlFor="adminEmail" className="text-xs font-bold uppercase tracking-wider text-slate-400">Admin Email</Label>
+                      <Input 
+                        id="adminEmail" 
+                        type="email"
+                        placeholder="admin@example.com" 
+                        value={formData.adminEmail}
+                        onChange={(e) => handleInputChange('adminEmail', e.target.value)}
+                        className="h-14 text-xl font-bold border-slate-200 focus:ring-black rounded-2xl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="adminPassword" className="text-xs font-bold uppercase tracking-wider text-slate-400">Admin Password</Label>
                       <Input 
                         id="adminPassword" 
                         type="password"
@@ -305,7 +294,7 @@ function OnboardingContent() {
                   </div>
                 )}
 
-                {step === 3 && (
+                {step === 2 && (
                   <div className="space-y-8">
                     <div className="space-y-4">
                       <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Primary Brand Color</Label>
@@ -356,21 +345,22 @@ function OnboardingContent() {
                   </div>
                 )}
 
-                {step === 4 && (
+                {step === 3 && (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="annualGoal" className="text-xs font-bold uppercase tracking-wider text-slate-400">Annual Team Volume Goal ($)</Label>
+                      <Label htmlFor="annualGoal" className="text-xs font-bold uppercase tracking-wider text-slate-600">Annual Team Volume Goal ($)</Label>
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300">$</span>
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-400">$</span>
                         <Input 
                           id="annualGoal" 
                           type="number"
                           value={formData.annualGoal}
                           onChange={(e) => handleInputChange('annualGoal', e.target.value)}
-                          className="h-20 pl-12 text-4xl font-black text-blue-600 border-slate-200 focus:ring-black rounded-3xl"
+                          className="h-20 pl-12 text-4xl font-black text-blue-600 border-slate-300 focus:ring-black rounded-3xl"
                         />
                       </div>
                     </div>
+                    <Turnstile onVerify={(token) => setTurnstileToken(token)} />
                   </div>
                 )}
               </CardContent>
@@ -385,10 +375,10 @@ function OnboardingContent() {
                   <ChevronLeft className="w-4 h-4" /> Previous
                 </Button>
                 
-                {step < 4 ? (
+                {step < 3 ? (
                   <Button 
                     onClick={nextStep}
-                    disabled={step === 1 && !formData.companyName}
+                    disabled={step === 0 && !formData.companyName}
                     className="bg-black text-white px-10 h-14 rounded-2xl flex items-center gap-2 font-bold shadow-xl shadow-slate-200"
                   >
                     Continue <ChevronRight className="w-4 h-4" />

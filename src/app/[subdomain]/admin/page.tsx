@@ -65,6 +65,8 @@ interface AgentData {
   listingsVolume: number;
   status: string;
   countInTotal: boolean;
+  buyers: number;
+  sellers: number;
   transactions: Transaction[];
 }
 
@@ -229,8 +231,11 @@ export default function AdminPanel() {
       volumeClosed: 0,
       volumePending: 0,
       listingsVolume: 0,
+      buyers: 0,
+      sellers: 0,
       status: "active",
-      countInTotal: true
+      countInTotal: true,
+      transactions: []
     };
     setData({ ...data, agents: [...(data.agents || []), newAgent] });
   };
@@ -337,6 +342,10 @@ export default function AdminPanel() {
                         <TableHead onClick={() => handleSort('name')} className="px-10 py-5 font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800">Agent Name ↕</TableHead>
                         <TableHead onClick={() => handleSort('subTeamId')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800">Sub-Team ↕</TableHead>
                         <TableHead onClick={() => handleSort('goal')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800">Goal ($) ↕</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Closed</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Pending</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Buyers</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Sellers</TableHead>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest">Status</TableHead>
                         <TableHead className="text-right px-10 font-black text-[10px] uppercase tracking-widest">Actions</TableHead>
                       </TableRow>
@@ -366,6 +375,38 @@ export default function AdminPanel() {
                               type="number"
                               value={agent.goal} 
                               onChange={(e) => updateAgent(agent.id, "goal", Number(e.target.value))}
+                              className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input 
+                              type="number"
+                              value={agent.volumeClosed} 
+                              onChange={(e) => updateAgent(agent.id, "volumeClosed", Number(e.target.value))}
+                              className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input 
+                              type="number"
+                              value={agent.volumePending} 
+                              onChange={(e) => updateAgent(agent.id, "volumePending", Number(e.target.value))}
+                              className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input 
+                              type="number"
+                              value={agent.buyers} 
+                              onChange={(e) => updateAgent(agent.id, "buyers", Number(e.target.value))}
+                              className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input 
+                              type="number"
+                              value={agent.sellers} 
+                              onChange={(e) => updateAgent(agent.id, "sellers", Number(e.target.value))}
                               className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
                             />
                           </TableCell>
@@ -405,7 +446,6 @@ export default function AdminPanel() {
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))}
                     </TableBody>
                   </Table>
                 </CardContent>
