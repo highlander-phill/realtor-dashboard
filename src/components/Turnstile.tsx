@@ -13,35 +13,52 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
   useEffect(() => {
     if (!isMounted || !containerRef.current) return;
 
+    let widgetId: string | null = null;
+
     const renderWidget = () => {
-      // Small delay to ensure container is ready in DOM
-      setTimeout(() => {
-        if (window.turnstile && containerRef.current) {
-          try {
-            window.turnstile.render(containerRef.current, {
-              sitekey: "0x4AAAAAAC09M6PclLz1FMym",
-              callback: (token: string) => {
-                onVerify(token);
-              },
-            });
-          } catch (e) {
-            // Already rendered
-          }
+      if (window.turnstile && containerRef.current && !widgetId) {
+        try {
+          widgetId = window.turnstile.render(containerRef.current, {
+            sitekey: "0x4AAAAAAC09M6PclLz1FMym",
+            theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+            callback: (token: string) => {
+              onVerify(token);
+            },
+          });
+        } catch (e) {
+          console.error("Turnstile render failed", e);
         }
-      }, 100);
+      }
     };
 
     if (window.turnstile) {
       renderWidget();
     } else {
-      const script = document.createElement("script");
-      script.id = "cf-turnstile-script";
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-      script.async = true;
-      script.defer = true;
-      script.onload = renderWidget;
-      document.head.appendChild(script);
+      const existingScript = document.getElementById("cf-turnstile-script");
+      if (!existingScript) {
+        const script = document.createElement("script");
+        script.id = "cf-turnstile-script";
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+        script.async = true;
+        script.defer = true;
+        script.onload = renderWidget;
+        document.head.appendChild(script);
+      } else {
+        // Wait for script to load if it's already there but not ready
+        const checkTurnstile = setInterval(() => {
+          if (window.turnstile) {
+            renderWidget();
+            clearInterval(checkTurnstile);
+          }
+        }, 100);
+      }
     }
+
+    return () => {
+      if (widgetId && window.turnstile) {
+        window.turnstile.remove(widgetId);
+      }
+    };
   }, [isMounted, onVerify]);
 
   if (!isMounted) return <div style={{ minHeight: '65px' }} />;

@@ -2,7 +2,7 @@
 
 export const runtime = "edge";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,12 +30,16 @@ import { motion } from "framer-motion";
 
 export default function LandingPage() {
   const [teamId, setTeamId] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  const handleGo = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (teamId) {
-      router.push(`/${teamId.toLowerCase()}`);
+  const handleGo = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (teamId.trim()) {
+      router.push(`/${teamId.toLowerCase()}/onboarding`);
+    } else {
+      inputRef.current?.focus();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -107,11 +111,11 @@ export default function LandingPage() {
               <Activity className="w-2.5 h-2.5 md:w-3 h-3" /> The Professional Standard
             </div>
             <h1 className="text-5xl md:text-9xl font-black tracking-tighter leading-[0.95] md:leading-[0.85] uppercase italic">
-              Performance <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600">Visualized.</span>
+              Elite Sales <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600">Leaderboards.</span>
             </h1>
             <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto font-medium leading-relaxed px-4">
-              Transform your team's energy into measurable data. The high-performance dashboard for elite sales organizations.
+              Real-time performance tracking for modern sales teams. Visualize your goals, track every deal, and dominate your market with the professional standard in sales dashboards.
             </p>
           </motion.div>
 
@@ -125,9 +129,10 @@ export default function LandingPage() {
               <CardContent className="p-0">
                 <form onSubmit={handleGo} className="flex flex-col md:flex-row gap-2">
                   <Input 
+                    ref={inputRef}
                     value={teamId}
-                    onChange={(e) => setTeamId(e.target.value)}
-                    placeholder="Enter team handle (e.g. yourteam)"
+                    onChange={(e) => setTeamId(e.target.value.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase())}
+                    placeholder="Enter your team name (no spaces)"
                     className="h-12 md:h-16 bg-transparent border-none text-white text-lg md:text-xl font-bold focus:ring-0 px-6 md:px-8 placeholder:text-slate-600"
                   />
                   <Button type="submit" className="h-12 md:h-16 px-8 md:px-10 bg-blue-600 hover:bg-blue-700 text-white rounded-[24px] md:rounded-[32px] font-black uppercase tracking-widest shadow-xl shadow-blue-900/40 group">
@@ -316,7 +321,11 @@ export default function LandingPage() {
               </div>
 
               <div className="pt-6 md:pt-8 space-y-6 md:space-y-8">
-                <Button size="lg" className="w-full md:w-auto bg-white text-blue-700 hover:bg-blue-50 h-16 md:h-20 px-12 md:px-16 rounded-[20px] md:rounded-[24px] font-black uppercase tracking-widest text-lg md:text-xl shadow-2xl shadow-black/20 group">
+                <Button 
+                  onClick={() => handleGo()}
+                  size="lg" 
+                  className="w-full md:w-auto bg-white text-blue-700 hover:bg-blue-50 h-16 md:h-20 px-12 md:px-16 rounded-[20px] md:rounded-[24px] font-black uppercase tracking-widest text-lg md:text-xl shadow-2xl shadow-black/20 group"
+                >
                   Claim Your Handle <ArrowRight className="ml-2 group-hover:translate-x-2 transition-transform" />
                 </Button>
                 <p className="text-white/40 text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em]">Cancel anytime • Secure setup</p>

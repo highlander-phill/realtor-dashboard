@@ -44,6 +44,7 @@ function OnboardingContent() {
     theme: "realtor",
     logoUrl: "",
   });
+  const [emailExists, setEmailExists] = useState(false);
   const router = useRouter();
 
   const steps = [
@@ -80,8 +81,17 @@ function OnboardingContent() {
     if (subdomain && !bypassKey) checkExisting();
   }, [subdomain, bypassKey]);
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = async (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
+    if (field === 'adminEmail' && value.includes('@')) {
+       try {
+         const res = await fetch(`/api/auth/check-email?email=${encodeURIComponent(value)}`);
+         if (res.ok) {
+           const data = await res.json();
+           setEmailExists(data.exists);
+         }
+       } catch (e) {}
+    }
   };
 
   const nextStep = async () => {
@@ -152,7 +162,7 @@ function OnboardingContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full space-y-8">
         
         <AnimatePresence>
@@ -190,8 +200,8 @@ function OnboardingContent() {
 
         <div className="flex justify-between items-center px-4">
           <div className="flex items-center gap-2">
-             <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white font-black text-xs">TG</div>
-             <span className="font-bold tracking-tight">TeamGoals</span>
+             <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-black font-black text-xs">TG</div>
+             <span className="font-bold tracking-tight dark:text-white">TeamGoals</span>
           </div>
           {hasExistingData && (
               <Button variant="ghost" size="sm" onClick={() => router.push(`/${subdomain}`)} className="text-xs text-slate-400">
@@ -203,15 +213,15 @@ function OnboardingContent() {
         <div className="flex justify-between items-center px-4 overflow-x-auto pb-4">
           {steps.map((s, i) => (
             <div key={i} className="flex flex-col items-center gap-2 min-w-[70px]">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${step > i ? 'bg-green-500 text-white shadow-lg shadow-green-100' : step === i ? 'bg-black text-white shadow-lg shadow-slate-200 scale-110' : 'bg-slate-200 text-slate-400'}`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${step > i ? 'bg-green-500 text-white shadow-lg shadow-green-100 dark:shadow-green-950/20' : step === i ? 'bg-black dark:bg-white text-white dark:text-black shadow-lg shadow-slate-200 dark:shadow-slate-800/20 scale-110' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600'}`}>
                 {step > i ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
               </div>
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${step === i ? 'text-black' : 'text-slate-400'}`}>{s.title}</span>
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${step === i ? 'text-black dark:text-white' : 'text-slate-400'}`}>{s.title}</span>
             </div>
           ))}
         </div>
 
-        <Card className="shadow-2xl border-none overflow-hidden rounded-[32px]">
+        <Card className="shadow-2xl border-none overflow-hidden rounded-[32px] bg-white dark:bg-slate-900">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -221,44 +231,44 @@ function OnboardingContent() {
               transition={{ duration: 0.2 }}
             >
               <CardHeader className="text-center pb-8 pt-10">
-                <CardTitle className="text-3xl font-black uppercase tracking-tight">{steps[step].title}</CardTitle>
-                <CardDescription className="text-slate-500 font-medium">{steps[step].description}</CardDescription>
+                <CardTitle className="text-3xl font-black uppercase tracking-tight dark:text-white">{steps[step].title}</CardTitle>
+                <CardDescription className="text-slate-500 font-medium dark:text-slate-400">{steps[step].description}</CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-6 px-10 min-h-[320px]">
                 {step === 0 && (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="companyName" className="text-xs font-bold uppercase tracking-wider text-slate-400">Team / Group Name</Label>
+                      <Label htmlFor="companyName" className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Team / Group Name</Label>
                       <Input 
                         id="companyName" 
                         placeholder="e.g. Empire Sales Group" 
                         value={formData.companyName}
                         onChange={(e) => handleInputChange('companyName', e.target.value)}
-                        className="h-14 text-xl font-bold border-slate-200 focus:ring-black rounded-2xl"
+                        className="h-14 text-xl font-bold border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-black dark:text-white focus:ring-black dark:focus:ring-white rounded-2xl"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Dashboard Theme</Label>
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Dashboard Theme</Label>
                       <div className="grid grid-cols-2 gap-4">
                          <Button 
                           variant="outline" 
                           onClick={() => handleInputChange('theme', 'realtor')}
-                          className={`h-20 rounded-2xl border-2 flex flex-col gap-1 ${formData.theme === 'realtor' ? 'border-blue-600 bg-blue-50' : 'border-slate-100'}`}
+                          className={`h-20 rounded-2xl border-2 flex flex-col gap-1 transition-all ${formData.theme === 'realtor' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'border-slate-100 dark:border-slate-800 bg-transparent text-slate-600 dark:text-slate-400'}`}
                          >
                            <span className="font-bold">Real Estate</span>
                          </Button>
                          <Button 
                           variant="outline" 
                           onClick={() => handleInputChange('theme', 'sales')}
-                          className={`h-20 rounded-2xl border-2 flex flex-col gap-1 ${formData.theme === 'sales' ? 'border-blue-600 bg-blue-50' : 'border-slate-100'}`}
+                          className={`h-20 rounded-2xl border-2 flex flex-col gap-1 transition-all ${formData.theme === 'sales' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'border-slate-100 dark:border-slate-800 bg-transparent text-slate-600 dark:text-slate-400'}`}
                          >
                            <span className="font-bold">General Sales</span>
                          </Button>
                          <Button 
                           variant="outline" 
                           onClick={() => handleInputChange('theme', 'car_sales')}
-                          className={`h-20 rounded-2xl border-2 flex flex-col gap-1 ${formData.theme === 'car_sales' ? 'border-blue-600 bg-blue-50' : 'border-slate-100'}`}
+                          className={`h-20 rounded-2xl border-2 flex flex-col gap-1 transition-all ${formData.theme === 'car_sales' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'border-slate-100 dark:border-slate-800 bg-transparent text-slate-600 dark:text-slate-400'}`}
                          >
                            <span className="font-bold">Car Sales</span>
                          </Button>
@@ -268,27 +278,53 @@ function OnboardingContent() {
                 )}
 
                 {step === 1 && (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => alert("Google Login would be integrated with NextAuth here.")}
+                        className="w-full h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 flex items-center justify-center gap-3 font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                      >
+                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                          <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                          <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                          <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        Continue with Google
+                      </Button>
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-slate-100 dark:border-slate-800" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-white dark:bg-slate-900 px-2 text-slate-400 dark:text-slate-500 font-bold">Or use password</span>
+                        </div>
+                      </div>
+                    </div>
                     <div className="space-y-2">
-                      <Label htmlFor="adminEmail" className="text-xs font-bold uppercase tracking-wider text-slate-400">Admin Email</Label>
+                      <Label htmlFor="adminEmail" className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Admin Email</Label>
                       <Input 
                         id="adminEmail" 
                         type="email"
                         placeholder="admin@example.com" 
                         value={formData.adminEmail}
                         onChange={(e) => handleInputChange('adminEmail', e.target.value)}
-                        className="h-14 text-xl font-bold border-slate-200 focus:ring-black rounded-2xl"
+                        className="h-14 text-xl font-bold border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-black dark:text-white focus:ring-black dark:focus:ring-white rounded-2xl"
                       />
+                      {emailExists && (
+                        <p className="text-xs text-red-500 font-bold">This email is already in use.</p>
+                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="adminPassword" className="text-xs font-bold uppercase tracking-wider text-slate-400">Admin Password</Label>
+                      <Label htmlFor="adminPassword" className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Admin Password</Label>
                       <Input 
                         id="adminPassword" 
                         type="password"
                         placeholder="••••••••" 
                         value={formData.adminPassword}
                         onChange={(e) => handleInputChange('adminPassword', e.target.value)}
-                        className="h-14 text-xl font-bold border-slate-200 focus:ring-black rounded-2xl"
+                        className="h-14 text-xl font-bold border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-black dark:text-white focus:ring-black dark:focus:ring-white rounded-2xl"
                       />
                     </div>
                   </div>
@@ -297,47 +333,51 @@ function OnboardingContent() {
                 {step === 2 && (
                   <div className="space-y-8">
                     <div className="space-y-4">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Primary Brand Color</Label>
-                      <div className="flex gap-6 items-center bg-slate-50 p-6 rounded-[24px] border border-slate-100">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Primary Brand Color</Label>
+                      <div className="flex gap-6 items-center bg-slate-50 dark:bg-slate-950 p-6 rounded-[24px] border border-slate-100 dark:border-slate-800">
                         <input 
                           type="color" 
                           value={formData.primaryColor}
                           onChange={(e) => handleInputChange('primaryColor', e.target.value)}
-                          className="w-20 h-20 rounded-2xl cursor-pointer border-4 border-white shadow-xl"
+                          className="w-20 h-20 rounded-2xl cursor-pointer border-4 border-white dark:border-slate-800 shadow-xl"
                         />
                         <div className="flex-1 space-y-1">
-                          <p className="text-lg font-black uppercase tracking-tighter">{formData.primaryColor}</p>
+                          <p className="text-lg font-black uppercase tracking-tighter dark:text-white">{formData.primaryColor}</p>
                         </div>
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Team Logo</Label>
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Team Logo</Label>
                       <div className="space-y-4">
                         <Input 
                           placeholder="Logo URL (https://...)" 
                           value={formData.logoUrl}
                           onChange={(e) => handleInputChange('logoUrl', e.target.value)}
-                          className="h-12 border-slate-200 focus:ring-black rounded-xl"
+                          className="h-12 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-black dark:text-white focus:ring-black dark:focus:ring-white rounded-xl"
                         />
-                        <div className="flex gap-2">
+                        <div className="grid grid-cols-2 gap-3">
                            <Button 
                              variant="outline" 
-                             className="flex-1 h-12 rounded-xl text-xs font-bold uppercase tracking-widest"
+                             className="h-12 rounded-xl text-[10px] font-bold uppercase tracking-widest border-2 border-slate-100 dark:border-slate-800 dark:text-slate-300"
                              onClick={() => alert("Image upload requires Cloudflare R2 or similar. Please provide a URL for now.")}
                            >
                              Upload Image
                            </Button>
                            <Button 
                              variant="outline"
-                             className="flex-1 h-12 rounded-xl text-xs font-bold uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800"
-                             onClick={() => handleInputChange('logoUrl', `https://logo.clearbit.com/${formData.companyName.toLowerCase().replace(/\s+/g, '')}.com`)}
+                             className="h-12 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-black dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-slate-200 border-none"
+                             onClick={() => {
+                               const logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.companyName)}&background=${formData.primaryColor.replace('#', '')}&color=fff&size=128&bold=true`;
+                               handleInputChange('logoUrl', logoUrl);
+                             }}
                            >
-                             Generate from Name
+                             Generate Logo
                            </Button>
                         </div>
                         {formData.logoUrl && (
-                          <div className="mt-4 p-4 border border-slate-100 rounded-2xl flex items-center justify-center bg-slate-50">
-                             <img src={formData.logoUrl} alt="Logo Preview" className="h-16 object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                          <div className="mt-4 p-8 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-950/50 gap-3">
+                             <img src={formData.logoUrl} alt="Logo Preview" className="h-20 object-contain shadow-2xl rounded-xl" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Preview</p>
                           </div>
                         )}
                       </div>
@@ -348,29 +388,31 @@ function OnboardingContent() {
                 {step === 3 && (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="annualGoal" className="text-xs font-bold uppercase tracking-wider text-slate-600">Annual Team Volume Goal ($)</Label>
+                      <Label htmlFor="annualGoal" className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Annual Team Volume Goal ($)</Label>
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-400">$</span>
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-400 dark:text-slate-600">$</span>
                         <Input 
                           id="annualGoal" 
                           type="number"
                           value={formData.annualGoal}
                           onChange={(e) => handleInputChange('annualGoal', e.target.value)}
-                          className="h-20 pl-12 text-4xl font-black text-blue-600 border-slate-300 focus:ring-black rounded-3xl"
+                          className="h-20 pl-12 text-4xl font-black text-blue-600 dark:text-blue-500 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-black dark:focus:ring-white rounded-3xl"
                         />
                       </div>
                     </div>
-                    <Turnstile onVerify={(token) => setTurnstileToken(token)} />
+                    <div className="py-4">
+                      <Turnstile onVerify={(token) => setTurnstileToken(token)} />
+                    </div>
                   </div>
                 )}
               </CardContent>
 
-              <CardFooter className="flex justify-between p-10 bg-slate-50/50 border-t border-slate-100">
+              <CardFooter className="flex justify-between p-10 bg-slate-50/50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800">
                 <Button 
                   variant="ghost" 
                   onClick={prevStep} 
                   disabled={step === 0}
-                  className="flex items-center gap-2 h-12 font-bold text-slate-500"
+                  className="flex items-center gap-2 h-12 font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   <ChevronLeft className="w-4 h-4" /> Previous
                 </Button>
@@ -379,14 +421,15 @@ function OnboardingContent() {
                   <Button 
                     onClick={nextStep}
                     disabled={step === 0 && !formData.companyName}
-                    className="bg-black text-white px-10 h-14 rounded-2xl flex items-center gap-2 font-bold shadow-xl shadow-slate-200"
+                    className="bg-black dark:bg-white text-white dark:text-black px-10 h-14 rounded-2xl flex items-center gap-2 font-bold shadow-xl shadow-slate-200 dark:shadow-black/50 hover:bg-slate-800 dark:hover:bg-slate-100"
                   >
                     Continue <ChevronRight className="w-4 h-4" />
                   </Button>
                 ) : (
                   <Button 
                     onClick={handleSubmit}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-12 h-14 rounded-2xl flex items-center gap-3 shadow-xl shadow-blue-200 font-black uppercase tracking-wider"
+                    disabled={!turnstileToken && !bypassKey}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-12 h-14 rounded-2xl flex items-center gap-3 shadow-xl shadow-blue-200 dark:shadow-blue-900/40 font-black uppercase tracking-wider"
                   >
                     Finish & Launch <Rocket className="w-5 h-5" />
                   </Button>

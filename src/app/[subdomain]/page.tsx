@@ -495,14 +495,14 @@ function DashboardContent() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
-                    <TableRow className="border-slate-100 dark:border-slate-800 hover:bg-transparent">
-                      <TableHead className="px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em]">Name of Agent</TableHead>
-                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em]">Annual Goal</TableHead>
-                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em]">Volume Closed</TableHead>
-                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em]">Volume Pending</TableHead>
-                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em]">Active Listings (V)</TableHead>
-                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em]">
+                  <TableHeader className="bg-slate-100 dark:bg-slate-950">
+                    <TableRow className="border-slate-200 dark:border-slate-800 hover:bg-transparent">
+                      <TableHead className="px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-slate-100">Name of Agent</TableHead>
+                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-slate-100">Annual Goal</TableHead>
+                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-slate-100">Volume Closed</TableHead>
+                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-slate-100">Volume Pending</TableHead>
+                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-slate-100">Active Listings (V)</TableHead>
+                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-slate-100">
                          <div className="flex items-center justify-end gap-1">
                             B/S Ratio
                             <Tooltip content="Buyer vs Seller representation ratio for this agent.">
@@ -510,7 +510,7 @@ function DashboardContent() {
                             </Tooltip>
                          </div>
                       </TableHead>
-                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em]">Progress %</TableHead>
+                      <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-slate-100">Progress %</TableHead>
                       <TableHead className="text-right pr-10"></TableHead>
                     </TableRow>
                   </TableHeader>

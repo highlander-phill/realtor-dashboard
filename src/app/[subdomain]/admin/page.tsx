@@ -328,28 +328,28 @@ export default function AdminPanel() {
               className="space-y-6"
             >
               <Card className="border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden rounded-[32px] bg-white dark:bg-slate-900">
-                <CardHeader className="bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between py-8 px-10">
+                <CardHeader className="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex flex-row items-center justify-between py-8 px-10">
                   <div>
-                    <CardTitle className="text-xl font-black uppercase italic">Active Roster</CardTitle>
-                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Individual Performance Targets</CardDescription>
+                    <CardTitle className="text-xl font-black uppercase italic dark:text-white">Active Roster</CardTitle>
+                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Individual Performance Targets</CardDescription>
                   </div>
-                  <Button onClick={addAgent} variant="outline" className="bg-white dark:bg-slate-900 border-slate-200 font-black uppercase text-[10px] tracking-widest gap-2 rounded-xl h-10 px-4">
+                  <Button onClick={addAgent} variant="outline" className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 font-black uppercase text-[10px] tracking-widest gap-2 rounded-xl h-10 px-4">
                     <Plus className="w-4 h-4" /> New Agent
                   </Button>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
-                      <TableRow className="border-slate-100 dark:border-slate-800">
-                        <TableHead onClick={() => handleSort('name')} className="px-10 py-5 font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800">Agent Name ↕</TableHead>
-                        <TableHead onClick={() => handleSort('subTeamId')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800">Sub-Team ↕</TableHead>
-                        <TableHead onClick={() => handleSort('goal')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800">Goal ($) ↕</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Closed</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Pending</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Buyers</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Sellers</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Status</TableHead>
-                        <TableHead className="text-right px-10 font-black text-[10px] uppercase tracking-widest">Actions</TableHead>
+                    <TableHeader className="bg-slate-100 dark:bg-slate-950">
+                      <TableRow className="border-slate-200 dark:border-slate-800">
+                        <TableHead onClick={() => handleSort('name')} className="px-10 py-5 font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100">Agent Name ↕</TableHead>
+                        <TableHead onClick={() => handleSort('subTeamId')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100">Sub-Team ↕</TableHead>
+                        <TableHead onClick={() => handleSort('goal')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100">Goal ($) ↕</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Closed</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Pending</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Buyers</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Sellers</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Status</TableHead>
+                        <TableHead className="text-right px-10 font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -524,8 +524,8 @@ export default function AdminPanel() {
               className="grid grid-cols-1 md:grid-cols-2 gap-8"
             >
               <Card className="border-slate-200 dark:border-slate-800 shadow-xl rounded-[32px] overflow-hidden bg-white dark:bg-slate-900">
-                <CardHeader className="bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 py-6 px-8">
-                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                <CardHeader className="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 py-6 px-8">
+                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 dark:text-white">
                      <ImageIcon className="w-4 h-4 text-blue-500" /> Branding & UI
                   </CardTitle>
                 </CardHeader>
@@ -617,8 +617,8 @@ export default function AdminPanel() {
               </Card>
 
               <Card className="border-slate-200 dark:border-slate-800 shadow-xl rounded-[32px] overflow-hidden bg-white dark:bg-slate-900">
-                <CardHeader className="bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 py-6 px-8">
-                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                <CardHeader className="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 py-6 px-8">
+                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 dark:text-white">
                      <Lock className="w-4 h-4 text-red-500" /> Security Access
                   </CardTitle>
                 </CardHeader>
