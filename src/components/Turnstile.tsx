@@ -15,6 +15,8 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
 
     let widgetId: string | null = null;
 
+    let interval: any = null;
+
     const renderWidget = () => {
       if (window.turnstile && containerRef.current && !widgetId) {
         try {
@@ -26,7 +28,7 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
             },
           });
         } catch (e) {
-          console.error("Turnstile render failed", e);
+          // Silent error if already rendered
         }
       }
     };
@@ -44,19 +46,21 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
         script.onload = renderWidget;
         document.head.appendChild(script);
       } else {
-        // Wait for script to load if it's already there but not ready
-        const checkTurnstile = setInterval(() => {
+        interval = setInterval(() => {
           if (window.turnstile) {
             renderWidget();
-            clearInterval(checkTurnstile);
+            clearInterval(interval);
           }
         }, 100);
       }
     }
 
     return () => {
+      if (interval) clearInterval(interval);
       if (widgetId && window.turnstile) {
-        window.turnstile.remove(widgetId);
+        try {
+          window.turnstile.remove(widgetId);
+        } catch (e) {}
       }
     };
   }, [isMounted, onVerify]);

@@ -278,24 +278,24 @@ export default function AdminPanel() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 text-slate-900 dark:text-slate-100">
       <div className="max-w-7xl mx-auto space-y-8">
         
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900 dark:bg-black p-8 rounded-[40px] border border-white/5 shadow-2xl">
           <div className="flex items-center gap-4">
              <Link href={`/${subdomain}`}>
-               <Button variant="ghost" size="icon" className="rounded-full">
+               <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/10">
                  <ChevronLeft className="w-5 h-5" />
                </Button>
              </Link>
              <div>
-                <h1 className="text-2xl font-black uppercase tracking-tight italic">Admin Management</h1>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">{data.tenant.name} • Master Controls v2.2.17</p>
+                <h1 className="text-3xl font-black uppercase tracking-tight italic text-white leading-none">Admin Management</h1>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mt-2">{data.tenant.name} • Master Controls v2.2.17</p>
              </div>
           </div>
           <div className="flex gap-3 w-full md:w-auto">
-            <Button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs rounded-xl gap-2 h-12 px-6">
+            <Button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl gap-2 h-14 px-10 shadow-xl shadow-blue-900/40">
               {isSaving ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Publish Updates
             </Button>
-            <Button onClick={handleLogout} variant="outline" className="rounded-xl font-black uppercase tracking-widest text-xs gap-2 h-12 px-6">
+            <Button onClick={handleLogout} variant="outline" className="rounded-2xl font-black uppercase tracking-widest text-[10px] gap-2 h-14 px-8 border-2 border-slate-700 text-slate-300 hover:bg-slate-800 transition-all">
               <LogOut className="w-4 h-4" /> Exit
             </Button>
           </div>
@@ -311,9 +311,9 @@ export default function AdminPanel() {
               key={tab.id}
               variant={activeTab === tab.id ? "default" : "ghost"} 
               onClick={() => setActiveTab(tab.id as any)}
-              className={`rounded-full font-black uppercase text-[10px] tracking-widest px-6 gap-2 h-10 ${activeTab === tab.id ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-500 hover:bg-slate-100'}`}
+              className={`rounded-full font-black uppercase text-[10px] tracking-widest px-8 gap-2 h-12 transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-xl shadow-blue-900/20' : 'text-slate-400 hover:bg-slate-900 hover:text-white'}`}
              >
-               <tab.icon className="w-3.5 h-3.5" /> {tab.label}
+               <tab.icon className="w-4 h-4" /> {tab.label}
              </Button>
            ))}
         </div>
@@ -328,12 +328,12 @@ export default function AdminPanel() {
               className="space-y-6"
             >
               <Card className="border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden rounded-[32px] bg-white dark:bg-slate-900">
-                <CardHeader className="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex flex-row items-center justify-between py-8 px-10">
+                <CardHeader className="bg-slate-900 dark:bg-black border-b border-slate-800 flex flex-row items-center justify-between py-8 px-10">
                   <div>
-                    <CardTitle className="text-xl font-black uppercase italic dark:text-white">Active Roster</CardTitle>
-                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Individual Performance Targets</CardDescription>
+                    <CardTitle className="text-xl font-black uppercase italic text-white">Active Roster</CardTitle>
+                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Individual Performance Targets</CardDescription>
                   </div>
-                  <Button onClick={addAgent} variant="outline" className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 font-black uppercase text-[10px] tracking-widest gap-2 rounded-xl h-10 px-4">
+                  <Button onClick={addAgent} variant="outline" className="bg-blue-600 hover:bg-blue-700 text-white border-none font-black uppercase text-[10px] tracking-widest gap-2 rounded-xl h-10 px-4 shadow-lg shadow-blue-900/20 transition-all active:scale-95">
                     <Plus className="w-4 h-4" /> New Agent
                   </Button>
                 </CardHeader>

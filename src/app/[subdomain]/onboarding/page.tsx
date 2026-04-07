@@ -4,6 +4,7 @@ export const runtime = "edge";
 
 import { useState, useEffect, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { 
   Lock, 
   Building, 
@@ -16,7 +17,8 @@ import {
   AlertTriangle,
   X,
   Layout,
-  UserCheck
+  UserCheck,
+  ArrowRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -34,6 +36,7 @@ function OnboardingContent() {
   const [hasExistingData, setHasExistingData] = useState(false);
   const [showOverwriteWarning, setShowOverwriteWarning] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const handleTurnstileVerify = (token: string) => setTurnstileToken(token);
   const [formData, setFormData] = useState({
     companyName: "",
     subdomain: subdomain || "",
@@ -166,31 +169,62 @@ function OnboardingContent() {
       <div className="max-w-2xl w-full space-y-8">
         
         <AnimatePresence>
+          {hasExistingData && !showOverwriteWarning && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+            >
+              <motion.div 
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="bg-white dark:bg-slate-900 rounded-[40px] p-10 max-w-lg w-full shadow-2xl space-y-8 border border-white/10"
+              >
+                <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 mx-auto">
+                  <UserCheck className="w-10 h-10" />
+                </div>
+                <div className="text-center space-y-3">
+                  <h3 className="text-3xl font-black uppercase italic tracking-tight dark:text-white">Account Found</h3>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium">A dashboard already exists for <span className="text-blue-600 dark:text-blue-400 font-bold">{subdomain}</span>. What would you like to do?</p>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Button onClick={() => router.push(`/${subdomain}`)} className="bg-blue-600 hover:bg-blue-700 text-white h-16 rounded-2xl text-lg font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 group">
+                    Go to Dashboard <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowOverwriteWarning(true)} className="h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
+                    Reset & Start Over
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
           {showOverwriteWarning && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
             >
               <motion.div 
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
-                className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6"
+                className="bg-white dark:bg-slate-900 rounded-[40px] p-10 max-w-lg w-full shadow-2xl space-y-8 border border-white/10"
               >
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto">
-                  <AlertTriangle className="w-8 h-8" />
+                <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 dark:text-red-400 mx-auto">
+                  <AlertTriangle className="w-10 h-10" />
                 </div>
-                <div className="text-center space-y-2">
-                  <h3 className="text-2xl font-bold">Overwrite Existing Data?</h3>
-                  <p className="text-slate-500">Completing this setup will replace your current dashboard configuration for {subdomain}.</p>
+                <div className="text-center space-y-3">
+                  <h3 className="text-3xl font-black uppercase italic tracking-tight dark:text-white">Dangerous Action</h3>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium">Completing this setup will <span className="text-red-600 font-black uppercase">Permanently Delete</span> all existing data for <span className="font-bold">{subdomain}</span>.</p>
                 </div>
                 <div className="flex flex-col gap-3">
-                  <Button onClick={handleSubmit} className="bg-red-600 hover:bg-red-700 text-white h-12 text-lg font-bold">
-                    Yes, Replace Everything
+                  <Button onClick={handleSubmit} className="bg-red-600 hover:bg-red-700 text-white h-16 rounded-2xl text-lg font-black uppercase tracking-widest shadow-xl shadow-red-900/20">
+                    Yes, Delete Everything
                   </Button>
-                  <Button variant="ghost" onClick={() => setShowOverwriteWarning(false)} className="h-12 text-slate-500">
-                    Go Back & Review
+                  <Button variant="ghost" onClick={() => setShowOverwriteWarning(false)} className="h-14 rounded-2xl text-slate-500 font-bold uppercase tracking-widest text-[10px]">
+                    No, Go Back
                   </Button>
                 </div>
               </motion.div>
@@ -282,7 +316,7 @@ function OnboardingContent() {
                     <div className="space-y-4">
                       <Button 
                         variant="outline" 
-                        onClick={() => alert("Google Login would be integrated with NextAuth here.")}
+                        onClick={() => signIn("google", { callbackUrl: `/${subdomain}/onboarding?step=1` })}
                         className="w-full h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 flex items-center justify-center gap-3 font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
                       >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -401,7 +435,7 @@ function OnboardingContent() {
                       </div>
                     </div>
                     <div className="py-4">
-                      <Turnstile onVerify={(token) => setTurnstileToken(token)} />
+                      <Turnstile onVerify={handleTurnstileVerify} />
                     </div>
                   </div>
                 )}
