@@ -4,7 +4,7 @@ export const runtime = "edge";
 
 import { useState, useEffect, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { 
   Lock, 
   Building, 
@@ -31,12 +31,16 @@ function OnboardingContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const bypassKey = searchParams.get('key');
+  const initialStep = parseInt(searchParams.get('step') || '0');
   const subdomain = params.subdomain as string;
-  const [step, setStep] = useState(0); 
+  const [step, setStep] = useState(initialStep); 
   const [hasExistingData, setHasExistingData] = useState(false);
   const [showOverwriteWarning, setShowOverwriteWarning] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const handleTurnstileVerify = (token: string) => setTurnstileToken(token);
+  
+  const { data: session } = useSession();
+  
   const [formData, setFormData] = useState({
     companyName: "",
     subdomain: subdomain || "",
@@ -49,6 +53,15 @@ function OnboardingContent() {
   });
   const [emailExists, setEmailExists] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (session?.user?.email && !formData.adminEmail) {
+      setFormData(prev => ({ ...prev, adminEmail: session.user.email as string }));
+      if (step === 1) {
+         setStep(2); // Auto-advance from security if Google login successful
+      }
+    }
+  }, [session, step]);
 
   const steps = [
     { title: "Company", description: "Your property group details", icon: Building },

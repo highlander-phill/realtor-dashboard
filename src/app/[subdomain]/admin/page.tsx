@@ -311,7 +311,7 @@ export default function AdminPanel() {
               key={tab.id}
               variant={activeTab === tab.id ? "default" : "ghost"} 
               onClick={() => setActiveTab(tab.id as any)}
-              className={`rounded-full font-black uppercase text-[10px] tracking-widest px-8 gap-2 h-12 transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-xl shadow-blue-900/20' : 'text-slate-400 hover:bg-slate-900 hover:text-white'}`}
+              className={`rounded-full font-black uppercase text-[10px] tracking-widest px-8 gap-2 h-12 transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-xl shadow-blue-900/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-900 dark:hover:bg-slate-800 hover:text-white'}`}
              >
                <tab.icon className="w-4 h-4" /> {tab.label}
              </Button>
@@ -331,7 +331,7 @@ export default function AdminPanel() {
                 <CardHeader className="bg-slate-900 dark:bg-black border-b border-slate-800 flex flex-row items-center justify-between py-8 px-10">
                   <div>
                     <CardTitle className="text-xl font-black uppercase italic text-white">Active Roster</CardTitle>
-                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Individual Performance Targets</CardDescription>
+                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Individual Performance Targets</CardDescription>
                   </div>
                   <Button onClick={addAgent} variant="outline" className="bg-blue-600 hover:bg-blue-700 text-white border-none font-black uppercase text-[10px] tracking-widest gap-2 rounded-xl h-10 px-4 shadow-lg shadow-blue-900/20 transition-all active:scale-95">
                     <Plus className="w-4 h-4" /> New Agent
