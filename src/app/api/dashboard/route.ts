@@ -232,7 +232,7 @@ export async function POST(req: NextRequest) {
       // Only search by name if email is not available in agents table
       const agent = await db.prepare("SELECT * FROM agents WHERE name = ? AND tenant_id = ?").bind(session.user.name || '', existingTenant.id).first();
       
-      if (!user && !agent && !session.user.email?.includes("nik@realestatebastrop.com")) {
+      if (!user && !agent && !session.user.email?.toLowerCase().includes("nik@realestatebastrop.com")) {
          return NextResponse.json({ error: "Forbidden: You do not have management access to this tenant" }, { status: 403 });
       }
     }
@@ -254,7 +254,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    console.log("Saving data for tenant:", tenant.subdomain, "Agents count:", agents?.length);
     // 1. Resolve Tenant ID
     let tenantId = tenant.id;
     const existing = await db.prepare("SELECT id FROM tenants WHERE subdomain = ?").bind(tenant.subdomain).first();
