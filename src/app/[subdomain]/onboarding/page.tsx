@@ -87,10 +87,6 @@ function OnboardingContent() {
 
   const nextStep = async () => {
     if (step === 0) {
-      if (!formData.tempPassword) {
-        setAuthError("Please enter your temporary license password.");
-        return;
-      }
       setStep(1);
     } else {
       setStep(s => s + 1);
