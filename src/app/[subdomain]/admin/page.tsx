@@ -67,6 +67,8 @@ interface AgentData {
   countInTotal: boolean;
   buyers: number;
   sellers: number;
+  buyers: number;
+  sellers: number;
   transactions: Transaction[];
 }
 
@@ -446,6 +448,7 @@ export default function AdminPanel() {
                             </div>
                           </TableCell>
                         </TableRow>
+                      ))}
                     </TableBody>
                   </Table>
                 </CardContent>
