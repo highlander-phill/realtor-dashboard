@@ -233,7 +233,7 @@ export default function AdminPanel() {
       countInTotal: true,
       transactions: []
     };
-    setData({ ...data, agents: [...data.agents, newAgent] });
+    setData({ ...data, agents: [...(data.agents || []), newAgent] });
   };
 
   const addSubTeam = () => {
