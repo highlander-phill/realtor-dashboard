@@ -359,7 +359,7 @@ export default function AdminPanel() {
                               className="bg-transparent border border-slate-200 dark:border-slate-800 rounded-lg px-3 h-12 font-bold text-xs focus:bg-white dark:focus:bg-black"
                              >
                                <option value="">Company Wide</option>
-                               {data.subTeams.map(st => <option key={st.id} value={st.id}>{st.name}</option>)}
+                               {(data.subTeams || []).map(st => <option key={st.id} value={st.id}>{st.name}</option>)}
                              </select>
                           </TableCell>
                           <TableCell>
