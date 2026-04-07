@@ -313,6 +313,7 @@ function DashboardContent() {
     realtor: { production: "Volume Closed", pending: "Volume Pending", goal: "Annual Production Goal", unit: "Houses", listing: "Listing", sale: "Sale" },
     sales: { production: "Revenue Closed", pending: "Pipeline Value", goal: "Sales Target", unit: "Deals", listing: "Lead", sale: "Deal" },
     insurance: { production: "Premiums Written", pending: "Pending Quotes", goal: "Premium Target", unit: "Policies", listing: "Quote", sale: "Policy" },
+    car_sales: { production: "Revenue Closed", pending: "Pipeline Value", goal: "Sales Target", unit: "Vehicles", listing: "Lead", sale: "Vehicle" },
     custom: { production: "Total Production", pending: "In Progress", goal: "Annual Target", unit: "Units", listing: "Unit", sale: "Unit" }
   }[theme as keyof typeof labels] || { production: "Volume Closed", pending: "Volume Pending", goal: "Annual Production Goal", unit: "Houses", listing: "Listing", sale: "Sale" };
 
