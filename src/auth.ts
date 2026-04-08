@@ -121,9 +121,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Ensure redirect stays within the same subdomain if possible
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      return url;
+      // Allows relative callback URLs and stays on the same subdomain
+      if (url.startsWith("/")) return url;
+      // Allows callback URLs on the same domain (including subdomains)
+      try {
+        const urlObj = new URL(url);
+        const baseUrlObj = new URL(baseUrl);
+        if (urlObj.hostname.endsWith(baseUrlObj.hostname)) return url;
+      } catch (e) {
+        // Fallback for invalid URLs
+      }
+      return baseUrl;
     },
   },
   // Setting explicit pages might help avoid the default /api/auth pathing issues
