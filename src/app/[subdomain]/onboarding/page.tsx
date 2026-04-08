@@ -97,16 +97,12 @@ function OnboardingContent() {
         const res = await fetch(`/api/dashboard?subdomain=${subdomain}`);
         if (res.ok) {
           const data = await res.json();
-          if (!data.tenant || !data.tenant.onboardingCompleted) {
-            setStep(0);
-          } else if (data.tenant.onboardingCompleted) {
+          if (data.tenant && data.tenant.onboardingCompleted) {
             setHasExistingData(true);
           }
-        } else {
-          setStep(0);
         }
       } catch (e) {
-        setStep(0);
+        console.error("Check existing error:", e);
       }
     }
     if (subdomain && !bypassKey) checkExisting();
