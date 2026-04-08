@@ -52,11 +52,26 @@ function OnboardingContent() {
     logoUrl: "",
   });
   const [emailExists, setEmailExists] = useState(false);
+  const [existingSubdomain, setExistingSubdomain] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
+    async function checkEmail(email: string) {
+      try {
+        const res = await fetch(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setEmailExists(data.exists);
+          if (data.exists && data.subdomain) {
+            setExistingSubdomain(data.subdomain);
+          }
+        }
+      } catch (e) {}
+    }
+
     if (session?.user?.email && !formData.adminEmail) {
       setFormData(prev => ({ ...prev, adminEmail: session.user.email as string }));
+      checkEmail(session.user.email as string);
       if (step === 1) {
          setStep(2); // Auto-advance from security if Google login successful
       }
@@ -182,7 +197,38 @@ function OnboardingContent() {
       <div className="max-w-2xl w-full space-y-8">
         
         <AnimatePresence>
-          {hasExistingData && !showOverwriteWarning && (
+          {existingSubdomain && existingSubdomain !== subdomain && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+            >
+              <motion.div 
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="bg-white dark:bg-slate-900 rounded-[40px] p-10 max-w-lg w-full shadow-2xl space-y-8 border border-white/10"
+              >
+                <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 mx-auto">
+                  <UserCheck className="w-10 h-10" />
+                </div>
+                <div className="text-center space-y-3">
+                  <h3 className="text-3xl font-black uppercase italic tracking-tight dark:text-white">Email in Use</h3>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium">The email <span className="font-bold text-blue-600">{session?.user?.email}</span> is already associated with the dashboard for <span className="text-blue-600 dark:text-blue-400 font-bold">{existingSubdomain}</span>.</p>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Button onClick={() => window.location.href = `/${existingSubdomain}`} className="bg-blue-600 hover:bg-blue-700 text-white h-16 rounded-2xl text-lg font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 group">
+                    Go to {existingSubdomain} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                  <Button variant="outline" onClick={() => setExistingSubdomain(null)} className="h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
+                    Continue Anyway
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {hasExistingData && !showOverwriteWarning && !existingSubdomain && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

@@ -127,9 +127,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       try {
         const urlObj = new URL(url);
         const baseUrlObj = new URL(baseUrl);
-        if (urlObj.hostname.endsWith(baseUrlObj.hostname)) return url;
+        // Check if the hostname matches or is a subdomain of the base domain
+        if (urlObj.hostname === baseUrlObj.hostname || urlObj.hostname.endsWith("." + baseUrlObj.hostname)) {
+          return url;
+        }
       } catch (e) {
-        // Fallback for invalid URLs
+        // Fallback for relative or invalid URLs
+        if (url.startsWith("http")) return baseUrl; // If absolute but failed, go to base
+        return url;
       }
       return baseUrl;
     },

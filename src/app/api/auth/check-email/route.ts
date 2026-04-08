@@ -20,9 +20,30 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    const user = await db.prepare("SELECT email FROM users WHERE email = ?").bind(email).first();
+    const user = await db.prepare(`
+      SELECT u.email, t.subdomain 
+      FROM users u 
+      JOIN tenants t ON u.tenant_id = t.id 
+      WHERE LOWER(u.email) = LOWER(?)
+    `).bind(email).first();
 
-    return NextResponse.json({ exists: !!user });
+    if (user) {
+      return NextResponse.json({ exists: true, subdomain: user.subdomain });
+    }
+
+    // Also check agents table
+    const agent = await db.prepare(`
+      SELECT a.email, t.subdomain 
+      FROM agents a 
+      JOIN tenants t ON a.tenant_id = t.id 
+      WHERE LOWER(a.email) = LOWER(?)
+    `).bind(email).first();
+
+    if (agent) {
+      return NextResponse.json({ exists: true, subdomain: agent.subdomain });
+    }
+
+    return NextResponse.json({ exists: false });
   } catch (error: any) {
     console.error("Check email error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
