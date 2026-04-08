@@ -10,11 +10,13 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
     setIsMounted(true);
   }, []);
 
+  const onVerifyRef = useRef(onVerify);
+  onVerifyRef.current = onVerify;
+
   useEffect(() => {
     if (!isMounted || !containerRef.current) return;
 
     let widgetId: string | null = null;
-
     let interval: any = null;
 
     const renderWidget = () => {
@@ -24,7 +26,7 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
             sitekey: "0x4AAAAAAC09M6PclLz1FMym",
             theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
             callback: (token: string) => {
-              onVerify(token);
+              onVerifyRef.current(token);
             },
           });
         } catch (e) {
@@ -63,7 +65,7 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
         } catch (e) {}
       }
     };
-  }, [isMounted, onVerify]);
+  }, [isMounted]);
 
   if (!isMounted) return <div style={{ minHeight: '65px' }} />;
 
