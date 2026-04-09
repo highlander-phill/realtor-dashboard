@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
         api_key: apiKey,
         sender: "supportrequest@team-goals.com",
         recipients: ["phill@phillsimpson.com"],
+        reply_to: userEmail,
         subject: `[Team-Goals] New Contact from ${userName}`,
         html_body: `
           <div style="font-family: sans-serif; padding: 20px; color: #333;">
@@ -29,13 +30,7 @@ export async function POST(req: NextRequest) {
             <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
             <p style="white-space: pre-wrap;">${message}</p>
           </div>
-        `,
-        custom_headers: [
-          {
-            header: "Reply-To",
-            value: userEmail
-          }
-        ]
+        `
       }),
     });
 

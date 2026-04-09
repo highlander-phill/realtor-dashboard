@@ -733,6 +733,7 @@ export default function AdminPanel() {
                               onClick={() => {
                                 setData({...data, tenant: {...data.tenant, logoUrl: logoPreview}});
                                 setLogoPreview(null);
+                                alert("Logo applied to local settings. Click 'Publish Updates' at the top to save it to your live dashboard.");
                               }}
                               size="sm"
                               className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] h-8 px-4 rounded-lg"

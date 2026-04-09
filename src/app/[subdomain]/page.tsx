@@ -22,7 +22,8 @@ import {
   Info,
   HelpCircle,
   Tv,
-  RefreshCcw
+  RefreshCcw,
+  CreditCard
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -158,6 +159,7 @@ interface DashboardData {
     showTimeToClose: boolean;
     showPriceDelta: boolean;
     hasViewerPassword: boolean;
+    billingStatus?: string;
   };
   team: {
     goal: number;
@@ -275,33 +277,35 @@ function DashboardContent() {
   };
 
   if (isLocked) {
+    // ... existing isLocked logic ...
+  }
+
+  // Dashboard Lockdown for Unpaid tenants
+  const isUnpaid = data.tenant.id && (data.tenant.billingStatus === 'unpaid' || data.tenant.billingStatus === 'canceled' || data.tenant.billingStatus === 'past_due') && !(subdomain === 'nspg' || data.tenant.id === 'nspg-group');
+
+  if (isUnpaid) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full bg-slate-900 border-slate-800 shadow-2xl rounded-[32px] overflow-hidden">
+        <Card className="max-w-md w-full bg-slate-900 border-red-900/50 shadow-2xl rounded-[40px] overflow-hidden border-2">
+           <div className="h-2 bg-red-600" />
            <CardHeader className="text-center pt-12 pb-8">
-              {lockInfo?.logoUrl ? (
-                <img src={lockInfo.logoUrl} className="h-16 mx-auto mb-4 object-contain" />
-              ) : (
-                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg" style={{ backgroundColor: lockInfo?.primaryColor }}>
-                  <Lock className="w-8 h-8" />
-                </div>
-              )}
-              <CardTitle className="text-2xl font-black text-white uppercase italic tracking-tight">{lockInfo?.tenantName || 'Team Dashboard'}</CardTitle>
-              <CardDescription className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-2">Protected Dashboard Access</CardDescription>
+              <div className="w-20 h-20 bg-red-600/20 rounded-3xl flex items-center justify-center text-red-500 mx-auto mb-6 shadow-xl border border-red-600/30">
+                <Lock className="w-10 h-10" />
+              </div>
+              <CardTitle className="text-3xl font-black text-white uppercase italic tracking-tight">Account Suspended</CardTitle>
+              <CardDescription className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-2 px-6 leading-relaxed">
+                Your subscription has expired or a payment was missed. Please update your billing information to restore access.
+              </CardDescription>
            </CardHeader>
-           <CardContent className="px-10 pb-12">
-              <form onSubmit={handleUnlock} className="space-y-4">
-                 <Input 
-                   type="password"
-                   placeholder="Enter Viewer Password"
-                   value={viewerPassword}
-                   onChange={(e) => setViewerPassword(e.target.value)}
-                   className="h-14 bg-slate-950 border-slate-800 text-white text-center font-bold text-xl rounded-2xl focus:ring-blue-600"
-                 />
-                 <Button type="submit" className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-900/20">
-                   Unlock Dashboard <ArrowRight className="ml-2 w-4 h-4" />
-                 </Button>
-              </form>
+           <CardContent className="px-10 pb-12 space-y-4">
+              <Link href={`/${subdomain}/admin/login`}>
+                <Button className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-900/20 gap-3">
+                  <CreditCard className="w-5 h-5" /> Go to Billing Center
+                </Button>
+              </Link>
+              <p className="text-center text-[9px] font-bold text-slate-600 uppercase tracking-widest leading-relaxed">
+                Only team administrators can manage billing settings.
+              </p>
            </CardContent>
         </Card>
       </div>

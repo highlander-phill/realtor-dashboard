@@ -61,6 +61,28 @@ export async function POST(req: NextRequest) {
         cancel_url: cancelUrl.toString(),
     });
 
+    // Alert the owner about new trial signup
+    if (env.SMTP2GO_API_KEY) {
+        try {
+            await fetch("https://api.smtp2go.com/v3/email/send", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    api_key: env.SMTP2GO_API_KEY,
+                    sender: "alerts@team-goals.com",
+                    recipients: ["phill@phillsimpson.com"],
+                    subject: `[Alert] New Trial Signup: ${tenant.name}`,
+                    html_body: `<p>A new customer has signed up for a 30-day trial.</p>
+                               <p><strong>Tenant:</strong> ${tenant.name}</p>
+                               <p><strong>Subdomain:</strong> ${tenant.subdomain}</p>
+                               <p><strong>Initial Quantity:</strong> ${quantity} (Agents: ${agentCount})</p>`
+                })
+            });
+        } catch (e) {
+            console.error("Failed to send signup alert:", e);
+        }
+    }
+
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error(error);

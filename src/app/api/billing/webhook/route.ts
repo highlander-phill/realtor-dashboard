@@ -14,7 +14,8 @@ interface D1Env {
 
 export async function POST(req: NextRequest) {
   try {
-    const { env } = getRequestContext() as unknown as { env: D1Env };
+    const context = getRequestContext();
+    const env = (context?.env || process.env || {}) as any;
     const db = env.DB;
     const body = await req.text();
     const sig = req.headers.get('stripe-signature');
@@ -47,9 +48,30 @@ export async function POST(req: NextRequest) {
         break;
       case 'customer.subscription.updated':
         const sub = event.data.object as any;
+        const oldStatusResult = await db.prepare("SELECT billing_status, name FROM tenants WHERE stripe_customer_id = ?").bind(sub.customer).first();
+        
         await db.prepare("UPDATE tenants SET billing_status = ? WHERE stripe_customer_id = ?")
           .bind(sub.status, sub.customer)
           .run();
+
+        // Alert on conversion from trialing to active
+        if (oldStatusResult?.billing_status === 'trialing' && sub.status === 'active' && env.SMTP2GO_API_KEY) {
+           try {
+              await fetch("https://api.smtp2go.com/v3/email/send", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                      api_key: env.SMTP2GO_API_KEY,
+                      sender: "alerts@team-goals.com",
+                      recipients: ["phill@phillsimpson.com"],
+                      subject: `[Alert] Trial Converted: ${oldStatusResult.name}`,
+                      html_body: `<p>A customer has successfully converted from trial to a paid subscription.</p>
+                                 <p><strong>Tenant:</strong> ${oldStatusResult.name}</p>
+                                 <p><strong>Status:</strong> ${sub.status}</p>`
+                  })
+              });
+           } catch (e) {}
+        }
         break;
       case 'customer.subscription.deleted':
         const subDeleted = event.data.object as any;
