@@ -21,7 +21,10 @@ import {
   Users,
   Eye,
   CalendarClock,
-  TrendingUp
+  TrendingUp,
+  HelpCircle,
+  CreditCard,
+  ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -130,7 +133,7 @@ export default function AdminPanel() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData>(initialData);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"agents" | "subteams" | "settings">("agents");
+  const [activeTab, setActiveTab] = useState<"agents" | "subteams" | "settings" | "billing">("agents");
   
   const [newPassword, setNewPassword] = useState("");
   const [viewerPassword, setViewerPassword] = useState("");
@@ -262,6 +265,36 @@ export default function AdminPanel() {
     nextSignOut({ callbackUrl: `/${subdomain}` });
   };
 
+  const handleUpgrade = async () => {
+    setIsSaving(true);
+    const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId: data.tenant.id, priceId: 'price_1TK7zZ4YkfnFDOD9XtoU6E6m' }),
+    });
+    const { url } = await res.json();
+    if (url) window.location.href = url;
+    setIsSaving(false);
+  };
+
+  const handlePortal = async () => {
+    setIsSaving(true);
+    const res = await fetch('/api/billing/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId: data.tenant.id }),
+    });
+    const { url } = await res.json();
+    if (url) window.location.href = url;
+    setIsSaving(false);
+  };
+
+  const HelpIcon = ({ topic }: { topic?: string }) => (
+    <Link href={`/${subdomain}/admin/help${topic ? `#${topic}` : ''}`} target="_blank">
+       <HelpCircle className="w-3.5 h-3.5 text-slate-400 hover:text-blue-500 cursor-help transition-colors inline-block ml-1.5 mb-0.5" />
+    </Link>
+  );
+
   if (status === "loading") {
     return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center font-black uppercase tracking-widest text-slate-500">Authenticating...</div>;
   }
@@ -291,6 +324,11 @@ export default function AdminPanel() {
              </div>
           </div>
           <div className="flex gap-3 w-full md:w-auto">
+            <Link href={`/${subdomain}/admin/help`}>
+               <Button variant="outline" className="rounded-2xl font-black uppercase tracking-widest text-[10px] gap-2 h-14 px-8 border-2 border-blue-900 text-blue-400 hover:bg-blue-900 transition-all">
+                  <HelpCircle className="w-4 h-4" /> Help Center
+               </Button>
+            </Link>
             <Button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl gap-2 h-14 px-10 shadow-xl shadow-blue-900/40">
               {isSaving ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Publish Updates
@@ -305,7 +343,8 @@ export default function AdminPanel() {
            {[
              { id: 'agents', label: 'Roster Management', icon: Users },
              { id: 'subteams', label: 'Team Divisions', icon: LayoutGrid },
-             { id: 'settings', label: 'System Settings', icon: Settings }
+             { id: 'settings', label: 'System Settings', icon: Settings },
+             { id: 'billing', label: 'Subscription', icon: CreditCard }
            ].map((tab) => (
              <Button 
               key={tab.id}
@@ -343,9 +382,9 @@ export default function AdminPanel() {
                       <TableRow className="border-slate-200 dark:border-slate-800">
                         <TableHead onClick={() => handleSort('name')} className="px-10 py-5 font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100">Agent Name ↕</TableHead>
                         <TableHead onClick={() => handleSort('subTeamId')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100">Sub-Team ↕</TableHead>
-                        <TableHead onClick={() => handleSort('goal')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100">Goal ($) ↕</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Closed</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Pending</TableHead>
+                        <TableHead onClick={() => handleSort('goal')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100">Goal ($) ↕ <HelpIcon /></TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Closed <HelpIcon /></TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Pending <HelpIcon /></TableHead>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Buyers</TableHead>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Sellers</TableHead>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Status</TableHead>
@@ -653,6 +692,98 @@ export default function AdminPanel() {
                    <Button onClick={updateSettings} disabled={isSaving} className="w-full h-14 bg-slate-900 dark:bg-white dark:text-slate-900 font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl shadow-xl transition-all active:scale-95">
                       Save Branding & Security
                    </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {activeTab === "billing" && (
+            <motion.div
+              key="billing"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="max-w-2xl mx-auto w-full"
+            >
+              <Card className="border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden rounded-[40px] bg-white dark:bg-slate-900">
+                <CardHeader className="bg-slate-900 dark:bg-black border-b border-slate-800 py-10 px-12">
+                   <CardTitle className="text-2xl font-black uppercase italic text-white flex items-center gap-3">
+                      <CreditCard className="w-6 h-6 text-blue-500" /> Billing & Subscription
+                   </CardTitle>
+                   <CardDescription className="text-slate-400 font-medium">Manage your team's pro access and billing history.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-12 space-y-10">
+                   <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800">
+                      <div className="space-y-1">
+                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Subscription Status</p>
+                         <p className="text-xl font-black uppercase italic dark:text-white">
+                            {subdomain === 'nspg' || data.tenant.id === 'nspg-group' ? 'Free Forever' : (data.tenant.billingStatus || 'Free Plan')}
+                         </p>
+                      </div>
+                      <Badge className={`uppercase px-4 py-1.5 rounded-full font-black ${data.tenant.billingStatus === 'active' || data.tenant.billingStatus === 'trialing' ? 'bg-green-500' : 'bg-slate-200 text-slate-600'}`}>
+                         {data.tenant.billingStatus === 'trialing' ? 'Trialing' : data.tenant.billingStatus === 'active' ? 'Active' : 'Unpaid'}
+                      </Badge>
+                   </div>
+
+                   {!(subdomain === 'nspg' || data.tenant.id === 'nspg-group') && (
+                      <div className="space-y-6">
+                         <div className="bg-blue-600/5 dark:bg-blue-500/5 border border-blue-600/20 dark:border-blue-500/20 p-8 rounded-3xl space-y-4">
+                            <h3 className="text-blue-600 dark:text-blue-400 font-black uppercase italic tracking-tight flex items-center gap-2">
+                               <TrendingUp className="w-5 h-5" /> Current Usage Model
+                            </h3>
+                            <div className="flex justify-between items-end">
+                               <div className="space-y-1">
+                                  <p className="text-sm font-bold text-slate-600 dark:text-slate-400">Monthly Price:</p>
+                                  <p className="text-3xl font-black dark:text-white">$1.00 <span className="text-sm font-medium opacity-50 text-slate-500">per 10 users</span></p>
+                               </div>
+                               <div className="text-right space-y-1">
+                                  <p className="text-sm font-bold text-slate-600 dark:text-slate-400">Active Agents:</p>
+                                  <p className="text-3xl font-black text-blue-600">{data.agents.length}</p>
+                               </div>
+                            </div>
+                            <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                               <div className="h-full bg-blue-600" style={{ width: `${(data.agents.length % 10 || 10) * 10}%` }} />
+                            </div>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                               Next bracket at {Math.ceil((data.agents.length + 1) / 10) * 10} agents
+                            </p>
+                         </div>
+
+                         {data.tenant.billingStatus === 'free' || !data.tenant.billingStatus ? (
+                            <div className="space-y-6">
+                               <div className="p-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-2xl">
+                                  <p className="text-amber-700 dark:text-amber-400 text-xs font-bold leading-relaxed">
+                                     Your 30-day free trial starts today. You won't be charged until the trial ends, and you can cancel anytime before then.
+                                  </p>
+                               </div>
+                               <Button onClick={handleUpgrade} disabled={isSaving} className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-900/40 gap-3">
+                                  {isSaving ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
+                                  Start 30-Day Free Trial
+                               </Button>
+                            </div>
+                         ) : (
+                            <div className="space-y-4">
+                               <Button onClick={handlePortal} disabled={isSaving} variant="outline" className="w-full h-16 border-2 border-slate-200 dark:border-slate-700 rounded-2xl font-black uppercase tracking-widest gap-3 hover:bg-slate-50 dark:hover:bg-slate-800">
+                                  {isSaving ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <ExternalLink className="w-5 h-5" />}
+                                  Manage Payment & Invoices
+                               </Button>
+                               <p className="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                  Cancellations take effect at the end of your current billing cycle.
+                               </p>
+                            </div>
+                         )}
+                      </div>
+                   )}
+
+                   { (subdomain === 'nspg' || data.tenant.id === 'nspg-group') && (
+                      <div className="p-10 border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[40px] text-center space-y-4">
+                         <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
+                            <Shield className="w-8 h-8 text-slate-400" />
+                         </div>
+                         <h4 className="text-xl font-black uppercase italic text-slate-400 tracking-tight">Billing Exempt</h4>
+                         <p className="text-sm text-slate-500 font-medium">This tenant is part of the core infrastructure and is exempt from all subscription charges.</p>
+                      </div>
+                   )}
                 </CardContent>
               </Card>
             </motion.div>
