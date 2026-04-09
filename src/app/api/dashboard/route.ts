@@ -2,6 +2,7 @@ import { getRequestContext } from "@cloudflare/next-on-pages";
 import { NextRequest, NextResponse } from "next/server";
 import { hashPassword, comparePasswords } from "@/lib/crypto";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { updateSubscriptionQuantity } from "@/lib/stripe";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -313,6 +314,15 @@ export async function POST(req: NextRequest) {
     }
 
     await db.batch(statements);
+
+    // 5. Update Stripe Subscription Quantity if active or trialing
+    if (existingTenant && existingTenant.stripe_subscription_id && (existingTenant.billing_status === 'active' || existingTenant.billing_status === 'trialing')) {
+      const apiKey = env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+      if (apiKey) {
+        const agentCount = agents ? agents.length : 0;
+        await updateSubscriptionQuantity(existingTenant.stripe_subscription_id, agentCount, apiKey);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

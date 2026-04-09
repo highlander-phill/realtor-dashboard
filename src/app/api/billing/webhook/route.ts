@@ -31,8 +31,18 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed':
         const session = event.data.object as any;
-        await db.prepare("UPDATE tenants SET billing_status = 'active', stripe_subscription_id = ? WHERE stripe_customer_id = ?")
-          .bind(session.subscription, session.customer)
+        // Check if there is a subscription and its status
+        let status = 'active';
+        if (session.subscription) {
+          try {
+            const sub = await stripe.subscriptions.retrieve(session.subscription);
+            status = sub.status;
+          } catch (e) {
+            console.error("Failed to retrieve subscription status:", e);
+          }
+        }
+        await db.prepare("UPDATE tenants SET billing_status = ?, stripe_subscription_id = ? WHERE stripe_customer_id = ?")
+          .bind(status, session.subscription, session.customer)
           .run();
         break;
       case 'customer.subscription.updated':
