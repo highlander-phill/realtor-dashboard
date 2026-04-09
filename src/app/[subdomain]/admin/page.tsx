@@ -687,12 +687,24 @@ export default function AdminPanel() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Logo Link</Label>
-                    <Input 
-                      value={data.tenant.logoUrl || ""}
-                      onChange={(e) => setData({...data, tenant: {...data.tenant, logoUrl: e.target.value}})}
-                      placeholder="https://..."
-                      className="h-14 font-bold"
-                    />
+                    <div className="flex gap-2">
+                      <Input 
+                        value={data.tenant.logoUrl || ""}
+                        onChange={(e) => setData({...data, tenant: {...data.tenant, logoUrl: e.target.value}})}
+                        placeholder="https://..."
+                        className="h-14 font-bold flex-1"
+                      />
+                      <Button 
+                        onClick={() => {
+                          const logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.tenant.name)}&background=${data.tenant.primaryColor.replace('#', '')}&color=fff&size=128&bold=true`;
+                          setData({...data, tenant: {...data.tenant, logoUrl}});
+                        }}
+                        variant="outline" 
+                        className="h-14 rounded-2xl bg-black text-white hover:bg-slate-800 border-none font-black uppercase text-[10px] px-4"
+                      >
+                        Generate
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="pt-4 space-y-4 border-t border-slate-100 dark:border-slate-800">
