@@ -24,7 +24,9 @@ import {
   TrendingUp,
   HelpCircle,
   CreditCard,
-  ExternalLink
+  ExternalLink,
+  MessageSquare,
+  Send
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -34,8 +36,17 @@ import {
   CardDescription, 
   CardContent 
 } from "@/components/ui/card";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
   Table, 
@@ -45,6 +56,12 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
@@ -70,15 +87,21 @@ interface AgentData {
   countInTotal: boolean;
   buyers: number;
   sellers: number;
-  buyers: number;
-  sellers: number;
   transactions: Transaction[];
+  customFields?: Record<string, any>;
 }
 
 interface SubTeam {
   id: string;
   name: string;
   goal: number;
+}
+
+interface CustomColumn {
+  id: string;
+  name: string;
+  type: 'number' | 'text' | 'select';
+  options?: string[];
 }
 
 interface DashboardData {
@@ -95,6 +118,8 @@ interface DashboardData {
     trackDaysToClose: boolean;
     showPriceDelta: boolean;
     hasViewerPassword: boolean;
+    billingStatus?: string;
+    customColumns?: CustomColumn[];
   };
   team: {
     goal: number;
@@ -116,7 +141,8 @@ const initialData: DashboardData = {
     showTimeToClose: false,
     trackDaysToClose: false,
     showPriceDelta: false,
-    hasViewerPassword: false
+    hasViewerPassword: false,
+    customColumns: []
   },
   team: {
     goal: 1,
@@ -137,6 +163,10 @@ export default function AdminPanel() {
   
   const [newPassword, setNewPassword] = useState("");
   const [viewerPassword, setViewerPassword] = useState("");
+
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportMessage, setSupportMessage] = useState("");
+  const [isSendingSupport, setIsSendingSupport] = useState(false);
 
   const { data: session, status } = useSession();
 
@@ -289,6 +319,49 @@ export default function AdminPanel() {
     setIsSaving(false);
   };
 
+  const handlePayNow = async () => {
+    setIsSaving(true);
+    const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          tenantId: data.tenant.id, 
+          priceId: 'price_1TK7zZ4YkfnFDOD9XtoU6E6m',
+          skipTrial: true 
+        }),
+    });
+    const { url } = await res.json();
+    if (url) window.location.href = url;
+    setIsSaving(false);
+  };
+
+  const handleSendSupport = async () => {
+    if (!supportMessage.trim()) return;
+    setIsSendingSupport(true);
+    try {
+      const res = await fetch('/api/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userName: session?.user?.name || subdomain,
+          userEmail: session?.user?.email || 'unknown@team-goals.com',
+          message: supportMessage
+        }),
+      });
+      if (res.ok) {
+        alert("Support request sent! We'll get back to you soon.");
+        setSupportMessage("");
+        setSupportOpen(false);
+      } else {
+        throw new Error("Failed to send");
+      }
+    } catch (e) {
+      alert("Error sending support request. Please try again later.");
+    } finally {
+      setIsSendingSupport(false);
+    }
+  };
+
   const HelpIcon = ({ topic }: { topic?: string }) => (
     <Link href={`/${subdomain}/admin/help${topic ? `#${topic}` : ''}`} target="_blank">
        <HelpCircle className="w-3.5 h-3.5 text-slate-400 hover:text-blue-500 cursor-help transition-colors inline-block ml-1.5 mb-0.5" />
@@ -329,6 +402,9 @@ export default function AdminPanel() {
                   <HelpCircle className="w-4 h-4" /> Help Center
                </Button>
             </Link>
+            <Button onClick={() => setSupportOpen(true)} variant="outline" className="rounded-2xl font-black uppercase tracking-widest text-[10px] gap-2 h-14 px-8 border-2 border-slate-700 text-slate-400 hover:bg-slate-800 transition-all">
+               <MessageSquare className="w-4 h-4" /> Support
+            </Button>
             <Button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl gap-2 h-14 px-10 shadow-xl shadow-blue-900/40">
               {isSaving ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Publish Updates
@@ -386,7 +462,10 @@ export default function AdminPanel() {
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Closed <HelpIcon /></TableHead>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Pending <HelpIcon /></TableHead>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Buyers</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Sellers</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Sellers <HelpIcon /></TableHead>
+                        {(data.tenant.customColumns || []).map(col => (
+                           <TableHead key={col.id} className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">{col.name}</TableHead>
+                        ))}
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Status</TableHead>
                         <TableHead className="text-right px-10 font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Actions</TableHead>
                       </TableRow>
@@ -451,6 +530,19 @@ export default function AdminPanel() {
                               className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
                             />
                           </TableCell>
+                          {(data.tenant.customColumns || []).map(col => (
+                            <TableCell key={col.id}>
+                              <Input 
+                                type={col.type === 'number' ? 'number' : 'text'}
+                                value={agent.customFields?.[col.id] || ""} 
+                                onChange={(e) => {
+                                  const val = col.type === 'number' ? Number(e.target.value) : e.target.value;
+                                  updateAgent(agent.id, "customFields", { ...(agent.customFields || {}), [col.id]: val });
+                                }}
+                                className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-bold text-xs"
+                              />
+                            </TableCell>
+                          ))}
                           <TableCell>
                              <div className="flex flex-col gap-2">
                                 <Badge variant={agent.status === 'active' ? 'default' : 'outline'} className="uppercase text-[9px] w-fit">
@@ -606,7 +698,7 @@ export default function AdminPanel() {
                   <div className="pt-4 space-y-4 border-t border-slate-100 dark:border-slate-800">
                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Transaction Columns</Label>
                     <div className="space-y-3">
-                       <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl cursor-pointer">
+                       <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl cursor-pointer" title="Displays the 'Date Listed' column on transaction tables.">
                           <span className="flex items-center gap-3 font-bold text-sm">
                              <CalendarClock className="w-4 h-4 text-blue-500" /> Track 'Date Listed'
                           </span>
@@ -617,7 +709,7 @@ export default function AdminPanel() {
                             className="w-5 h-5 rounded border-slate-300"
                           />
                        </label>
-                       <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl cursor-pointer">
+                       <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl cursor-pointer" title="Calculates and displays the number of days between 'Date Listed' and 'Date Closed'.">
                           <span className="flex items-center gap-3 font-bold text-sm">
                              <CalendarClock className="w-4 h-4 text-purple-500" /> Track 'Days to Close'
                           </span>
@@ -628,7 +720,7 @@ export default function AdminPanel() {
                             className="w-5 h-5 rounded border-slate-300"
                           />
                        </label>
-                       <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl cursor-pointer">
+                       <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl cursor-pointer" title="Shows the difference between the initial List Price and the final Sale Price.">
                           <span className="flex items-center gap-3 font-bold text-sm">
                              <TrendingUp className="w-4 h-4 text-green-500" /> Track List vs Sale Price
                           </span>
@@ -639,7 +731,7 @@ export default function AdminPanel() {
                             className="w-5 h-5 rounded border-slate-300"
                           />
                        </label>
-                       <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl cursor-pointer">
+                       <label className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl cursor-pointer" title="Overrides user preferences and forces the dashboard into high-contrast dark mode.">
                           <span className="flex items-center gap-3 font-bold text-sm">
                              <Lock className="w-4 h-4 text-purple-500" /> Force Dark Mode
                           </span>
@@ -650,6 +742,59 @@ export default function AdminPanel() {
                             className="w-5 h-5 rounded border-slate-300"
                           />
                        </label>
+                    </div>
+                  </div>
+
+                  <div className="pt-8 space-y-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Custom Columns</Label>
+                        <p className="text-[9px] text-slate-500 font-bold uppercase">Add unique data points to your roster</p>
+                      </div>
+                      <Button 
+                        onClick={() => {
+                          const newCol: CustomColumn = { id: Math.random().toString(36).substr(2, 5), name: 'New Column', type: 'number' };
+                          setData({...data, tenant: {...data.tenant, customColumns: [...(data.tenant.customColumns || []), newCol]}});
+                        }}
+                        variant="outline" size="sm" className="h-8 rounded-lg border-blue-600 text-blue-600 text-[9px] font-black uppercase tracking-widest gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </Button>
+                    </div>
+                    <div className="space-y-3">
+                      {(data.tenant.customColumns || []).map((col) => (
+                        <div key={col.id} className="flex gap-2 p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
+                           <Input 
+                             value={col.name}
+                             onChange={(e) => {
+                               const newCols = data.tenant.customColumns?.map(c => c.id === col.id ? {...c, name: e.target.value} : c);
+                               setData({...data, tenant: {...data.tenant, customColumns: newCols}});
+                             }}
+                             className="h-10 font-bold text-xs"
+                             placeholder="Column Name"
+                           />
+                           <select 
+                              value={col.type}
+                              onChange={(e) => {
+                                const newCols = data.tenant.customColumns?.map(c => c.id === col.id ? {...c, type: e.target.value as any} : c);
+                                setData({...data, tenant: {...data.tenant, customColumns: newCols}});
+                              }}
+                              className="h-10 rounded-lg border border-input bg-transparent px-3 text-xs font-bold focus:ring-1 focus:ring-ring outline-none"
+                           >
+                             <option value="number">Number</option>
+                             <option value="text">Text</option>
+                           </select>
+                           <Button 
+                             onClick={() => {
+                               const newCols = data.tenant.customColumns?.filter(c => c.id !== col.id);
+                               setData({...data, tenant: {...data.tenant, customColumns: newCols}});
+                             }}
+                             variant="ghost" size="icon" className="text-slate-400 hover:text-red-600"
+                           >
+                             <Trash2 className="w-4 h-4" />
+                           </Button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </CardContent>
@@ -756,10 +901,16 @@ export default function AdminPanel() {
                                      Your 30-day free trial starts today. You won't be charged until the trial ends, and you can cancel anytime before then.
                                   </p>
                                </div>
-                               <Button onClick={handleUpgrade} disabled={isSaving} className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-900/40 gap-3">
-                                  {isSaving ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
-                                  Start 30-Day Free Trial
-                               </Button>
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <Button onClick={handleUpgrade} disabled={isSaving} className="h-16 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-900/40 gap-3">
+                                      {isSaving ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
+                                      Start 30-Day Free Trial
+                                  </Button>
+                                  <Button onClick={handlePayNow} disabled={isSaving} variant="outline" className="h-16 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-black uppercase tracking-widest rounded-2xl gap-3">
+                                      {isSaving ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                                      Pay Now (Skip Trial)
+                                  </Button>
+                               </div>
                             </div>
                          ) : (
                             <div className="space-y-4">
@@ -789,6 +940,46 @@ export default function AdminPanel() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <Dialog open={supportOpen} onOpenChange={setSupportOpen}>
+          <DialogContent className="rounded-[40px] border-none shadow-2xl p-10 max-w-lg bg-white dark:bg-slate-900">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black uppercase italic tracking-tight flex items-center gap-3">
+                <MessageSquare className="w-6 h-6 text-blue-600" /> Contact Support
+              </DialogTitle>
+              <DialogDescription className="text-slate-500 font-medium">
+                Send a message to the TeamGoals engineering team. We typically respond within 24 hours.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6 py-6">
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Account</Label>
+                    <p className="text-xs font-bold truncate">{data.tenant.name}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Admin</Label>
+                    <p className="text-xs font-bold truncate">{session?.user?.email}</p>
+                  </div>
+               </div>
+               <div className="space-y-2">
+                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">How can we help?</Label>
+                 <Textarea 
+                   value={supportMessage}
+                   onChange={(e) => setSupportMessage(e.target.value)}
+                   placeholder="Describe your issue or feature request..."
+                   className="min-h-[150px] rounded-2xl border-slate-200 focus:ring-blue-600 bg-slate-50 dark:bg-slate-950 font-medium"
+                 />
+               </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleSendSupport} disabled={isSendingSupport || !supportMessage.trim()} className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-900/40 gap-3">
+                {isSendingSupport ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                Send Support Ticket
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
       </div>
     </div>

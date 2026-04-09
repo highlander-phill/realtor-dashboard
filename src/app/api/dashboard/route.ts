@@ -143,7 +143,8 @@ export async function GET(req: NextRequest) {
         showPriceDelta: !!tenant.show_price_delta,
         hasViewerPassword: !!tenant.viewer_password_hash,
         billingStatus: tenant.billing_status || 'free',
-        stripeSubscriptionId: tenant.stripe_subscription_id
+        stripeSubscriptionId: tenant.stripe_subscription_id,
+        customColumns: tenant.custom_columns ? JSON.parse(tenant.custom_columns) : []
       },
       team: {
         goal: teamData?.goal || 50000000,
@@ -171,6 +172,7 @@ export async function GET(req: NextRequest) {
           mlsLink: a.mls_link,
           status: a.status || 'active',
           countInTotal: !!a.count_in_total,
+          customFields: a.custom_fields ? JSON.parse(a.custom_fields) : {},
           bsRatio,
           transactions: agentTransactions.map((t: any) => ({
             ...t,
@@ -266,9 +268,9 @@ export async function POST(req: NextRequest) {
     // 2. Upsert Tenant
     const aHash = tenant.adminPassword ? await hashPassword(tenant.adminPassword) : null;
     await safeBind(db.prepare(
-      "INSERT INTO tenants (id, name, subdomain, primary_color, theme, onboarding_completed, logo_url, admin_password_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
-      "ON CONFLICT(subdomain) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, theme=excluded.theme, onboarding_completed=MAX(tenants.onboarding_completed, excluded.onboarding_completed), logo_url=excluded.logo_url, admin_password_hash=COALESCE(excluded.admin_password_hash, tenants.admin_password_hash)"
-    ), tenantId, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0, tenant.logoUrl || null, aHash).run();
+      "INSERT INTO tenants (id, name, subdomain, primary_color, theme, onboarding_completed, logo_url, admin_password_hash, custom_columns) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+      "ON CONFLICT(subdomain) DO UPDATE SET name=excluded.name, primary_color=excluded.primary_color, theme=excluded.theme, onboarding_completed=MAX(tenants.onboarding_completed, excluded.onboarding_completed), logo_url=excluded.logo_url, admin_password_hash=COALESCE(excluded.admin_password_hash, tenants.admin_password_hash), custom_columns=excluded.custom_columns"
+    ), tenantId, tenant.name, tenant.subdomain, tenant.primaryColor, tenant.theme || 'realtor', tenant.onboardingCompleted ? 1 : 0, tenant.logoUrl || null, aHash, tenant.customColumns ? JSON.stringify(tenant.customColumns) : null).run();
 
     // Insert/Upsert User
     if (tenant.adminEmail && tenant.adminPassword) {
@@ -301,8 +303,8 @@ export async function POST(req: NextRequest) {
     
     if (agents && agents.length > 0) {
       for (const a of agents) {
-        statements.push(safeBind(db.prepare("INSERT INTO agents (id, tenant_id, sub_team_id, name, goal, closings, volume_pending, volume_closed, listings_volume, buyers, sellers, listings, mls_link, status, count_in_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"),
-          a.id, tenantId, a.subTeamId || null, a.name, a.goal || 0, a.closings || 0, a.volumePending || 0, a.volumeClosed || 0, a.listingsVolume || 0, a.buyers || 0, a.sellers || 0, a.listings || 0, a.mlsLink || null, a.status || 'active', a.countInTotal ? 1 : 0));
+        statements.push(safeBind(db.prepare("INSERT INTO agents (id, tenant_id, sub_team_id, name, goal, closings, volume_pending, volume_closed, listings_volume, buyers, sellers, listings, mls_link, status, count_in_total, custom_fields) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"),
+          a.id, tenantId, a.subTeamId || null, a.name, a.goal || 0, a.closings || 0, a.volumePending || 0, a.volumeClosed || 0, a.listingsVolume || 0, a.buyers || 0, a.sellers || 0, a.listings || 0, a.mlsLink || null, a.status || 'active', a.countInTotal ? 1 : 0, a.customFields ? JSON.stringify(a.customFields) : null));
           
         if (a.transactions && a.transactions.length > 0) {
           for (const t of a.transactions) {

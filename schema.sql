@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS tenants (
   stripe_customer_id TEXT,
   billing_status TEXT DEFAULT 'free',
   stripe_subscription_id TEXT,
+  custom_columns TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -85,6 +86,7 @@ CREATE TABLE IF NOT EXISTS agents (
   mls_link TEXT,
   status TEXT DEFAULT 'active',
   count_in_total INTEGER DEFAULT 1,
+  custom_fields TEXT,
   FOREIGN KEY (tenant_id) REFERENCES tenants(id),
   FOREIGN KEY (sub_team_id) REFERENCES sub_teams(id)
 );

@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const { env } = getRequestContext() as unknown as { env: { DB: any, STRIPE_SECRET_KEY: string, STRIPE_PRICE_ID?: string } };
     const db = env.DB;
-    const { tenantId, priceId: requestedPriceId } = await req.json();
+    const { tenantId, priceId: requestedPriceId, skipTrial } = await req.json();
 
     const tenant = await db.prepare("SELECT * FROM tenants WHERE id = ?").bind(tenantId).first();
     if (!tenant) return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         mode: 'subscription',
         line_items: [{ price: priceId, quantity: quantity }],
         subscription_data: {
-            trial_period_days: 30,
+            trial_period_days: skipTrial ? undefined : 30,
             metadata: { tenantId: tenant.id }
         },
         success_url: successUrl.toString(),

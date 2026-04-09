@@ -16,11 +16,23 @@ export default function ForgotPassword() {
   const subdomain = params.subdomain as string;
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate sending email
-    setSubmitted(true);
+    setLoading(true);
+    try {
+      await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'request', email, subdomain }),
+      });
+      setSubmitted(true);
+    } catch (e) {
+      alert("Error sending reset email.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
