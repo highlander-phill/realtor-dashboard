@@ -155,9 +155,11 @@ export default function HelpPage() {
                     <CardContent className="p-12 text-center space-y-6">
                         <h3 className="text-2xl font-black text-white uppercase italic tracking-tight">Need More Help?</h3>
                         <p className="text-blue-100 font-medium">Contact our support team for custom implementation or technical assistance.</p>
-                        <Button variant="secondary" className="rounded-2xl font-black uppercase tracking-widest px-10 h-14 bg-white text-blue-600 hover:bg-blue-50 border-none">
-                            Contact Support
-                        </Button>
+                        <Link href={`/${subdomain}/admin?support=true`}>
+                            <Button variant="secondary" className="rounded-2xl font-black uppercase tracking-widest px-10 h-14 bg-white text-blue-600 hover:bg-blue-50 border-none">
+                                Contact Support
+                            </Button>
+                        </Link>
                     </CardContent>
                 </Card>
             </div>

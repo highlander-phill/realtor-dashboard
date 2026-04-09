@@ -2,8 +2,8 @@
 
 export const runtime = "edge";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession, signOut as nextSignOut } from "next-auth/react";
 import { 
   ChevronLeft, 
@@ -155,6 +155,7 @@ const initialData: DashboardData = {
 
 export default function AdminPanel() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const subdomain = params.subdomain as string;
   const router = useRouter();
   const [data, setData] = useState<DashboardData>(initialData);
@@ -164,7 +165,7 @@ export default function AdminPanel() {
   const [newPassword, setNewPassword] = useState("");
   const [viewerPassword, setViewerPassword] = useState("");
 
-  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(searchParams.get('support') === 'true');
   const [supportMessage, setSupportMessage] = useState("");
   const [isSendingSupport, setIsSendingSupport] = useState(false);
 
