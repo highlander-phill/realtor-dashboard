@@ -144,7 +144,7 @@ export async function GET(req: NextRequest) {
         hasViewerPassword: !!tenant.viewer_password_hash,
         billingStatus: tenant.billing_status || 'free',
         stripeSubscriptionId: tenant.stripe_subscription_id,
-        customColumns: tenant.custom_columns ? JSON.parse(tenant.custom_columns) : []
+        customColumns: (tenant.custom_columns && tenant.custom_columns.trim()) ? JSON.parse(tenant.custom_columns) : []
       },
       team: {
         goal: teamData?.goal || 50000000,
@@ -172,7 +172,7 @@ export async function GET(req: NextRequest) {
           mlsLink: a.mls_link,
           status: a.status || 'active',
           countInTotal: !!a.count_in_total,
-          customFields: a.custom_fields ? JSON.parse(a.custom_fields) : {},
+          customFields: (a.custom_fields && a.custom_fields.trim()) ? JSON.parse(a.custom_fields) : {},
           bsRatio,
           transactions: agentTransactions.map((t: any) => ({
             ...t,

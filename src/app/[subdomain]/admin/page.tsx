@@ -862,15 +862,15 @@ export default function AdminPanel() {
                       <div className="space-y-1">
                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Subscription Status</p>
                          <p className="text-xl font-black uppercase italic dark:text-white">
-                            {subdomain === 'nspg' || data.tenant.id === 'nspg-group' ? 'Free Forever' : (data.tenant.billingStatus || 'Free Plan')}
+                            {(subdomain === 'nspg' || data?.tenant?.id === 'nspg-group') ? 'Free Forever' : (data?.tenant?.billingStatus || 'Free Plan')}
                          </p>
                       </div>
-                      <Badge className={`uppercase px-4 py-1.5 rounded-full font-black ${data.tenant.billingStatus === 'active' || data.tenant.billingStatus === 'trialing' ? 'bg-green-500' : 'bg-slate-200 text-slate-600'}`}>
-                         {data.tenant.billingStatus === 'trialing' ? 'Trialing' : data.tenant.billingStatus === 'active' ? 'Active' : 'Unpaid'}
+                      <Badge className={`uppercase px-4 py-1.5 rounded-full font-black ${(data?.tenant?.billingStatus === 'active' || data?.tenant?.billingStatus === 'trialing') ? 'bg-green-500' : 'bg-slate-200 text-slate-600'}`}>
+                         {data?.tenant?.billingStatus === 'trialing' ? 'Trialing' : data?.tenant?.billingStatus === 'active' ? 'Active' : 'Unpaid'}
                       </Badge>
                    </div>
 
-                   {!(subdomain === 'nspg' || data.tenant.id === 'nspg-group') && (
+                   {!(subdomain === 'nspg' || data?.tenant?.id === 'nspg-group') && (
                       <div className="space-y-6">
                          <div className="bg-blue-600/5 dark:bg-blue-500/5 border border-blue-600/20 dark:border-blue-500/20 p-8 rounded-3xl space-y-4">
                             <h3 className="text-blue-600 dark:text-blue-400 font-black uppercase italic tracking-tight flex items-center gap-2">
@@ -883,18 +883,18 @@ export default function AdminPanel() {
                                </div>
                                <div className="text-right space-y-1">
                                   <p className="text-sm font-bold text-slate-600 dark:text-slate-400">Active Agents:</p>
-                                  <p className="text-3xl font-black text-blue-600">{data.agents.length}</p>
-                               </div>
+                                  <p className="text-3xl font-black text-blue-600">{data?.agents?.length || 0}</p>
+                                </div>
                             </div>
                             <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                               <div className="h-full bg-blue-600" style={{ width: `${(data.agents.length % 10 || 10) * 10}%` }} />
+                               <div className="h-full bg-blue-600" style={{ width: `${((data?.agents?.length || 0) % 10 || 10) * 10}%` }} />
                             </div>
                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                               Next bracket at {Math.ceil((data.agents.length + 1) / 10) * 10} agents
+                               Next bracket at {Math.ceil(((data?.agents?.length || 0) + 1) / 10) * 10} agents
                             </p>
                          </div>
 
-                         {data.tenant.billingStatus === 'free' || !data.tenant.billingStatus ? (
+                         {(data?.tenant?.billingStatus === 'free' || !data?.tenant?.billingStatus) ? (
                             <div className="space-y-6">
                                <div className="p-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-2xl">
                                   <p className="text-amber-700 dark:text-amber-400 text-xs font-bold leading-relaxed">
@@ -926,7 +926,7 @@ export default function AdminPanel() {
                       </div>
                    )}
 
-                   { (subdomain === 'nspg' || data.tenant.id === 'nspg-group') && (
+                   { (subdomain === 'nspg' || data?.tenant?.id === 'nspg-group') && (
                       <div className="p-10 border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[40px] text-center space-y-4">
                          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
                             <Shield className="w-8 h-8 text-slate-400" />
