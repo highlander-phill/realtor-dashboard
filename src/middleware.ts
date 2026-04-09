@@ -61,6 +61,7 @@ export default async function middleware(request: NextRequest) {
   // Route protection
   const isAdminRoute = url.pathname.includes('/admin') || (subdomain && url.pathname.startsWith(`/${subdomain}/admin`));
   const isLoginPage = url.pathname.includes('/login') || (subdomain && url.pathname.startsWith(`/${subdomain}/admin/login`));
+  const isPublicAdminRoute = url.pathname.includes('/forgot-password') || url.pathname.includes('/reset-password');
   const isMasterRoute = url.pathname.startsWith('/master');
 
   // Master Route Protection
@@ -71,7 +72,7 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
-  if (isAdminRoute && !isLoginPage && !session) {
+  if (isAdminRoute && !isLoginPage && !isPublicAdminRoute && !session) {
     return NextResponse.redirect(new URL(subdomain ? `/${subdomain}/admin/login` : '/admin/login', request.url));
   }
 

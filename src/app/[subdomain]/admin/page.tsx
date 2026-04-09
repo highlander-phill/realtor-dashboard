@@ -14,6 +14,7 @@ import {
   Settings, 
   RefreshCcw,
   Lock,
+  Shield,
   Image as ImageIcon,
   UserMinus,
   UserCheck,
@@ -168,6 +169,8 @@ export default function AdminPanel() {
   const [supportOpen, setSupportOpen] = useState(searchParams.get('support') === 'true');
   const [supportMessage, setSupportMessage] = useState("");
   const [isSendingSupport, setIsSendingSupport] = useState(false);
+
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const { data: session, status } = useSession();
 
@@ -688,23 +691,52 @@ export default function AdminPanel() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Logo Link</Label>
-                    <div className="flex gap-2">
-                      <Input 
-                        value={data.tenant.logoUrl || ""}
-                        onChange={(e) => setData({...data, tenant: {...data.tenant, logoUrl: e.target.value}})}
-                        placeholder="https://..."
-                        className="h-14 font-bold flex-1"
-                      />
-                      <Button 
-                        onClick={() => {
-                          const logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.tenant.name)}&background=${data.tenant.primaryColor.replace('#', '')}&color=fff&size=128&bold=true`;
-                          setData({...data, tenant: {...data.tenant, logoUrl}});
-                        }}
-                        variant="outline" 
-                        className="h-14 rounded-2xl bg-black text-white hover:bg-slate-800 border-none font-black uppercase text-[10px] px-4"
-                      >
-                        Generate
-                      </Button>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex gap-2">
+                        <Input 
+                          value={data.tenant.logoUrl || ""}
+                          onChange={(e) => setData({...data, tenant: {...data.tenant, logoUrl: e.target.value}})}
+                          placeholder="https://..."
+                          className="h-14 font-bold flex-1"
+                        />
+                        <Button 
+                          onClick={() => {
+                            const logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.tenant.name)}&background=${data.tenant.primaryColor.replace('#', '')}&color=fff&size=128&bold=true`;
+                            setLogoPreview(logoUrl);
+                          }}
+                          variant="outline" 
+                          className="h-14 rounded-2xl bg-black text-white hover:bg-slate-800 border-none font-black uppercase text-[10px] px-4"
+                        >
+                          Generate
+                        </Button>
+                      </div>
+                      
+                      {logoPreview && (
+                        <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+                          <img src={logoPreview} alt="Logo Preview" className="w-16 h-16 rounded-xl shadow-lg" />
+                          <div className="flex-1">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-1">Preview Generated</p>
+                            <Button 
+                              onClick={() => {
+                                setData({...data, tenant: {...data.tenant, logoUrl: logoPreview}});
+                                setLogoPreview(null);
+                              }}
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] h-8 px-4 rounded-lg"
+                            >
+                              Apply Logo
+                            </Button>
+                          </div>
+                          <Button onClick={() => setLogoPreview(null)} variant="ghost" size="sm" className="text-slate-400 hover:text-red-600 font-black uppercase text-[10px]">Cancel</Button>
+                        </div>
+                      )}
+
+                      {data.tenant.logoUrl && !logoPreview && (
+                        <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
+                           <img src={data.tenant.logoUrl} alt="Current Logo" className="w-12 h-12 rounded-lg object-contain bg-white p-1" />
+                           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Logo</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
