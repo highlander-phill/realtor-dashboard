@@ -5,7 +5,8 @@ export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
   try {
-    const { env } = getRequestContext() as unknown as { env: { SMTP2GO_API_KEY: string } };
+    const context = getRequestContext();
+    const env = (context?.env || process.env || {}) as any;
     const { userName, userEmail, message } = await req.json();
 
     const apiKey = env.SMTP2GO_API_KEY;

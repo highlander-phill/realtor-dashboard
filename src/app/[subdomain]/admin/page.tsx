@@ -699,21 +699,34 @@ export default function AdminPanel() {
                           placeholder="https://..."
                           className="h-14 font-bold flex-1"
                         />
-                        <Button 
-                          onClick={() => {
-                            const logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.tenant.name)}&background=${data.tenant.primaryColor.replace('#', '')}&color=fff&size=128&bold=true`;
-                            setLogoPreview(logoUrl);
-                          }}
-                          variant="outline" 
-                          className="h-14 rounded-2xl bg-black text-white hover:bg-slate-800 border-none font-black uppercase text-[10px] px-4"
-                        >
-                          Generate
-                        </Button>
+                          <Button 
+                            onClick={() => {
+                              const cleanColor = (data.tenant.primaryColor || "#000000").replace('#', '');
+                              const logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.tenant.name)}&background=${cleanColor}&color=fff&size=128&bold=true`;
+                              console.log("Generating logo:", logoUrl);
+                              setLogoPreview(logoUrl);
+                            }}
+                            variant="outline" 
+                            className="h-14 rounded-2xl bg-black text-white hover:bg-slate-800 border-none font-black uppercase text-[10px] px-4"
+                          >
+                            Generate
+                          </Button>
                       </div>
                       
                       {logoPreview && (
                         <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                          <img src={logoPreview} alt="Logo Preview" className="w-16 h-16 rounded-xl shadow-lg" />
+                          <div className="relative w-16 h-16 bg-slate-200 rounded-xl overflow-hidden shadow-lg">
+                            <img 
+                              src={logoPreview} 
+                              alt="Logo Preview" 
+                              className="w-full h-full object-cover" 
+                              onLoad={() => console.log("Logo preview loaded")}
+                              onError={(e) => {
+                                console.error("Logo preview failed to load");
+                                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=Error&background=f00&color=fff`;
+                              }}
+                            />
+                          </div>
                           <div className="flex-1">
                             <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-1">Preview Generated</p>
                             <Button 

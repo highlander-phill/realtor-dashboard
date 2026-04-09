@@ -34,7 +34,8 @@ async function verifyToken(token: string, secret: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { env } = getRequestContext() as any;
+    const context = getRequestContext();
+    const env = (context?.env || process.env || {}) as any;
     const db = env.DB;
     const { action, email, token, password, subdomain } = await req.json();
     const secret = env.NEXTAUTH_SECRET || "fallback-secret";
