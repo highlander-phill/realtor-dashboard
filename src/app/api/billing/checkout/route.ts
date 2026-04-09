@@ -6,9 +6,9 @@ export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
   try {
-    const { env } = getRequestContext() as unknown as { env: { DB: any, STRIPE_SECRET_KEY: string } };
+    const { env } = getRequestContext() as unknown as { env: { DB: any, STRIPE_SECRET_KEY: string, STRIPE_PRICE_ID?: string } };
     const db = env.DB;
-    const { tenantId, priceId } = await req.json();
+    const { tenantId, priceId: requestedPriceId } = await req.json();
 
     const tenant = await db.prepare("SELECT * FROM tenants WHERE id = ?").bind(tenantId).first();
     if (!tenant) return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     const apiKey = env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || 'sk_test_mock';
-    const priceId = env.STRIPE_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1TK7zZ4YkfnFDOD9XtoU6E6m';
+    const priceId = env.STRIPE_PRICE_ID || requestedPriceId || 'price_1TK7zZ4YkfnFDOD9XtoU6E6m';
     
     const stripe = new Stripe(apiKey, {
         apiVersion: '2025-02-24',

@@ -305,7 +305,7 @@ export default function LandingPage() {
                 <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 text-left">
                   <div className="space-y-0 text-center md:text-left">
                     <p className="text-6xl md:text-7xl font-black text-white">$1</p>
-                    <p className="text-blue-200 font-black uppercase text-[8px] md:text-[10px] tracking-[0.3em]">per month / team</p>
+                    <p className="text-blue-200 font-black uppercase text-[8px] md:text-[10px] tracking-[0.3em]">per month / 10 users</p>
                   </div>
                   <div className="hidden md:block w-px h-16 bg-white/20" />
                   <div className="space-y-2 text-center md:text-left">
@@ -315,7 +315,7 @@ export default function LandingPage() {
                       </div> 
                       30-Day Free Trial
                     </p>
-                    <p className="text-blue-100/70 text-xs md:text-sm font-medium">No Credit Card required to start.</p>
+                    <p className="text-blue-100/70 text-xs md:text-sm font-medium">Full access. No credit card required to start.</p>
                   </div>
                 </div>
               </div>
