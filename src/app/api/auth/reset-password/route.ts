@@ -42,33 +42,46 @@ export async function POST(req: NextRequest) {
 
     if (action === 'request') {
       const user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
-      if (!user) return NextResponse.json({ message: "If that email exists, a reset link has been sent." });
+      if (!user) return NextResponse.json({ message: "If that email exists, instructions have been sent." });
 
-      const resetToken = await generateToken(email, secret);
-      const resetLink = `https://${subdomain}.team-goals.com/admin/reset-password?token=${encodeURIComponent(resetToken)}`;
+      // Generate a temporary 8-character password
+      const tempPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await hashPassword(tempPassword);
 
-      // Send email via SMTP2GO (calling the internal route or fetch directly)
-      const emailRes = await fetch("https://api.smtp2go.com/v3/email/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          api_key: env.SMTP2GO_API_KEY,
-          sender: "supportrequest@team-goals.com",
-          recipients: [email],
-          subject: "[Team-Goals] Password Reset Request",
-          html_body: `
-            <div style="font-family: sans-serif; padding: 20px; color: #333;">
-              <h2 style="color: #2563eb;">Password Reset</h2>
-              <p>You requested a password reset for your TeamGoals account.</p>
-              <p>Click the button below to set a new password. This link will expire in 1 hour.</p>
-              <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold;">Reset Password</a>
-              <p style="margin-top: 20px; font-size: 12px; color: #666;">If you didn't request this, you can safely ignore this email.</p>
-            </div>
-          `
-        })
-      });
+      // Update both user and tenant (if admin)
+      await db.prepare("UPDATE users SET password_hash = ? WHERE email = ?").bind(hashedPassword, email).run();
+      await db.prepare("UPDATE tenants SET admin_password_hash = ? WHERE id = ?").bind(hashedPassword, user.tenant_id).run();
 
-      return NextResponse.json({ success: true, message: "If that email exists, a reset link has been sent." });
+      // Send email via SMTP2GO
+      if (env.SMTP2GO_API_KEY) {
+        await fetch("https://api.smtp2go.com/v3/email/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            api_key: env.SMTP2GO_API_KEY,
+            sender: "noreply@team-goals.com",
+            recipients: [email],
+            subject: "[Team-Goals] Your Temporary Password",
+            html_body: `
+              <div style="font-family: sans-serif; padding: 40px; color: #333; background-color: #f8fafc;">
+                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                  <h2 style="color: #2563eb; margin-top: 0;">Password Reset</h2>
+                  <p>Your TeamGoals password has been reset to a temporary one.</p>
+                  <div style="background-color: #f1f5f9; padding: 20px; border-radius: 12px; margin: 30px 0; text-align: center;">
+                    <span style="font-family: monospace; font-size: 24px; font-weight: bold; letter-spacing: 2px;">${tempPassword}</span>
+                  </div>
+                  <p>Please use this password to sign in, and then immediately update it from your <strong>System Settings</strong> in the Admin Console.</p>
+                  <a href="https://${subdomain}.team-goals.com/admin/login" style="display: inline-block; padding: 16px 32px; background-color: #2563eb; color: #fff; text-decoration: none; border-radius: 12px; font-weight: bold; margin-top: 20px;">Sign In Now</a>
+                  <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+                  <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">If you didn't request this change, please contact support immediately.</p>
+                </div>
+              </div>
+            `
+          })
+        });
+      }
+
+      return NextResponse.json({ success: true, message: "A temporary password has been sent to your email." });
     }
 
     if (action === 'reset') {

@@ -22,12 +22,17 @@ export default function ForgotPassword() {
     e.preventDefault();
     setLoading(true);
     try {
-      await fetch('/api/auth/reset-password', {
+      const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'request', email, subdomain }),
       });
-      setSubmitted(true);
+      if (res.ok) {
+        setSubmitted(true);
+      } else {
+        const errData = await res.json();
+        alert(`Error: ${errData.message || "Failed to send reset email."}`);
+      }
     } catch (e) {
       alert("Error sending reset email.");
     } finally {

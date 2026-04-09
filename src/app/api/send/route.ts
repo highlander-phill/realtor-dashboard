@@ -12,6 +12,13 @@ export async function POST(req: NextRequest) {
     const apiKey = env.SMTP2GO_API_KEY;
     if (!apiKey) return NextResponse.json({ error: "SMTP2GO API Key not configured" }, { status: 500 });
 
+    console.log("SMTP2GO Payload:", JSON.stringify({
+      sender: "supportrequest@team-goals.com",
+      recipients: ["phill@phillsimpson.com"],
+      reply_to: userEmail,
+      subject: `[Team-Goals] New Contact from ${userName}`,
+    }));
+
     const response = await fetch("https://api.smtp2go.com/v3/email/send", {
       method: "POST",
       headers: {

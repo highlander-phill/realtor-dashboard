@@ -357,10 +357,11 @@ export default function AdminPanel() {
         setSupportMessage("");
         setSupportOpen(false);
       } else {
-        throw new Error("Failed to send");
+        const errData = await res.json();
+        throw new Error(errData.error || errData.message || "Failed to send");
       }
-    } catch (e) {
-      alert("Error sending support request. Please try again later.");
+    } catch (e: any) {
+      alert(`Error: ${e.message || "Error sending support request. Please try again later."}`);
     } finally {
       setIsSendingSupport(false);
     }
@@ -701,11 +702,9 @@ export default function AdminPanel() {
                         />
                             <Button 
                               onClick={() => {
-                                const cleanColor = (data.tenant.primaryColor || "#000000").replace('#', '');
-                                // Use a simpler URL to avoid encoding issues
-                                const nameParam = data.tenant.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                                const cleanColor = (data.tenant.primaryColor || "#000000").trim().replace('#', '');
+                                const nameParam = (data.tenant.name || "TG").trim().split(' ').map(n => n[0]).join('').substring(0, 2);
                                 const logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(nameParam)}&background=${cleanColor}&color=fff&size=128&bold=true`;
-                                console.log("Generating logo:", logoUrl);
                                 setLogoPreview(logoUrl);
                               }}
                               variant="outline" 
