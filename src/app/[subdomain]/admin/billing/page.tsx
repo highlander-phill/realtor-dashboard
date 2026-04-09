@@ -31,7 +31,7 @@ export default function BillingPage() {
         const res = await fetch('/api/billing/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tenantId: tenant.id, priceId: 'price_123' }), // REPLACE WITH ACTUAL PRICE ID
+            body: JSON.stringify({ tenantId: tenant.id, priceId: 'price_1TK7zZ4YkfnFDOD9XtoU6E6m' }),
         });
         const { url } = await res.json();
         if (url) window.location.href = url;

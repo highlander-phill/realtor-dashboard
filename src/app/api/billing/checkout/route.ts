@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     const apiKey = env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || 'sk_test_mock';
-    const priceId = env.STRIPE_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_123';
+    const priceId = env.STRIPE_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1TK7zZ4YkfnFDOD9XtoU6E6m';
     
     const stripe = new Stripe(apiKey, {
         apiVersion: '2025-02-24',
