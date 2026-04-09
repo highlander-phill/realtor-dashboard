@@ -336,10 +336,10 @@ function DashboardContent() {
         
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
-            {data.tenant.logoUrl ? (
-              <img src={data.tenant.logoUrl} alt={data.tenant.name} className="w-16 h-16 object-contain rounded-lg" />
+            {data.tenant.logoUrl && data.tenant.logoUrl !== 'null' ? (
+              <img src={data.tenant.logoUrl} alt={data.tenant.name} className="w-16 h-16 object-contain rounded-lg shadow-sm bg-white p-1" />
             ) : (
-              <div className="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center font-black text-2xl shadow-lg" style={{ backgroundColor: data.tenant.primaryColor }}>
+              <div className="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center font-black text-2xl shadow-lg border-2 border-white/10" style={{ backgroundColor: data.tenant.primaryColor }}>
                 {data.tenant.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
               </div>
             )}
