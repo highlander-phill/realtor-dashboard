@@ -53,6 +53,7 @@ function OnboardingContent() {
   });
   const [emailExists, setEmailExists] = useState(false);
   const [existingSubdomain, setExistingSubdomain] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -109,19 +110,30 @@ function OnboardingContent() {
   }, [subdomain, bypassKey]);
 
   const handleInputChange = async (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value });
-    if (field === 'adminEmail' && value.includes('@')) {
-       try {
-         const res = await fetch(`/api/auth/check-email?email=${encodeURIComponent(value)}`);
-         if (res.ok) {
-           const data = await res.json();
-           setEmailExists(data.exists);
-         }
-       } catch (e) {}
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'adminEmail') {
+       setEmailExists(false); 
+       if (value.includes('@') && value.includes('.')) {
+          const res = await fetch(`/api/auth/check-email?email=${encodeURIComponent(value)}`);
+          if (res.ok) {
+            const data = await res.json();
+            // Only update if the value hasn't changed since the request started
+            setFormData(current => {
+              if (current.adminEmail === value) {
+                setEmailExists(data.exists);
+              }
+              return current;
+            });
+          }
+       }
     }
   };
 
   const nextStep = async () => {
+    if (step === 1 && emailExists) {
+      alert("Please use a different email address.");
+      return;
+    }
     setStep(s => s + 1);
   };
 
@@ -133,6 +145,7 @@ function OnboardingContent() {
       return;
     }
 
+    setLoading(true);
     const isDemo = formData.subdomain === 'empire' || formData.companyName.toLowerCase().includes('demo');
     
     const updatedData = {
@@ -177,14 +190,17 @@ function OnboardingContent() {
         body: JSON.stringify(updatedData),
       });
       
-      if (!response.ok) throw new Error("Save failed");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Save failed");
+      }
       
       alert("Success! Your team dashboard is ready.");
       // Force a hard navigation to clear cache and ensure state is fresh
       window.location.href = `/${subdomain}`;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Cloud save failed during onboarding", err);
-      alert("Something went wrong saving your setup. Please try again.");
+      alert(err.message || "Something went wrong saving your setup. Please try again.");
     }
   };
 
@@ -456,7 +472,9 @@ function OnboardingContent() {
                              variant="outline"
                              className="h-12 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-black dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-slate-200 border-none"
                              onClick={() => {
-                               const logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.companyName)}&background=${formData.primaryColor.replace('#', '')}&color=fff&size=128&bold=true`;
+                               const nameParam = (formData.companyName || "TG").trim().split(' ').map(n => n[0]).join('').substring(0, 2);
+                               const cleanColor = (formData.primaryColor || "#2563eb").trim().replace('#', '');
+                               const logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(nameParam)}&background=${cleanColor}&color=fff&size=128&bold=true`;
                                handleInputChange('logoUrl', logoUrl);
                              }}
                            >

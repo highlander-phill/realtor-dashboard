@@ -225,10 +225,11 @@ export async function POST(req: NextRequest) {
     
     // Authorization: Only allow the update if:
     // 1. The tenant doesn't exist yet (onboarding)
-    // 2. OR The session user is an admin for this specific tenant
-    if (existingTenant) {
+    // 2. OR The tenant exists but onboarding is not completed
+    // 3. OR The session user is an admin for this specific tenant
+    if (existingTenant && existingTenant.onboarding_completed === 1) {
       if (!session || !session.user) {
-         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+         return NextResponse.json({ error: "Unauthorized: Dashboard already exists. Please login to modify." }, { status: 401 });
       }
       
       // Check if user has access to this tenant (as user or as an agent by name/email)
@@ -317,14 +318,29 @@ export async function POST(req: NextRequest) {
 
     await db.batch(statements);
 
-    // 5. Update Stripe Subscription Quantity if active or trialing
-    if (existingTenant && existingTenant.stripe_subscription_id && (existingTenant.billing_status === 'active' || existingTenant.billing_status === 'trialing')) {
-      const apiKey = env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
-      if (apiKey) {
-        const agentCount = agents ? agents.length : 0;
-        await updateSubscriptionQuantity(existingTenant.stripe_subscription_id, agentCount, apiKey);
+    // 5. Alert Phill about new signup (only on onboarding completion)
+    if (tenant.onboardingCompleted && (!existingTenant || !existingTenant.onboarding_completed)) {
+      try {
+        const origin = new URL(req.url).origin;
+        const apiKey = env.SMTP2GO_API_KEY || process.env.SMTP2GO_API_KEY;
+        if (apiKey) {
+           await fetch(`${origin}/api/send`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({
+               type: 'signup_alert',
+               tenantName: tenant.name,
+               userEmail: tenant.adminEmail,
+               subdomain: tenant.subdomain
+             })
+           });
+        }
+      } catch (e) {
+        console.error("Signup alert failed:", e);
       }
     }
+
+    // 6. Update Stripe Subscription Quantity if active or trialing
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

@@ -106,6 +106,15 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
+          <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <button 
+              onClick={() => router.push(`/${subdomain}/admin/forgot-password`)}
+              style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.1em' }}
+            >
+              Forgot Password?
+            </button>
+          </div>
+
           <div style={{ textAlign: 'center', margin: '24px 0', borderTop: '1px solid #1e293b', paddingTop: '24px' }}>
             <button 
               onClick={() => signIn("google", { callbackUrl: `/${subdomain}/admin` })}
