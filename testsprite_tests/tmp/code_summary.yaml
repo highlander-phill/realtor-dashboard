@@ -1,0 +1,109 @@
+version: "2"
+type: frontend
+tech_stack:
+  - TypeScript
+  - Next.js 15 (App Router)
+  - React 19
+  - Tailwind CSS
+  - Shadcn UI
+  - Auth.js v5
+  - Cloudflare D1 (Database)
+  - Stripe (Payments)
+  - SMTP2GO (Email)
+  - Framer Motion (Animations)
+  - Recharts (Visualization)
+routes:
+  - path: /
+    file: src/app/page.tsx
+    auth_required: false
+    description: Root marketing or redirect page
+  - path: /[subdomain]
+    file: src/app/[subdomain]/page.tsx
+    auth_required: false
+    description: Public team dashboard
+  - path: /[subdomain]/admin/login
+    file: src/app/[subdomain]/admin/login/page.tsx
+    auth_required: false
+    description: Administrator login page
+  - path: /[subdomain]/admin
+    file: src/app/[subdomain]/admin/page.tsx
+    auth_required: true
+    description: Main admin console for team management
+  - path: /[subdomain]/onboarding
+    file: src/app/[subdomain]/onboarding/page.tsx
+    auth_required: false
+    description: Multi-step tenant setup wizard
+  - path: /[subdomain]/agent/[id]
+    file: src/app/[subdomain]/agent/[id]/page.tsx
+    auth_required: false
+    description: Detailed agent performance profile
+  - path: /master
+    file: src/app/master/page.tsx
+    auth_required: true
+    description: Global platform administration
+features:
+  - name: Tenant Onboarding
+    description: Create a new team dashboard with custom branding and security
+    files:
+      - src/app/[subdomain]/onboarding/page.tsx
+    entry_route: /[subdomain]/onboarding
+    user_interactions:
+      - Enter company name
+      - Select dashboard theme
+      - Setup admin email and password
+      - Configure brand colors and logo
+      - Set annual production goals
+    api_calls:
+      - method: POST
+        endpoint: /api/dashboard
+    auth_required: false
+  - name: Roster Management
+    description: Manage agents, goals, and transaction data
+    files:
+      - src/app/[subdomain]/admin/page.tsx
+    entry_route: /[subdomain]/admin
+    user_interactions:
+      - Add/Edit/Remove agents
+      - Update agent goals and volume
+      - Manage sub-teams and divisions
+      - Publish updates to live dashboard
+    api_calls:
+      - method: GET
+        endpoint: /api/dashboard
+      - method: POST
+        endpoint: /api/dashboard
+    auth_required: true
+  - name: Subscription Billing
+    description: Manage pro access and payments via Stripe
+    files:
+      - src/app/[subdomain]/admin/page.tsx
+      - src/app/api/billing/checkout/route.ts
+    entry_route: /[subdomain]/admin?tab=billing
+    user_interactions:
+      - Start 30-day free trial
+      - Pay now (skip trial)
+      - Access Stripe customer portal
+    api_calls:
+      - method: POST
+        endpoint: /api/billing/checkout
+      - method: POST
+        endpoint: /api/billing/portal
+    auth_required: true
+  - name: Password Recovery
+    description: Reset forgotten admin passwords via email
+    files:
+      - src/app/[subdomain]/admin/forgot-password/page.tsx
+      - src/app/api/auth/reset-password/route.ts
+    entry_route: /[subdomain]/admin/forgot-password
+    user_interactions:
+      - Enter admin email
+      - Click Send Reset Email
+      - Receive temporary password via email
+    api_calls:
+      - method: POST
+        endpoint: /api/auth/reset-password
+    auth_required: false
+known_limitations:
+  - issue: Logo upload requires external URL
+    location: src/app/[subdomain]/onboarding/page.tsx
+    impact: Users must host images elsewhere or use generated placeholders

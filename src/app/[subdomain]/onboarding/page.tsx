@@ -55,7 +55,12 @@ function OnboardingContent() {
   const [existingSubdomain, setExistingSubdomain] = useState<string | null>(null);
   const [hasDismissedEmailWarning, setHasDismissedEmailWarning] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     async function checkEmail(email: string) {
@@ -71,13 +76,12 @@ function OnboardingContent() {
       } catch (e) {}
     }
 
-    if (session?.user?.email && !formData.adminEmail && !hasDismissedEmailWarning) {
+    // Only auto-fill if we're on the security step and haven't filled it yet
+    if (step === 1 && session?.user?.email && !formData.adminEmail && !hasDismissedEmailWarning) {
       setFormData(prev => ({ ...prev, adminEmail: session.user.email as string }));
       checkEmail(session.user.email as string);
-      // We don't auto-advance anymore to avoid confusion, 
-      // let the user see the security step first.
     }
-  }, [session, hasDismissedEmailWarning]); // Removed step from dependencies to avoid re-triggering on step change
+  }, [session, step, hasDismissedEmailWarning]); // Added step back to dependencies to trigger on step change
 
   const steps = [
     { title: "Company", description: "Your property group details", icon: Building },
@@ -203,6 +207,17 @@ function OnboardingContent() {
       alert(err.message || "Something went wrong saving your setup. Please try again.");
     }
   };
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+          <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded-full" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">

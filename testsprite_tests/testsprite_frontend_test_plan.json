@@ -1,0 +1,1217 @@
+[
+  {
+    "id": "TC001",
+    "title": "View team metrics and use TV-optimized mode",
+    "description": "A public viewer can open a team dashboard, see team progress metrics and goal completion, and switch to a TV-optimized view that still shows accurate metrics.",
+    "category": "Public Team Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the entry point to open a public team dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the team dashboard to finish loading"
+      },
+      {
+        "type": "action",
+        "description": "Switch to TV-optimized mode"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify high-level team progress metrics and goal completion percentage are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the TV-optimized dashboard view is displayed in a simplified large-format layout"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Public team dashboard displays core team metrics and goal completion",
+    "description": "A public viewer can open a team’s dashboard and see team progress metrics and goal completion information.",
+    "category": "Agent Performance Profiles",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals Public Dashboard Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+publicdash@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid annual production goals into the goals fields"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the public team dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify team metrics and goal completion information are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a roster list is displayed on the public dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Access control redirects unauthenticated users away from admin console",
+    "description": "A user who is not signed in is redirected to the admin login when attempting to open the admin console.",
+    "category": "Roster Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals Admin Access Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+access@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid annual production goals into the goals fields"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /[subdomain]/admin"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is redirected to the admin login page instead of seeing the admin console"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the admin console content is not displayed while unauthenticated"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Public viewer can switch to TV-optimized mode",
+    "description": "A public viewer can switch the public dashboard into TV-optimized mode and the view remains accurate and readable.",
+    "category": "Agent Performance Profiles",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals TV Mode Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+tv@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid annual production goals into the goals fields"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the public team dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Switch the dashboard to TV-optimized mode"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard displays a simplified large-format TV view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify team metrics and goal completion are still displayed in TV mode"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Create a new tenant dashboard via onboarding",
+    "description": "A user completes onboarding to create a new team and then can access the resulting public dashboard for that subdomain.",
+    "category": "Tenant Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals QA Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+qa-team@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid annual production goals into the goals fields"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a confirmation state is displayed indicating the team dashboard was created"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the new public team dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the public team dashboard loads and displays team metrics and goal completion"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Admin adds an agent, saves, publishes, and sees agent on public dashboard",
+    "description": "An admin can add an agent in the roster, save and publish changes, and the agent appears on the public dashboard roster.",
+    "category": "Roster Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals Roster Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+roster@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid annual production goals into the goals fields"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /[subdomain]/admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+roster@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open roster management in the admin console"
+      },
+      {
+        "type": "action",
+        "description": "Add a new agent"
+      },
+      {
+        "type": "action",
+        "description": "Fill Agent One into the agent name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill agent.one@example.com into the agent email field if present"
+      },
+      {
+        "type": "action",
+        "description": "Set valid agent goals and target volume values"
+      },
+      {
+        "type": "action",
+        "description": "Save roster changes"
+      },
+      {
+        "type": "action",
+        "description": "Publish updates to the live dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the public team dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the public dashboard roster list includes Agent One"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the team metrics/goal completion section is displayed on the public dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Public dashboard agent selection navigates to an agent performance profile",
+    "description": "A public viewer can select an agent from the dashboard and reach that agent’s performance profile view.",
+    "category": "Agent Performance Profiles",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals Agent Profile Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+agentprofile@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid annual production goals into the goals fields"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /[subdomain]/admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+agentprofile@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open roster management in the admin console"
+      },
+      {
+        "type": "action",
+        "description": "Add a new agent"
+      },
+      {
+        "type": "action",
+        "description": "Fill Agent Profile Target into the agent name field"
+      },
+      {
+        "type": "action",
+        "description": "Set valid agent goals and target volume values"
+      },
+      {
+        "type": "action",
+        "description": "Save roster changes"
+      },
+      {
+        "type": "action",
+        "description": "Publish updates to the live dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the public team dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Select Agent Profile Target from the roster list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an agent performance profile page is displayed with key metrics"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify production trend chart data and a transaction history section are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Admin edits an existing agent goal and sees roster summary update",
+    "description": "An admin can edit an existing agent’s goal values, save, and see the roster summary reflect the updated values.",
+    "category": "Roster Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals Edit Agent Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+edit@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid annual production goals into the goals fields"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /[subdomain]/admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+edit@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open roster management in the admin console"
+      },
+      {
+        "type": "action",
+        "description": "Add a new agent"
+      },
+      {
+        "type": "action",
+        "description": "Fill Agent Two into the agent name field"
+      },
+      {
+        "type": "action",
+        "description": "Set valid agent goals and target volume values"
+      },
+      {
+        "type": "action",
+        "description": "Save roster changes"
+      },
+      {
+        "type": "action",
+        "description": "Select the existing agent Agent Two from the roster list"
+      },
+      {
+        "type": "action",
+        "description": "Update one of the agent goal values to a different valid number"
+      },
+      {
+        "type": "action",
+        "description": "Save roster changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the roster summary reflects the updated goal totals or progress"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the agent remains present in the roster list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Agent profile transaction list can be filtered by status",
+    "description": "A public viewer can filter an agent’s transaction history by status and the list updates to match the selected status.",
+    "category": "Agent Performance Profiles",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals Status Filter Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+filter@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid annual production goals into the goals fields"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /[subdomain]/admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+filter@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open roster management in the admin console"
+      },
+      {
+        "type": "action",
+        "description": "Add a new agent"
+      },
+      {
+        "type": "action",
+        "description": "Fill Agent Filter Target into the agent name field"
+      },
+      {
+        "type": "action",
+        "description": "Set valid agent goals and target volume values"
+      },
+      {
+        "type": "action",
+        "description": "Save roster changes"
+      },
+      {
+        "type": "action",
+        "description": "Publish updates to the live dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the public team dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Select Agent Filter Target from the roster list"
+      },
+      {
+        "type": "action",
+        "description": "Select the Closed status filter for transactions"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the transaction history list updates to show only transactions matching the selected status"
+      },
+      {
+        "type": "action",
+        "description": "Select the Pending status filter for transactions"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the transaction history list updates to match the newly selected status"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC010",
+    "title": "Ensure public dashboard does not show admin-only controls",
+    "description": "A public viewer should not see any admin management controls while viewing a team dashboard.",
+    "category": "Public Team Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the entry point to open a public team dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the team dashboard to finish loading"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no admin-only management controls are visible on the public dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify only read-only dashboard metrics and roster information are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC011",
+    "title": "TV-optimized mode remains stable during extended viewing",
+    "description": "A public viewer can leave the dashboard in TV-optimized mode and the view remains stable without losing core metrics display.",
+    "category": "Public Team Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the entry point to open a public team dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the team dashboard to finish loading"
+      },
+      {
+        "type": "action",
+        "description": "Switch to TV-optimized mode"
+      },
+      {
+        "type": "action",
+        "description": "Wait for a short period to simulate ongoing TV display"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify high-level team progress metrics and goal completion percentage are still displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the TV-optimized view remains visible and does not revert unexpectedly"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC012",
+    "title": "Request password reset shows confirmation",
+    "description": "An administrator can submit a password reset request and sees confirmation that a temporary password email was sent.",
+    "category": "Password Recovery",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the entry point to open a team admin login page"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open password recovery"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the administrator email field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the password reset request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a confirmation state is shown indicating a temporary password email was sent"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC013",
+    "title": "Roster form validates invalid goal inputs for an agent",
+    "description": "An admin is prevented from saving when an agent has invalid goal inputs and sees validation errors.",
+    "category": "Roster Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals Validate Roster Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+validate@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid annual production goals into the goals fields"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /[subdomain]/admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+validate@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open roster management in the admin console"
+      },
+      {
+        "type": "action",
+        "description": "Add a new agent"
+      },
+      {
+        "type": "action",
+        "description": "Fill Agent Invalid Goals into the agent name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a non-numeric value into a numeric goal field for the agent"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to save roster changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a goal validation error is visible and changes are not saved"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the publish action is unavailable or ineffective until validation is resolved"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC014",
+    "title": "Onboarding rejects non-numeric or negative goals",
+    "description": "A user entering invalid goal values during onboarding sees validation and cannot submit until goals are valid.",
+    "category": "Tenant Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals QA Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+qa-team@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Fill a negative number into an annual goals numeric field"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to submit onboarding"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a goals validation error is visible and onboarding cannot be submitted with invalid goal values"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC015",
+    "title": "Onboarding blocks submission when required fields are missing",
+    "description": "A user cannot submit onboarding with missing required information and sees validation errors prompting completion.",
+    "category": "Tenant Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Leave the company name field empty"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to continue to the next step"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a required-field validation error is visible for the missing company name"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to submit onboarding from the final step without completing all required fields"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the onboarding cannot be submitted and validation errors are visible for the missing required fields"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC016",
+    "title": "Password reset requires an email address",
+    "description": "An administrator cannot submit a password reset request without providing an email and is shown a validation error.",
+    "category": "Password Recovery",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the entry point to open a team admin login page"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open password recovery"
+      },
+      {
+        "type": "action",
+        "description": "Submit the password reset request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an email validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the password reset request is not submitted"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC017",
+    "title": "Onboarding rejects weak admin password",
+    "description": "A user entering a weak admin password during onboarding is blocked from continuing until the password meets requirements.",
+    "category": "Tenant Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals QA Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with admin+qa-team@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with 123"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to continue or submit onboarding"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a password validation error is visible and onboarding cannot proceed with a weak password"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC018",
+    "title": "Onboarding rejects invalid admin email format",
+    "description": "A user entering an invalid admin email during onboarding is prevented from proceeding until a valid email is provided.",
+    "category": "Tenant Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to start new team onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new team subdomain value into the subdomain field"
+      },
+      {
+        "type": "action",
+        "description": "Fill TeamGoals QA Team into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a dashboard theme"
+      },
+      {
+        "type": "action",
+        "description": "Configure brand colors with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Provide a valid external logo URL or choose a placeholder logo option"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with invalid-email-format"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin password field with a strong password"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to continue or submit onboarding"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an email validation error is visible and onboarding cannot proceed with the invalid email"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC019",
+    "title": "Password reset validates email format",
+    "description": "An administrator entering an invalid email format on password recovery is shown an email validation error and cannot proceed.",
+    "category": "Password Recovery",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the entry point to open a team admin login page"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open password recovery"
+      },
+      {
+        "type": "action",
+        "description": "Fill an invalid email format into the administrator email field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the password reset request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an email format validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the password reset request is not submitted"
+      }
+    ],
+    "priority": "Low"
+  }
+]

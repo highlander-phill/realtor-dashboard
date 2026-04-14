@@ -1,0 +1,18 @@
+{
+  "status": "init",
+  "scope": "codebase",
+  "type": "frontend",
+  "localEndpoint": "http://localhost:3000/",
+  "serverPort": 64489,
+  "executionArgs": {
+    "projectName": "nspg-dashboard",
+    "projectPath": "c:/Users/coding/Desktop/nspg-dashboard",
+    "testIds": [],
+    "additionalInstruction": "Test the onboarding flow, login flow, and password recovery.",
+    "serverMode": "development",
+    "envs": {
+      "API_KEY": "sk-user-fYJrlFA8-EkuQcJGqB4B2wx01HNx1qWV9CPJsC2VmTsiXQobgyBn27DRhZYugUyPAiwX7AUEbDb7XeV46YdwvLatDINeFFKzkce3DMOh9un9-G2FCP4LK_BY2IoKYDQoc0A"
+    }
+  },
+  "proxy": "http://0d8da7e9-782a-4a76-bec6-bec858309b33:Ly91ZTluSxFC2gfHEnV0uU0DgCe8HGvk@tun.testsprite.com:8080"
+}
