@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         api_key: apiKey,
         sender: "support@team-goals.com",
+        to: ["phill@phillsimpson.com"],
         recipients: ["phill@phillsimpson.com"],
         reply_to: userEmail || "support@team-goals.com",
         subject: subject,

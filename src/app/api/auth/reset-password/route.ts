@@ -75,7 +75,8 @@ export async function POST(req: NextRequest) {
           const payload = {
             api_key: apiKey,
             sender: "support@team-goals.com",
-            recipients: [email],
+            to: [email], // Trying 'to' instead of 'recipients' based on error log
+            recipients: [email], // Keeping recipients for compatibility
             subject: "[Team-Goals] Your Temporary Password",
             text_body: `Your TeamGoals password has been reset to a temporary one: ${tempPassword}\n\nPlease sign in at https://${subdomain}.team-goals.com/admin/login and update your password in System Settings.`,
             html_body: `

@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
     const payload = {
       api_key: apiKey,
       sender: "support@team-goals.com",
+      to: [testEmail],
       recipients: [testEmail],
       subject: "[Team-Goals] Diagnostic Test",
       text_body: "This is a diagnostic test of the SMTP2GO API integration.",
