@@ -29,6 +29,12 @@ export async function GET(req: NextRequest) {
 
     const data = await response.json();
 
+    let stripe_status = "Not Checked";
+    try {
+      const stripeKey = env.STRIPE_SECRET_KEY;
+      stripe_status = stripeKey ? (stripeKey.startsWith('sk_') ? "Present (Valid Format)" : "Present (Invalid Format)") : "Missing";
+    } catch (e) {}
+
     return NextResponse.json({
       status: response.status,
       ok: response.ok,
@@ -37,7 +43,8 @@ export async function GET(req: NextRequest) {
         sender: "support@team-goals.com",
         recipient: testEmail,
         using_fallback_key: !env.SMTP2GO_API_KEY
-      }
+      },
+      stripe_key_status: stripe_status
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
