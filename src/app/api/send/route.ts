@@ -50,13 +50,17 @@ export async function POST(req: NextRequest) {
         recipients: ["phill@phillsimpson.com"],
         reply_to: userEmail || "support@team-goals.com",
         subject: subject,
-        text_body: message || subject,
+        text_body: (message || subject) + `\n\nSent from: ${userName} (${userEmail})`,
         html_body: html_body
       }),
     });
 
     const data = await response.json();
-    if (!response.ok) return NextResponse.json(data, { status: response.status });
+    console.log("SMTP2GO send response:", JSON.stringify(data));
+    if (!response.ok) {
+        console.error("SMTP2GO send error details:", JSON.stringify(data));
+        return NextResponse.json(data, { status: response.status });
+    }
 
     return NextResponse.json(data);
   } catch (error) {
