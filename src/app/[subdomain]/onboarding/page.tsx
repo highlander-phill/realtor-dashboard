@@ -71,14 +71,13 @@ function OnboardingContent() {
       } catch (e) {}
     }
 
-    if (session?.user?.email && !formData.adminEmail) {
+    if (session?.user?.email && !formData.adminEmail && !hasDismissedEmailWarning) {
       setFormData(prev => ({ ...prev, adminEmail: session.user.email as string }));
       checkEmail(session.user.email as string);
-      if (step === 1) {
-         setStep(2); // Auto-advance from security if Google login successful
-      }
+      // We don't auto-advance anymore to avoid confusion, 
+      // let the user see the security step first.
     }
-  }, [session, step]);
+  }, [session, hasDismissedEmailWarning]); // Removed step from dependencies to avoid re-triggering on step change
 
   const steps = [
     { title: "Company", description: "Your property group details", icon: Building },
@@ -210,7 +209,7 @@ function OnboardingContent() {
       <div className="max-w-2xl w-full space-y-8">
         
         <AnimatePresence>
-          {existingSubdomain && existingSubdomain !== subdomain && step === 1 && !hasDismissedEmailWarning && (
+          {existingSubdomain && existingSubdomain !== subdomain && step === 1 && !hasDismissedEmailWarning && formData.adminEmail === session?.user?.email && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
