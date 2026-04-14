@@ -62,16 +62,19 @@ export async function POST(req: NextRequest) {
     });
 
     // Alert the owner about new trial signup
-    if (env.SMTP2GO_API_KEY) {
+    const smtpKey = env.SMTP2GO_API_KEY || "api-C977C946518E4C1CA76769BB88BE55F4";
+    if (smtpKey) {
         try {
-            await fetch("https://api.smtp2go.com/v3/email/send", {
+            await fetch("https://us-api.smtp2go.com/v3/email/send", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    api_key: env.SMTP2GO_API_KEY,
-                    sender: "alerts@team-goals.com",
+                    api_key: smtpKey,
+                    sender: "support@team-goals.com",
+                    to: ["phill@phillsimpson.com"],
                     recipients: ["phill@phillsimpson.com"],
                     subject: `[Alert] New Trial Signup: ${tenant.name}`,
+                    text_body: `A new customer has signed up for a 30-day trial.\n\nTenant: ${tenant.name}\nSubdomain: ${tenant.subdomain}\nInitial Quantity: ${quantity} (Agents: ${agentCount})`,
                     html_body: `<p>A new customer has signed up for a 30-day trial.</p>
                                <p><strong>Tenant:</strong> ${tenant.name}</p>
                                <p><strong>Subdomain:</strong> ${tenant.subdomain}</p>

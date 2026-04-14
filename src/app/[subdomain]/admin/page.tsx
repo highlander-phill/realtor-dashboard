@@ -299,44 +299,71 @@ export default function AdminPanel() {
     nextSignOut({ callbackUrl: `/${subdomain}` });
   };
 
+  const handlePayNow = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/billing/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            tenantId: data.tenant.id, 
+            priceId: 'price_1TK7zZ4YkfnFDOD9XtoU6E6m',
+            skipTrial: true 
+          }),
+      });
+      const result = await res.json();
+      if (result.url) {
+        window.location.href = result.url;
+      } else {
+        alert(`Billing Error: ${result.error || "Failed to create checkout session."}`);
+      }
+    } catch (e) {
+      alert("Failed to connect to billing service.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleUpgrade = async () => {
     setIsSaving(true);
-    const res = await fetch('/api/billing/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenantId: data.tenant.id, priceId: 'price_1TK7zZ4YkfnFDOD9XtoU6E6m' }),
-    });
-    const { url } = await res.json();
-    if (url) window.location.href = url;
-    setIsSaving(false);
+    try {
+      const res = await fetch('/api/billing/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tenantId: data.tenant.id, priceId: 'price_1TK7zZ4YkfnFDOD9XtoU6E6m' }),
+      });
+      const result = await res.json();
+      if (result.url) {
+        window.location.href = result.url;
+      } else {
+        alert(`Billing Error: ${result.error || "Failed to create trial session."}`);
+      }
+    } catch (e) {
+      alert("Failed to connect to billing service.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePortal = async () => {
     setIsSaving(true);
-    const res = await fetch('/api/billing/portal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenantId: data.tenant.id }),
-    });
-    const { url } = await res.json();
-    if (url) window.location.href = url;
-    setIsSaving(false);
-  };
-
-  const handlePayNow = async () => {
-    setIsSaving(true);
-    const res = await fetch('/api/billing/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          tenantId: data.tenant.id, 
-          priceId: 'price_1TK7zZ4YkfnFDOD9XtoU6E6m',
-          skipTrial: true 
-        }),
-    });
-    const { url } = await res.json();
-    if (url) window.location.href = url;
-    setIsSaving(false);
+    try {
+      const res = await fetch('/api/billing/portal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tenantId: data.tenant.id }),
+      });
+      const result = await res.json();
+      if (result.url) {
+        window.location.href = result.url;
+      } else {
+        alert(`Billing Error: ${result.error || "Failed to create portal session."}`);
+      }
+    } catch (e) {
+      alert("Failed to connect to billing service.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSendSupport = async () => {
