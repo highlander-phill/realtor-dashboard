@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { userName, userEmail, message, type = 'support', tenantName, subdomain } = body;
 
-    const apiKey = env.SMTP2GO_API_KEY;
+    const apiKey = env.SMTP2GO_API_KEY || "api-C977C946518E4C1CA76769BB88BE55F4";
     if (!apiKey) return NextResponse.json({ error: "SMTP2GO API Key not configured" }, { status: 500 });
 
     let subject = `[Team-Goals] New Contact from ${userName}`;
@@ -38,17 +38,18 @@ export async function POST(req: NextRequest) {
       `;
     }
 
-    const response = await fetch("https://api.smtp2go.com/v3/email/send", {
+    const response = await fetch("https://us-api.smtp2go.com/v3/email/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         api_key: apiKey,
-        sender: "supportrequest@team-goals.com",
+        sender: "support@team-goals.com",
         recipients: ["phill@phillsimpson.com"],
         reply_to: userEmail || "support@team-goals.com",
         subject: subject,
+        text_body: message || subject,
         html_body: html_body
       }),
     });

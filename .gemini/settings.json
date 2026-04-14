@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "openclaw-bridge": {
+      "url": "http://100.119.181.214:3000/sse",
+      "type": "sse"
+    }
+  }
+}

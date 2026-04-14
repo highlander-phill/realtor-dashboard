@@ -23,8 +23,18 @@ import {
   HelpCircle,
   Tv,
   RefreshCcw,
-  CreditCard
+  CreditCard,
+  BarChart
 } from "lucide-react";
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip, 
+  ResponsiveContainer 
+} from 'recharts';
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -171,6 +181,7 @@ interface DashboardData {
     };
   };
   subTeams: any[];
+  monthlyData: { month: string; production: number }[];
   agents: Agent[];
   lastUpdated: string;
   year: number;
@@ -193,6 +204,7 @@ const initialData: DashboardData = {
     ratios: { listingToClose: "0", buyerToSeller: "0", avgDealSize: "0" }
   },
   subTeams: [],
+  monthlyData: [],
   agents: [],
   lastUpdated: new Date().toISOString(),
   year: 2026
@@ -350,7 +362,7 @@ function DashboardContent() {
                 <div className="flex items-center gap-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   <span className="flex items-center gap-1 text-slate-900 dark:text-slate-100"><Calendar className="w-3 h-3" /> {selectedYear} Performance</span>
                   {selectedSubTeam && <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400"><Users className="w-3 h-3" /> {data.subTeams.find(s => s.id === selectedSubTeam)?.name}</span>}
-                  <span className="text-[9px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-400">v2.2.17</span>
+                  <span className="text-[9px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-400">v2.2.20</span>
                 </div>
               </div>
           </div>
@@ -479,6 +491,66 @@ function DashboardContent() {
                 </CardContent>
              </Card>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <Card className="lg:col-span-4 border-2 border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden rounded-[32px] bg-white dark:bg-slate-900">
+            <CardHeader className="pb-2 pt-8 px-10">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-xl font-black uppercase italic tracking-tight">Production Trend</CardTitle>
+                <div className="flex items-center gap-2 bg-purple-50 dark:bg-purple-950/30 px-3 py-1 rounded-full border border-purple-100 dark:border-purple-900">
+                   <BarChart className="text-purple-500 w-4 h-4" />
+                   <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest">Monthly Growth</span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6 pb-10 px-10">
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={data.monthlyData}>
+                    <defs>
+                      <linearGradient id="colorProd" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={data.tenant.primaryColor} stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor={data.tenant.primaryColor} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={data.tenant.darkMode ? '#1e293b' : '#e2e8f0'} />
+                    <XAxis 
+                      dataKey="month" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 10, fontBold: true, fill: '#64748b' }} 
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 10, fontBold: true, fill: '#64748b' }}
+                      tickFormatter={(value) => `$${value/1000}k`}
+                    />
+                    <RechartsTooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#0f172a', 
+                        border: 'none', 
+                        borderRadius: '12px', 
+                        color: '#fff',
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+                      }}
+                      formatter={(value: number) => [formatCurrency(value), 'Production']}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="production" 
+                      stroke={data.tenant.primaryColor} 
+                      strokeWidth={4}
+                      fillOpacity={1} 
+                      fill="url(#colorProd)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <motion.div 

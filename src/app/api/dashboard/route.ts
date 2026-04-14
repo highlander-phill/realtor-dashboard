@@ -128,6 +128,18 @@ export async function GET(req: NextRequest) {
       avgDealSize: yearTransactions.filter((t: any) => t.status === 'Sold').length > 0 ? (totalProduction / yearTransactions.filter((t: any) => t.status === 'Sold').length).toFixed(0) : "0"
     };
 
+    // Monthly Production Calculation
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthlyData = months.map((month, index) => {
+      const monthNum = index + 1;
+      const monthTransactions = yearTransactions.filter((t: any) => {
+        const date = new Date(t.date);
+        return date.getMonth() + 1 === monthNum && t.status === 'Sold';
+      });
+      const production = monthTransactions.reduce((acc: number, t: any) => acc + (t.price || 0), 0);
+      return { month, production };
+    });
+
     return NextResponse.json({
       tenant: {
         id: tenant.id,
@@ -152,6 +164,7 @@ export async function GET(req: NextRequest) {
         ratios: teamRatios
       },
       subTeams: subTeams,
+      monthlyData: monthlyData,
       agents: agents.map((a: any) => {
         const agentTransactions = transactions.filter((t: any) => t.agent_id === a.id && t.year === year);
         const volumeClosed = agentTransactions.filter((t: any) => t.status === 'Sold').reduce((acc: number, t: any) => acc + (t.price || 0), 0);

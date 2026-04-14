@@ -53,6 +53,7 @@ function OnboardingContent() {
   });
   const [emailExists, setEmailExists] = useState(false);
   const [existingSubdomain, setExistingSubdomain] = useState<string | null>(null);
+  const [hasDismissedEmailWarning, setHasDismissedEmailWarning] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -209,7 +210,7 @@ function OnboardingContent() {
       <div className="max-w-2xl w-full space-y-8">
         
         <AnimatePresence>
-          {existingSubdomain && existingSubdomain !== subdomain && (
+          {existingSubdomain && existingSubdomain !== subdomain && step === 1 && !hasDismissedEmailWarning && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -232,7 +233,7 @@ function OnboardingContent() {
                   <Button onClick={() => window.location.href = `/${existingSubdomain}`} className="bg-blue-600 hover:bg-blue-700 text-white h-16 rounded-2xl text-lg font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 group">
                     Go to {existingSubdomain} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                  <Button variant="outline" onClick={() => setExistingSubdomain(null)} className="h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
+                  <Button variant="outline" onClick={() => setHasDismissedEmailWarning(true)} className="h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
                     Continue Anyway
                   </Button>
                 </div>

@@ -398,7 +398,7 @@ export default function AdminPanel() {
              </Link>
              <div>
                 <h1 className="text-3xl font-black uppercase tracking-tight italic text-white leading-none">Admin Management</h1>
-                <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mt-2">{data.tenant.name} • Master Controls v2.2.17</p>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mt-2">{data.tenant.name} • Master Controls v2.2.20</p>
              </div>
           </div>
           <div className="flex gap-3 w-full md:w-auto">
@@ -415,7 +415,7 @@ export default function AdminPanel() {
               Publish Updates
             </Button>
             <Button onClick={handleLogout} variant="outline" className="rounded-2xl font-black uppercase tracking-widest text-[10px] gap-2 h-14 px-8 border-2 border-slate-700 text-slate-300 hover:bg-slate-800 transition-all">
-              <LogOut className="w-4 h-4" /> Exit
+              <LogOut className="w-4 h-4" /> Sign Out
             </Button>
           </div>
         </header>

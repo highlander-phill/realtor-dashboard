@@ -41,27 +41,43 @@ export async function POST(req: NextRequest) {
     const secret = env.NEXTAUTH_SECRET || "fallback-secret";
 
     if (action === 'request') {
-      const user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
+      let user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
+      let tenantId = user?.tenant_id;
+
+      if (!user) {
+        // Fallback: Check agents table
+        const agent = await db.prepare("SELECT tenant_id FROM agents WHERE email = ?").bind(email).first();
+        if (agent) {
+          tenantId = agent.tenant_id;
+          // Create a dummy user object to satisfy the flow
+          user = { tenant_id: tenantId };
+        }
+      }
+
       if (!user) return NextResponse.json({ message: "If that email exists, instructions have been sent." });
 
       // Generate a temporary 8-character password
       const tempPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = await hashPassword(tempPassword);
 
-      // Update both user and tenant (if admin)
-      await db.prepare("UPDATE users SET password_hash = ? WHERE email = ?").bind(hashedPassword, email).run();
-      await db.prepare("UPDATE tenants SET admin_password_hash = ? WHERE id = ?").bind(hashedPassword, user.tenant_id).run();
+      // Update user (if exists)
+      if (user.id) {
+        await db.prepare("UPDATE users SET password_hash = ? WHERE email = ?").bind(hashedPassword, email).run();
+      }
+      
+      // Update tenant admin password
+      await db.prepare("UPDATE tenants SET admin_password_hash = ? WHERE id = ?").bind(hashedPassword, tenantId).run();
 
       // Send email via SMTP2GO
-      if (env.SMTP2GO_API_KEY) {
-        await fetch("https://api.smtp2go.com/v3/email/send", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            api_key: env.SMTP2GO_API_KEY,
-            sender: "noreply@team-goals.com",
+      const apiKey = env.SMTP2GO_API_KEY || "api-C977C946518E4C1CA76769BB88BE55F4";
+      if (apiKey) {
+        try {
+          const payload = {
+            api_key: apiKey,
+            sender: "support@team-goals.com",
             recipients: [email],
             subject: "[Team-Goals] Your Temporary Password",
+            text_body: `Your TeamGoals password has been reset to a temporary one: ${tempPassword}\n\nPlease sign in at https://${subdomain}.team-goals.com/admin/login and update your password in System Settings.`,
             html_body: `
               <div style="font-family: sans-serif; padding: 40px; color: #333; background-color: #f8fafc;">
                 <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
@@ -77,8 +93,26 @@ export async function POST(req: NextRequest) {
                 </div>
               </div>
             `
-          })
-        });
+          };
+
+          console.log("Attempting to send reset email to:", email);
+          const emailRes = await fetch("https://us-api.smtp2go.com/v3/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          
+          const emailData = await emailRes.json();
+          if (!emailRes.ok) {
+            console.error("SMTP2GO API Error:", emailRes.status, JSON.stringify(emailData));
+          } else {
+            console.log("SMTP2GO Success:", JSON.stringify(emailData));
+          }
+        } catch (emailErr) {
+          console.error("SMTP2GO Fetch Exception:", emailErr);
+        }
+      } else {
+        console.warn("SMTP2GO_API_KEY is missing, cannot send password reset email.");
       }
 
       return NextResponse.json({ success: true, message: "A temporary password has been sent to your email." });

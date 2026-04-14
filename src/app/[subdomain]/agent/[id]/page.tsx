@@ -5,6 +5,15 @@ export const runtime = "edge";
 import { useState, useEffect, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip, 
+  ResponsiveContainer 
+} from 'recharts';
+import { 
   ChevronLeft, 
   Save, 
   RefreshCcw, 
@@ -243,6 +252,18 @@ function AgentDetailContent() {
 
   const progress = Math.round((agent.volumeClosed / agent.goal) * 100);
 
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const agentMonthlyData = months.map((month, index) => {
+    const monthNum = index + 1;
+    const prod = agent.transactions
+      .filter(t => {
+        const d = new Date(t.date);
+        return d.getMonth() + 1 === monthNum && t.status === 'Sold';
+      })
+      .reduce((acc, t) => acc + (t.price || 0), 0);
+    return { month, production: prod };
+  });
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-8">
@@ -267,7 +288,7 @@ function AgentDetailContent() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-1">
             <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase italic">{agent.name}</h1>
-            <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em]">{data.tenant.name} • {selectedYear} Profile v2.2.19</p>
+            <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em]">{data.tenant.name} • {selectedYear} Profile v2.2.20</p>
           </div>
           <div className="flex items-center gap-4">
              {isAuthorized && (
@@ -366,6 +387,64 @@ function AgentDetailContent() {
             </Card>
           )}
         </div>
+
+        <Card className="border-2 border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden rounded-[32px] bg-white dark:bg-slate-900">
+          <CardHeader className="pb-2 pt-8 px-10">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-xl font-black uppercase italic tracking-tight">Performance Trend</CardTitle>
+              <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-900">
+                 <TrendingUp className="text-blue-500 w-4 h-4" />
+                 <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Monthly Closed Volume</span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6 pb-10 px-10">
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={agentMonthlyData}>
+                  <defs>
+                    <linearGradient id="colorAgentProd" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={data.tenant.primaryColor} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={data.tenant.primaryColor} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:stroke-slate-800" />
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fontWeight: 'bold', fill: '#64748b' }} 
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fontWeight: 'bold', fill: '#64748b' }}
+                    tickFormatter={(value) => `$${value/1000}k`}
+                  />
+                  <RechartsTooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#0f172a', 
+                      border: 'none', 
+                      borderRadius: '12px', 
+                      color: '#fff',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                    formatter={(value: number) => [formatCurrency(value), 'Closed Volume']}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="production" 
+                    stroke={data.tenant.primaryColor} 
+                    strokeWidth={4}
+                    fillOpacity={1} 
+                    fill="url(#colorAgentProd)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="border-none shadow-2xl overflow-hidden rounded-[32px] bg-white dark:bg-slate-900">
           <CardHeader className="bg-slate-950 text-white p-10 flex flex-row items-center justify-between">
