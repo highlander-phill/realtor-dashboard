@@ -45,6 +45,22 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { action, subdomain, tempPassword, theme, customerName, customerPhone, tenantId, newPassword, associatedEmail } = body;
 
+    if (action === 'delete_tenant') {
+      const tenantToDelete = await db.prepare("SELECT subdomain FROM tenants WHERE id = ?").bind(tenantId).first();
+      if (tenantToDelete?.subdomain === 'nspg') {
+        return NextResponse.json({ error: "Cannot delete the primary tenant." }, { status: 403 });
+      }
+      
+      await db.prepare("DELETE FROM transactions WHERE tenant_id = ?").bind(tenantId).run();
+      await db.prepare("DELETE FROM agents WHERE tenant_id = ?").bind(tenantId).run();
+      await db.prepare("DELETE FROM sub_teams WHERE tenant_id = ?").bind(tenantId).run();
+      await db.prepare("DELETE FROM team_data WHERE tenant_id = ?").bind(tenantId).run();
+      await db.prepare("DELETE FROM users WHERE tenant_id = ?").bind(tenantId).run();
+      await db.prepare("DELETE FROM tenants WHERE id = ?").bind(tenantId).run();
+      
+      return NextResponse.json({ success: true, message: "Tenant deleted." });
+    }
+
     if (action === 'update_tenant') {
       if (newPassword) {
         const aHash = await hashPassword(newPassword);

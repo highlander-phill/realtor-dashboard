@@ -32,12 +32,23 @@ import {
   TableRow 
 } from "@/components/ui/table";
 
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
 import { useSession, signOut } from "next-auth/react";
+import { Trash2 } from "lucide-react";
 
 export default function MasterDashboard() {
   const { data: session, status } = useSession();
   const [authorized, setAuthorized] = useState<any[]>([]);
   const [active, setActive] = useState<any[]>([]);
+  const [tenantToDelete, setTenantToDelete] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     subdomain: "",
     tempPassword: Math.random().toString(36).substr(2, 8),
@@ -70,6 +81,26 @@ export default function MasterDashboard() {
       const data = await res.json();
       setAuthorized(data.authorized || []);
       setActive(data.active || []);
+    }
+  };
+
+  const handleDeleteTenant = async () => {
+    if (!tenantToDelete) return;
+    const res = await fetch('/api/master', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: 'delete_tenant', 
+        tenantId: tenantToDelete.id 
+      }),
+    });
+    if (res.ok) {
+      alert(`Tenant "${tenantToDelete.name}" deleted successfully.`);
+      setTenantToDelete(null);
+      fetchData();
+    } else {
+      const err = await res.json();
+      alert(`Failed to delete tenant: ${err.error}`);
     }
   };
 
@@ -378,6 +409,7 @@ export default function MasterDashboard() {
                       <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Path</TableHead>
                       <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Vertical</TableHead>
                       <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Created</TableHead>
+                      <TableHead className="text-right text-slate-400 font-bold uppercase text-[10px] tracking-widest px-6 py-4">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -402,6 +434,17 @@ export default function MasterDashboard() {
                         <TableCell className="text-xs text-slate-500 font-medium">
                           {t.created_at ? new Date(t.created_at).toLocaleDateString() : 'N/A'}
                         </TableCell>
+                        <TableCell className="text-right px-6">
+                           <Button 
+                             onClick={() => setTenantToDelete(t)}
+                             variant="ghost" 
+                             size="sm"
+                             disabled={t.subdomain === 'nspg'}
+                             className="disabled:opacity-20 disabled:cursor-not-allowed text-red-500 hover:bg-red-500/10 hover:text-red-400 font-bold text-xs"
+                           >
+                             Delete
+                           </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -410,6 +453,23 @@ export default function MasterDashboard() {
             </Card>
           </div>
         </div>
+
+        <Dialog open={!!tenantToDelete} onOpenChange={(isOpen) => !isOpen && setTenantToDelete(null)}>
+          <DialogContent className="bg-slate-900 border-slate-800 text-white rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-2xl font-black">
+                <Trash2 className="w-6 h-6 text-red-500" /> Are you sure?
+              </DialogTitle>
+              <DialogDescription className="text-slate-400">
+                This will permanently delete the tenant <strong className="text-red-400">{tenantToDelete?.name}</strong> and all associated data, including agents, transactions, and settings. This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="mt-4">
+              <Button onClick={() => setTenantToDelete(null)} variant="outline" className="text-slate-300 border-slate-700 hover:bg-slate-800">Cancel</Button>
+              <Button onClick={handleDeleteTenant} className="bg-red-600 hover:bg-red-700 text-white font-bold">Confirm Deletion</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

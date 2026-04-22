@@ -490,11 +490,10 @@ export default function AdminPanel() {
                       <TableRow className="border-slate-200 dark:border-slate-800">
                         <TableHead onClick={() => handleSort('name')} className="px-10 py-5 font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100">Agent Name ↕</TableHead>
                         <TableHead onClick={() => handleSort('subTeamId')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100">Sub-Team ↕</TableHead>
-                        <TableHead onClick={() => handleSort('goal')} className="font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100">Goal ($) ↕ <HelpIcon /></TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Closed <HelpIcon /></TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Pending <HelpIcon /></TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Closed</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Pending</TableHead>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Buyers</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Sellers <HelpIcon /></TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">Sellers</TableHead>
                         {(data.tenant.customColumns || []).map(col => (
                            <TableHead key={col.id} className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-slate-100">{col.name}</TableHead>
                         ))}
@@ -530,37 +529,17 @@ export default function AdminPanel() {
                               className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
                             />
                           </TableCell>
-                          <TableCell>
-                            <Input 
-                              type="number"
-                              value={agent.volumeClosed} 
-                              onChange={(e) => updateAgent(agent.id, "volumeClosed", Number(e.target.value))}
-                              className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
-                            />
+                          <TableCell className="font-mono text-xs font-bold text-slate-500">
+                            ${(agent.volumeClosed || 0).toLocaleString()}
                           </TableCell>
-                          <TableCell>
-                            <Input 
-                              type="number"
-                              value={agent.volumePending} 
-                              onChange={(e) => updateAgent(agent.id, "volumePending", Number(e.target.value))}
-                              className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
-                            />
+                           <TableCell className="font-mono text-xs font-bold text-slate-500">
+                            ${(agent.volumePending || 0).toLocaleString()}
                           </TableCell>
-                          <TableCell>
-                            <Input 
-                              type="number"
-                              value={agent.buyers} 
-                              onChange={(e) => updateAgent(agent.id, "buyers", Number(e.target.value))}
-                              className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
-                            />
+                          <TableCell className="font-mono text-xs font-bold text-slate-500">
+                            {agent.buyers}
                           </TableCell>
-                          <TableCell>
-                            <Input 
-                              type="number"
-                              value={agent.sellers} 
-                              onChange={(e) => updateAgent(agent.id, "sellers", Number(e.target.value))}
-                              className="bg-transparent border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-black h-12 font-mono text-xs font-bold"
-                            />
+                          <TableCell className="font-mono text-xs font-bold text-slate-500">
+                            {agent.sellers}
                           </TableCell>
                           {(data.tenant.customColumns || []).map(col => (
                             <TableCell key={col.id}>

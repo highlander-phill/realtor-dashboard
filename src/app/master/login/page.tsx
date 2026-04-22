@@ -4,7 +4,7 @@ export const runtime = "edge";
 
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { Shield, Lock, ArrowRight, Chrome, AlertCircle, Key } from "lucide-react";
+import { Shield, Lock, ArrowRight, AlertCircle, Key } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,7 +70,7 @@ function MasterLoginContent() {
               onClick={() => signIn("google", { callbackUrl: "/master" })} 
               className="w-full h-16 bg-white hover:bg-slate-100 text-slate-900 font-black uppercase tracking-widest rounded-2xl shadow-xl flex items-center justify-center gap-4 transition-all active:scale-95"
             >
-              <Chrome className="w-6 h-6 text-blue-600" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/></svg>
               Super Admin Google Login
             </Button>
 

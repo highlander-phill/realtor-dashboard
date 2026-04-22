@@ -294,39 +294,54 @@ export async function POST(req: NextRequest) {
       ), Math.random().toString(36).substr(2, 9), tenantId, tenant.adminEmail, aHash).run();
     }
 
-    // 3. Upsert Team Data
+    // 3. Upsert Team Goal (YTD is now a calculated field)
     await safeBind(db.prepare(
-      "INSERT INTO team_data (tenant_id, sub_team_id, year, goal, ytd_production, last_updated) VALUES (?, NULL, ?, ?, ?, ?) " +
-      "ON CONFLICT(tenant_id, sub_team_id, year) DO UPDATE SET goal=excluded.goal, ytd_production=excluded.ytd_production, last_updated=excluded.last_updated"
-    ), tenantId, year, team.goal, team.ytdProduction, new Date().toISOString()).run();
+      "INSERT INTO team_data (tenant_id, sub_team_id, year, goal, last_updated) VALUES (?, NULL, ?, ?, ?) " +
+      "ON CONFLICT(tenant_id, sub_team_id, year) DO UPDATE SET goal=excluded.goal, last_updated=excluded.last_updated"
+    ), tenantId, year, team.goal, new Date().toISOString()).run();
 
-    // 4. Batch update sub-teams, agents, and transactions
+    // 4. Batch update sub-teams and agents using UPSERT
     const statements: any[] = [];
-    
-    // Delete in reverse order of dependencies to avoid foreign key violations
-    statements.push(safeBind(db.prepare("DELETE FROM transactions WHERE tenant_id = ?"), tenantId));
-    statements.push(safeBind(db.prepare("DELETE FROM agents WHERE tenant_id = ?"), tenantId));
-    statements.push(safeBind(db.prepare("DELETE FROM sub_teams WHERE tenant_id = ?"), tenantId));
-    
+
+    // Upsert Sub-Teams
     if (subTeams && subTeams.length > 0) {
+      // First, delete any sub-teams that are no longer in the list
+      const subTeamIds = subTeams.map(st => st.id);
+      statements.push(db.prepare("DELETE FROM sub_teams WHERE tenant_id = ? AND id NOT IN (" + subTeamIds.map(() => '?').join(',') + ")").bind(tenantId, ...subTeamIds));
+      
       for (const st of subTeams) {
-        statements.push(safeBind(db.prepare("INSERT INTO sub_teams (id, tenant_id, name, goal) VALUES (?, ?, ?, ?)"), 
-          st.id, tenantId, st.name, st.goal || 0));
+        statements.push(safeBind(db.prepare(
+          "INSERT INTO sub_teams (id, tenant_id, name, goal) VALUES (?, ?, ?, ?) " +
+          "ON CONFLICT(id) DO UPDATE SET name=excluded.name, goal=excluded.goal"
+        ), st.id, tenantId, st.name, st.goal || 0));
       }
+    } else {
+      // If no sub-teams are provided, remove all for this tenant
+      statements.push(db.prepare("DELETE FROM sub_teams WHERE tenant_id = ?").bind(tenantId));
     }
-    
+
+    // Upsert Agents
     if (agents && agents.length > 0) {
+      const agentIds = agents.map(a => a.id);
+      // Delete agents that are no longer in the roster
+      statements.push(db.prepare("DELETE FROM agents WHERE tenant_id = ? AND id NOT IN (" + agentIds.map(() => '?').join(',') + ")").bind(tenantId, ...agentIds));
+
       for (const a of agents) {
-        statements.push(safeBind(db.prepare("INSERT INTO agents (id, tenant_id, sub_team_id, name, goal, closings, volume_pending, volume_closed, listings_volume, buyers, sellers, listings, mls_link, status, count_in_total, custom_fields) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"),
-          a.id, tenantId, a.subTeamId || null, a.name, a.goal || 0, a.closings || 0, a.volumePending || 0, a.volumeClosed || 0, a.listingsVolume || 0, a.buyers || 0, a.sellers || 0, a.listings || 0, a.mlsLink || null, a.status || 'active', a.countInTotal ? 1 : 0, a.customFields ? JSON.stringify(a.customFields) : null));
-          
-        if (a.transactions && a.transactions.length > 0) {
-          for (const t of a.transactions) {
-            statements.push(safeBind(db.prepare("INSERT INTO transactions (id, agent_id, tenant_id, address, price, list_price, date_listed, status, side, date, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"),
-              t.id, a.id, tenantId, t.address, t.price || 0, t.listPrice || null, t.dateListed || null, t.status, t.side, t.date, year));
-          }
-        }
+        // Note: We are NOT updating volumeClosed, volumePending etc. here as they are derived from transactions.
+        // The admin panel should manage transactions directly to affect these numbers.
+        statements.push(safeBind(db.prepare(
+          "INSERT INTO agents (id, tenant_id, sub_team_id, name, goal, status, count_in_total, custom_fields) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+          "ON CONFLICT(id) DO UPDATE SET sub_team_id=excluded.sub_team_id, name=excluded.name, goal=excluded.goal, status=excluded.status, count_in_total=excluded.count_in_total, custom_fields=excluded.custom_fields"
+        ), a.id, tenantId, a.subTeamId || null, a.name, a.goal || 0, a.status || 'active', a.countInTotal ? 1 : 0, a.customFields ? JSON.stringify(a.customFields) : null));
+        
+        // IMPORTANT: The existing code deleted all transactions. We will NOT do that.
+        // Transaction management should be a separate, more granular process.
+        // If the admin UI needs to edit transactions, it should call a different endpoint or action.
       }
+    } else {
+      // If no agents are provided, remove all for this tenant
+       statements.push(db.prepare("DELETE FROM agents WHERE tenant_id = ?").bind(tenantId));
+       statements.push(db.prepare("DELETE FROM transactions WHERE tenant_id = ?").bind(tenantId));
     }
 
     await db.batch(statements);
