@@ -16,9 +16,9 @@ Test timeout of 60000ms exceeded.
 ```
 
 ```
-Error: locator.fill: Test timeout of 60000ms exceeded.
+Error: page.waitForSelector: Test timeout of 60000ms exceeded.
 Call log:
-  - waiting for getByPlaceholder('your-email@example.com')
+  - waiting for locator('.cf-turnstile[data-solved="true"]') to be visible
 
 ```
 
@@ -48,12 +48,7 @@ Call log:
           - img
         - button "Cancel" [ref=e32]
     - paragraph [ref=e34]: TeamGoals Engine v2.3.1
-  - generic [ref=e37] [cursor=pointer]:
-    - img [ref=e38]
-    - generic [ref=e40]: 1 error
-    - button "Hide Errors" [ref=e41]:
-      - img [ref=e42]
-  - alert [ref=e45]
+  - alert [ref=e35]
 ```
 
 # Test source
@@ -66,15 +61,16 @@ Call log:
   5  |   test('should allow master admin to login', async ({ page }) => {
   6  |     await page.goto('/master/login');
   7  |     await page.getByRole('button', { name: 'Use Master Password' }).click();
-> 8  |     await page.getByPlaceholder('your-email@example.com').fill('phillsimpson@gmail.com');
-     |                                                           ^ Error: locator.fill: Test timeout of 60000ms exceeded.
-  9  |     await page.getByPlaceholder('••••••••').fill('4WeeStella$');
-  10 |     await page.getByRole('button', { name: 'Access System' }).click();
-  11 |     
-  12 |     await expect(page).toHaveURL('/master');
-  13 |     await expect(page.getByText('TEAMGOALS MASTER CONTROL')).toBeVisible();
-  14 |   });
-  15 | 
-  16 | });
-  17 | 
+> 8  |     await page.waitForSelector('.cf-turnstile[data-solved="true"]');
+     |                ^ Error: page.waitForSelector: Test timeout of 60000ms exceeded.
+  9  |     await page.getByPlaceholder('your-email@example.com').fill('phillsimpson@gmail.com');
+  10 |     await page.getByPlaceholder('••••••••').fill('4WeeStella$');
+  11 |     await page.getByRole('button', { name: 'Access System' }).click();
+  12 |     
+  13 |     await expect(page).toHaveURL('/master');
+  14 |     await expect(page.getByText('TEAMGOALS MASTER CONTROL')).toBeVisible();
+  15 |   });
+  16 | 
+  17 | });
+  18 | 
 ```

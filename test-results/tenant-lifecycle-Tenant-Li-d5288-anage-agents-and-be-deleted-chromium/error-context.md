@@ -152,12 +152,7 @@ Call log:
             - /url: mailto:hello@team-goals.com
           - link "System Status" [ref=e200] [cursor=pointer]:
             - /url: "#"
-  - generic [ref=e203] [cursor=pointer]:
-    - img [ref=e204]
-    - generic [ref=e206]: 2 errors
-    - button "Hide Errors" [ref=e207]:
-      - img [ref=e208]
-  - alert [ref=e211]
+  - alert [ref=e201]
 ```
 
 # Test source
@@ -209,27 +204,28 @@ Call log:
   43 |     // Step 4: Login as Master Admin and Delete Tenant
   44 |     await page.goto('/master/login');
   45 |     await page.getByRole('button', { name: 'Use Master Password' }).click();
-  46 |     await page.getByPlaceholder('your-email@example.com').fill('phillsimpson@gmail.com');
-  47 |     await page.getByPlaceholder('••••••••').fill('4WeeStella$');
-  48 |     await page.getByRole('button', { name: 'Sign In' }).click();
-  49 |     
-  50 |     await expect(page).toHaveURL('/master');
-  51 |     await expect(page.getByText(`${subdomain} Company`)).toBeVisible();
-  52 | 
-  53 |     const tenantRow = page.locator('tr', { hasText: subdomain });
-  54 |     await tenantRow.getByRole('button', { name: 'Delete' }).click();
-  55 |     
-  56 |     await expect(page.getByText(new RegExp(`permanently delete the tenant ${subdomain} Company`))).toBeVisible();
-  57 |     await page.getByRole('button', { name: 'Confirm Deletion' }).click();
-  58 | 
-  59 |     // Verify tenant is gone from the list
-  60 |     await expect(page.getByText(`${subdomain} Company`)).not.toBeVisible();
-  61 | 
-  62 |     // Step 5: Verify Tenant is Inaccessible
-  63 |     await page.goto(`/${subdomain}`);
-  64 |     await expect(page.getByText(`Welcome to Your Team Dash`)).toBeVisible();
-  65 |     await expect(page.getByText(subdomain, { exact: true })).toBeVisible();
-  66 |   });
-  67 | });
-  68 | 
+  46 |     await page.waitForSelector('.cf-turnstile[data-solved="true"]');
+  47 |     await page.getByPlaceholder('your-email@example.com').fill('phillsimpson@gmail.com');
+  48 |     await page.getByPlaceholder('••••••••').fill('4WeeStella$');
+  49 |     await page.getByRole('button', { name: 'Sign In' }).click();
+  50 |     
+  51 |     await expect(page).toHaveURL('/master');
+  52 |     await expect(page.getByText(`${subdomain} Company`)).toBeVisible();
+  53 | 
+  54 |     const tenantRow = page.locator('tr', { hasText: subdomain });
+  55 |     await tenantRow.getByRole('button', { name: 'Delete' }).click();
+  56 |     
+  57 |     await expect(page.getByText(new RegExp(`permanently delete the tenant ${subdomain} Company`))).toBeVisible();
+  58 |     await page.getByRole('button', { name: 'Confirm Deletion' }).click();
+  59 | 
+  60 |     // Verify tenant is gone from the list
+  61 |     await expect(page.getByText(`${subdomain} Company`)).not.toBeVisible();
+  62 | 
+  63 |     // Step 5: Verify Tenant is Inaccessible
+  64 |     await page.goto(`/${subdomain}`);
+  65 |     await expect(page.getByText(`Welcome to Your Team Dash`)).toBeVisible();
+  66 |     await expect(page.getByText(subdomain, { exact: true })).toBeVisible();
+  67 |   });
+  68 | });
+  69 | 
 ```

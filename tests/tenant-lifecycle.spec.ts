@@ -43,6 +43,7 @@ test.describe('Tenant Lifecycle', () => {
     // Step 4: Login as Master Admin and Delete Tenant
     await page.goto('/master/login');
     await page.getByRole('button', { name: 'Use Master Password' }).click();
+    await page.waitForSelector('.cf-turnstile[data-solved="true"]');
     await page.getByPlaceholder('your-email@example.com').fill('phillsimpson@gmail.com');
     await page.getByPlaceholder('••••••••').fill('4WeeStella$');
     await page.getByRole('button', { name: 'Sign In' }).click();

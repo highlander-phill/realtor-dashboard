@@ -9,7 +9,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:3002',
+    baseURL: 'https://www.team-goals.com',
     trace: 'on-first-retry',
   },
   projects: [
@@ -18,14 +18,4 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    command: 'npm run dev -- -p 3002',
-    url: 'http://localhost:3002',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-    env: {
-      NODE_ENV: 'development',
-      NEXTAUTH_SECRET: 'super_secret_test_key', // Use a consistent test secret
-    },
-  },
 });
