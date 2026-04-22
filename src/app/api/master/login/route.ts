@@ -1,5 +1,6 @@
 import { getRequestContext } from "@cloudflare/next-on-pages";
 import { NextRequest, NextResponse } from "next/server";
+import { verifyTurnstileToken } from "@/lib/utils";
 
 export const runtime = "edge";
 
@@ -11,7 +12,16 @@ export async function POST(req: NextRequest) {
   try {
     const { env } = getRequestContext() as unknown as { env: MasterEnv };
     const body = await req.json();
-    const { password } = body;
+    const { password, turnstileToken } = body;
+
+    // 1. Turnstile Verification (Server-Side)
+    const turnstileSecretKey = "0x4AAAAAAC09M5-b9P1MQeSSwKQ8PPWQIMA"; // Directly using the provided secret key
+    const turnstileVerification = await verifyTurnstileToken(turnstileSecretKey, turnstileToken);
+    
+    if (!turnstileVerification.success) {
+      console.warn("Turnstile verification failed:", turnstileVerification["error-codes"]);
+      return NextResponse.json({ success: false, error: "Turnstile verification failed." }, { status: 403 });
+    }
 
     if (env.SETTINGS) {
       const lockoutTime = await env.SETTINGS.get("MASTER_LOCKOUT");

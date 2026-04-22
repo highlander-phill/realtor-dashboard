@@ -9,15 +9,6 @@ test.describe('Tenant Lifecycle', () => {
 
   test('should allow a new tenant to onboard, manage agents, and be deleted', async ({ page }) => {
     // Step 1: Onboarding
-    await page.route('/cdn-cgi/challenge-platform/h/b/pat/.*', route => {
-      console.log(`[Network Intercept] Bypassing Cloudflare PAT challenge: ${route.request().url()}`);
-      route.fulfill({
-        status: 200,
-        contentType: 'text/plain',
-        body: '',
-      });
-    });
-    
     await page.goto('/');
     await page.getByPlaceholder('your-team-name').fill(subdomain);
     await page.getByRole('button', { name: 'Get Started' }).click();
