@@ -11,6 +11,15 @@ export default defineConfig({
   use: {
     baseURL: 'https://www.team-goals.com',
     trace: 'on-first-retry',
+    env: {
+      NEXT_PUBLIC_PLAYWRIGHT_TEST_ENV: 'true',
+    },
+    onPageError: (exception) => {
+      console.error(`Uncaught exception: ${exception}`);
+    },
+    onConsoleMessage: (msg) => {
+      console.log(`[Browser Console] ${msg.type().toUpperCase()}: ${msg.text()}`);
+    },
   },
   projects: [
     {

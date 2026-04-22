@@ -13,6 +13,13 @@ export default function Turnstile({ onVerify }: { onVerify: (token: string) => v
   const onVerifyRef = useRef(onVerify);
   onVerifyRef.current = onVerify;
 
+  // Bypass Turnstile for Playwright tests
+  if (process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_ENV === 'true') {
+    console.log("Turnstile bypassed for Playwright test environment (client-side).");
+    onVerifyRef.current("playwright-test-token");
+    return null; // Do not render Turnstile in test env
+  }
+
   useEffect(() => {
     if (!isMounted || !containerRef.current) return;
 

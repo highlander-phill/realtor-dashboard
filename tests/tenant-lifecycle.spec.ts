@@ -9,6 +9,15 @@ test.describe('Tenant Lifecycle', () => {
 
   test('should allow a new tenant to onboard, manage agents, and be deleted', async ({ page }) => {
     // Step 1: Onboarding
+    await page.route('/cdn-cgi/challenge-platform/h/b/pat/.*', route => {
+      console.log(`[Network Intercept] Bypassing Cloudflare PAT challenge: ${route.request().url()}`);
+      route.fulfill({
+        status: 200,
+        contentType: 'text/plain',
+        body: '',
+      });
+    });
+    
     await page.goto('/');
     await page.getByPlaceholder('your-team-name').fill(subdomain);
     await page.getByRole('button', { name: 'Get Started' }).click();
@@ -43,7 +52,6 @@ test.describe('Tenant Lifecycle', () => {
     // Step 4: Login as Master Admin and Delete Tenant
     await page.goto('/master/login');
     await page.getByRole('button', { name: 'Use Master Password' }).click();
-    await page.waitForSelector('.cf-turnstile[data-solved="true"]');
     await page.getByPlaceholder('your-email@example.com').fill('phillsimpson@gmail.com');
     await page.getByPlaceholder('••••••••').fill('4WeeStella$');
     await page.getByRole('button', { name: 'Sign In' }).click();

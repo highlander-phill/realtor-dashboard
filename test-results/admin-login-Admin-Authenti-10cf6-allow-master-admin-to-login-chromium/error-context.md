@@ -16,9 +16,9 @@ Test timeout of 60000ms exceeded.
 ```
 
 ```
-Error: page.waitForSelector: Test timeout of 60000ms exceeded.
+Error: locator.fill: Test timeout of 60000ms exceeded.
 Call log:
-  - waiting for locator('.cf-turnstile[data-solved="true"]') to be visible
+  - waiting for getByPlaceholder('your-email@example.com')
 
 ```
 
@@ -59,18 +59,34 @@ Call log:
   3  | test.describe('Admin Authentication', () => {
   4  | 
   5  |   test('should allow master admin to login', async ({ page }) => {
-  6  |     await page.goto('/master/login');
-  7  |     await page.getByRole('button', { name: 'Use Master Password' }).click();
-> 8  |     await page.waitForSelector('.cf-turnstile[data-solved="true"]');
-     |                ^ Error: page.waitForSelector: Test timeout of 60000ms exceeded.
-  9  |     await page.getByPlaceholder('your-email@example.com').fill('phillsimpson@gmail.com');
-  10 |     await page.getByPlaceholder('••••••••').fill('4WeeStella$');
-  11 |     await page.getByRole('button', { name: 'Access System' }).click();
-  12 |     
-  13 |     await expect(page).toHaveURL('/master');
-  14 |     await expect(page.getByText('TEAMGOALS MASTER CONTROL')).toBeVisible();
-  15 |   });
-  16 | 
-  17 | });
-  18 | 
+  6  |     await page.route('/cdn-cgi/challenge-platform/h/b/pat/.*', route => {
+  7  |       console.log(`[Network Intercept] Bypassing Cloudflare PAT challenge: ${route.request().url()}`);
+  8  |       route.fulfill({
+  9  |         status: 200,
+  10 |         contentType: 'text/plain',
+  11 |         body: '',
+  12 |       });
+  13 |     });
+  14 |     
+  15 |     await page.goto('/master/login');
+  16 |     page.on('pageerror', exception => console.log(`Uncaught exception: ${exception}`));
+  17 |     page.on('console', msg => console.log(`[Browser Console] ${msg.type().toUpperCase()}: ${msg.text()}`));
+  18 |     
+  19 |     await page.route('**', route => {
+  20 |       console.log(`[Network Request] ${route.request().method()} ${route.request().url()} - ${route.request().resourceType()}`);
+  21 |       route.continue();
+  22 |     });
+  23 |     
+  24 |     await page.getByRole('button', { name: 'Use Master Password' }).click();
+> 25 |     await page.getByPlaceholder('your-email@example.com').fill('phillsimpson@gmail.com');
+     |                                                           ^ Error: locator.fill: Test timeout of 60000ms exceeded.
+  26 |     await page.getByPlaceholder('••••••••').fill('4WeeStella$');
+  27 |     await page.getByRole('button', { name: 'Access System' }).click();
+  28 |     
+  29 |     await expect(page).toHaveURL('/master');
+  30 |     await expect(page.getByText('TEAMGOALS MASTER CONTROL')).toBeVisible();
+  31 |   });
+  32 | 
+  33 | });
+  34 | 
 ```

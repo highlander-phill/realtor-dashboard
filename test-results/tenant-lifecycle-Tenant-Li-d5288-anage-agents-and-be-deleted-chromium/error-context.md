@@ -169,63 +169,71 @@ Call log:
   9  | 
   10 |   test('should allow a new tenant to onboard, manage agents, and be deleted', async ({ page }) => {
   11 |     // Step 1: Onboarding
-  12 |     await page.goto('/');
-> 13 |     await page.getByPlaceholder('your-team-name').fill(subdomain);
+  12 |     await page.route('/cdn-cgi/challenge-platform/h/b/pat/.*', route => {
+  13 |       console.log(`[Network Intercept] Bypassing Cloudflare PAT challenge: ${route.request().url()}`);
+  14 |       route.fulfill({
+  15 |         status: 200,
+  16 |         contentType: 'text/plain',
+  17 |         body: '',
+  18 |       });
+  19 |     });
+  20 |     
+  21 |     await page.goto('/');
+> 22 |     await page.getByPlaceholder('your-team-name').fill(subdomain);
      |                                                   ^ Error: locator.fill: Test timeout of 60000ms exceeded.
-  14 |     await page.getByRole('button', { name: 'Get Started' }).click();
-  15 |     
-  16 |     await expect(page).toHaveURL(new RegExp(`\/${subdomain}\/onboarding`));
-  17 |     await page.getByPlaceholder('Your Company Name').fill(`${subdomain} Company`);
-  18 |     await page.getByPlaceholder('your-email@example.com').fill(adminEmail);
-  19 |     await page.getByPlaceholder('••••••••').fill(adminPassword);
-  20 |     await page.getByRole('button', { name: 'Create My Dashboard' }).click();
-  21 | 
-  22 |     await expect(page).toHaveURL(new RegExp(`\/${subdomain}\/admin`));
-  23 | 
-  24 |     // Step 2: Add and Verify Agent
-  25 |     await page.getByRole('button', { name: 'New Agent' }).click();
-  26 |     await page.locator('input[value="New Agent"]').fill(agentName);
-  27 |     await page.locator('input[type="number"][value="5000000"]').fill(agentGoal.toString());
-  28 |     await page.getByRole('button', { name: 'Publish Updates' }).click();
-  29 | 
-  30 |     // The alert dialog confirms the save
-  31 |     page.on('dialog', dialog => dialog.accept());
-  32 |     
-  33 |     // Reload to verify persistence
-  34 |     await page.reload();
-  35 |     
-  36 |     await expect(page.locator(`input[value="${agentName}"]`)).toBeVisible();
-  37 |     await expect(page.locator(`input[value="${agentGoal}"]`)).toBeVisible();
+  23 |     await page.getByRole('button', { name: 'Get Started' }).click();
+  24 |     
+  25 |     await expect(page).toHaveURL(new RegExp(`\/${subdomain}\/onboarding`));
+  26 |     await page.getByPlaceholder('Your Company Name').fill(`${subdomain} Company`);
+  27 |     await page.getByPlaceholder('your-email@example.com').fill(adminEmail);
+  28 |     await page.getByPlaceholder('••••••••').fill(adminPassword);
+  29 |     await page.getByRole('button', { name: 'Create My Dashboard' }).click();
+  30 | 
+  31 |     await expect(page).toHaveURL(new RegExp(`\/${subdomain}\/admin`));
+  32 | 
+  33 |     // Step 2: Add and Verify Agent
+  34 |     await page.getByRole('button', { name: 'New Agent' }).click();
+  35 |     await page.locator('input[value="New Agent"]').fill(agentName);
+  36 |     await page.locator('input[type="number"][value="5000000"]').fill(agentGoal.toString());
+  37 |     await page.getByRole('button', { name: 'Publish Updates' }).click();
   38 | 
-  39 |     // Step 3: Verify Public Dashboard
-  40 |     await page.goto(`/${subdomain}`);
-  41 |     await expect(page.getByText(agentName)).toBeVisible();
-  42 | 
-  43 |     // Step 4: Login as Master Admin and Delete Tenant
-  44 |     await page.goto('/master/login');
-  45 |     await page.getByRole('button', { name: 'Use Master Password' }).click();
-  46 |     await page.waitForSelector('.cf-turnstile[data-solved="true"]');
-  47 |     await page.getByPlaceholder('your-email@example.com').fill('phillsimpson@gmail.com');
-  48 |     await page.getByPlaceholder('••••••••').fill('4WeeStella$');
-  49 |     await page.getByRole('button', { name: 'Sign In' }).click();
-  50 |     
-  51 |     await expect(page).toHaveURL('/master');
-  52 |     await expect(page.getByText(`${subdomain} Company`)).toBeVisible();
-  53 | 
-  54 |     const tenantRow = page.locator('tr', { hasText: subdomain });
-  55 |     await tenantRow.getByRole('button', { name: 'Delete' }).click();
-  56 |     
-  57 |     await expect(page.getByText(new RegExp(`permanently delete the tenant ${subdomain} Company`))).toBeVisible();
-  58 |     await page.getByRole('button', { name: 'Confirm Deletion' }).click();
-  59 | 
-  60 |     // Verify tenant is gone from the list
-  61 |     await expect(page.getByText(`${subdomain} Company`)).not.toBeVisible();
-  62 | 
-  63 |     // Step 5: Verify Tenant is Inaccessible
-  64 |     await page.goto(`/${subdomain}`);
-  65 |     await expect(page.getByText(`Welcome to Your Team Dash`)).toBeVisible();
-  66 |     await expect(page.getByText(subdomain, { exact: true })).toBeVisible();
-  67 |   });
-  68 | });
-  69 | 
+  39 |     // The alert dialog confirms the save
+  40 |     page.on('dialog', dialog => dialog.accept());
+  41 |     
+  42 |     // Reload to verify persistence
+  43 |     await page.reload();
+  44 |     
+  45 |     await expect(page.locator(`input[value="${agentName}"]`)).toBeVisible();
+  46 |     await expect(page.locator(`input[value="${agentGoal}"]`)).toBeVisible();
+  47 | 
+  48 |     // Step 3: Verify Public Dashboard
+  49 |     await page.goto(`/${subdomain}`);
+  50 |     await expect(page.getByText(agentName)).toBeVisible();
+  51 | 
+  52 |     // Step 4: Login as Master Admin and Delete Tenant
+  53 |     await page.goto('/master/login');
+  54 |     await page.getByRole('button', { name: 'Use Master Password' }).click();
+  55 |     await page.getByPlaceholder('your-email@example.com').fill('phillsimpson@gmail.com');
+  56 |     await page.getByPlaceholder('••••••••').fill('4WeeStella$');
+  57 |     await page.getByRole('button', { name: 'Sign In' }).click();
+  58 |     
+  59 |     await expect(page).toHaveURL('/master');
+  60 |     await expect(page.getByText(`${subdomain} Company`)).toBeVisible();
+  61 | 
+  62 |     const tenantRow = page.locator('tr', { hasText: subdomain });
+  63 |     await tenantRow.getByRole('button', { name: 'Delete' }).click();
+  64 |     
+  65 |     await expect(page.getByText(new RegExp(`permanently delete the tenant ${subdomain} Company`))).toBeVisible();
+  66 |     await page.getByRole('button', { name: 'Confirm Deletion' }).click();
+  67 | 
+  68 |     // Verify tenant is gone from the list
+  69 |     await expect(page.getByText(`${subdomain} Company`)).not.toBeVisible();
+  70 | 
+  71 |     // Step 5: Verify Tenant is Inaccessible
+  72 |     await page.goto(`/${subdomain}`);
+  73 |     await expect(page.getByText(`Welcome to Your Team Dash`)).toBeVisible();
+  74 |     await expect(page.getByText(subdomain, { exact: true })).toBeVisible();
+  75 |   });
+  76 | });
+  77 | 
 ```
