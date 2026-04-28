@@ -120,7 +120,13 @@ export async function GET(req: NextRequest) {
     
     // Ratios Calculation (Team Wide, all years for better stats or just selected? Usually selected)
     const yearTransactions = transactions.filter((t: any) => t.year === year);
-    const totalProduction = yearTransactions.filter((t: any) => t.status === 'Sold').reduce((acc: number, t: any) => acc + (t.price || 0), 0);
+
+    // Only include agents that should be counted in team total
+    const agentsToCountInTotal = agents.filter((a: any) => a.count_in_total !== 0);
+    const agentIdsToCount = new Set(agentsToCountInTotal.map((a: any) => a.id));
+    const totalProduction = yearTransactions
+      .filter((t: any) => t.status === 'Sold' && agentIdsToCount.has(t.agent_id))
+      .reduce((acc: number, t: any) => acc + (t.price || 0), 0);
     
     const teamRatios = {
       listingToClose: yearTransactions.filter((t: any) => t.status === 'Active').length > 0 ? (yearTransactions.filter((t: any) => t.status === 'Sold').length / yearTransactions.filter((t: any) => t.status === 'Active').length).toFixed(2) : "0",
